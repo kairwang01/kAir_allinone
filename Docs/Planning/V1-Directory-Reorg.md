@@ -9,7 +9,7 @@ Rules for the next implementation phase:
 
 Current root-level implementation that remains active for now:
 - `ContentView.swift`
-- `Kair_HealthApp.swift`
+- `KAirApp.swift`
 - `HealthDashboardStore.swift`
 - `HealthDashboardModels.swift`
 - `HealthKitService.swift`
