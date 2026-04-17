@@ -6,13 +6,6 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-final class Item {
-    var timestamp: Date
-    
-    init(timestamp: Date) {
-        self.timestamp = timestamp
-    }
-}
+// The original SwiftData template model is intentionally retired.
+// Kair Health now renders a native dashboard backed by typed health fixtures.

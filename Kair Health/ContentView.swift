@@ -6,75 +6,91 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    let store: HealthDashboardStore
+    @State private var selectedTab: DashboardTab = .overview
+    @State private var bootstrap: AppBootstrap
+
+    init(store: HealthDashboardStore) {
+        self.store = store
+        _bootstrap = State(initialValue: AppBootstrap(healthStore: store))
+    }
 
     var body: some View {
-        NavigationViewWrapper {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+        Group {
+            if FeatureFlag.allInOneShellEnabled {
+                RootShellView(bootstrap: bootstrap)
+            } else {
+                switch store.phase {
+                case .intro:
+                    HealthAccessIntroScreen(
+                        statusMessage: store.statusMessage,
+                        supportsHealthData: store.supportsHealthData,
+                        action: store.requestAccess
+                    )
+                case .authorizing:
+                    LoadingStateScreen(
+                        title: "Authorizing Apple Health",
+                        message: "Requesting access to the local HealthKit store…"
+                    )
+                case .loading:
+                    LoadingStateScreen(
+                        title: "Analyzing Local Data",
+                        message: store.statusMessage
+                    )
+                case .loaded:
+                    if let dashboard = store.dashboard {
+                        liveDashboard(dashboard)
+                    } else {
+                        LoadingStateScreen(
+                            title: "Preparing Dashboard",
+                            message: "kAir is waiting for local Apple Health data."
+                        )
                     }
-                }
-                .onDelete(perform: deleteItems)
-            }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-#endif
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
+                case .failed:
+                    FailureStateScreen(
+                        message: store.errorMessage ?? "Unable to load Apple Health data.",
+                        retry: store.refresh
+                    )
                 }
             }
         }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
+        .task {
+            store.bootstrap()
         }
     }
 
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+    private func liveDashboard(_ dashboard: HealthDashboard) -> some View {
+        TabView(selection: $selectedTab) {
+            NavigationStack {
+                OverviewScreen(dashboard: dashboard, onRefresh: store.refresh)
             }
-        }
-    }
-}
+            .tabItem {
+                Label(DashboardTab.overview.title, systemImage: DashboardTab.overview.systemImage)
+            }
+            .tag(DashboardTab.overview)
 
-fileprivate struct NavigationViewWrapper<Content: View>: View {
-    let content: () -> Content
+            NavigationStack {
+                SignalsScreen(dashboard: dashboard, onRefresh: store.refresh)
+            }
+            .tabItem {
+                Label(DashboardTab.signals.title, systemImage: DashboardTab.signals.systemImage)
+            }
+            .tag(DashboardTab.signals)
 
-    var body: some View {
-#if os(macOS)
-        NavigationSplitView {
-            content()
-        } detail: {
-            Text("Select an item")
+            NavigationStack {
+                DataLibraryScreen(dashboard: dashboard, onRefresh: store.refresh)
+            }
+            .tabItem {
+                Label(DashboardTab.data.title, systemImage: DashboardTab.data.systemImage)
+            }
+            .tag(DashboardTab.data)
         }
-#else
-        content()
-#endif
+        .tint(HealthPalette.mint)
     }
 }
 
 #Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+    ContentView(store: .preview)
 }

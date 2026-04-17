@@ -1,0 +1,447 @@
+{
+  "bundle_version": "ios-compact-risk-v1",
+  "data_window_days": 28,
+  "engine": "kair-health-on-device-linear",
+  "feature_count": 42,
+  "feature_metadata": {
+    "age": {
+      "label": "Age",
+      "summary": "Current age in years"
+    },
+    "bmi": {
+      "label": "BMI",
+      "summary": "Body mass index"
+    },
+    "heart_rate_last": {
+      "label": "Latest heart rate",
+      "summary": "Most recent 6-hour heart-rate bucket value"
+    },
+    "heart_rate_max": {
+      "label": "Heart-rate maximum",
+      "summary": "Highest 6-hour heart-rate bucket value"
+    },
+    "heart_rate_mean": {
+      "label": "Heart-rate mean",
+      "summary": "Mean 6-hour heart-rate bucket value"
+    },
+    "heart_rate_min": {
+      "label": "Heart-rate minimum",
+      "summary": "Lowest 6-hour heart-rate bucket value"
+    },
+    "heart_rate_std": {
+      "label": "Heart-rate variability",
+      "summary": "Standard deviation of 6-hour heart-rate buckets"
+    },
+    "heart_rate_trend": {
+      "label": "Heart-rate trend",
+      "summary": "Linear trend of 6-hour heart-rate buckets"
+    },
+    "height_cm": {
+      "label": "Height",
+      "summary": "Current height in centimeters"
+    },
+    "high_step_buckets": {
+      "label": "High-activity windows",
+      "summary": "6-hour windows with over 500 steps"
+    },
+    "hrv_last": {
+      "label": "Latest HRV",
+      "summary": "Most recent 6-hour HRV bucket value"
+    },
+    "hrv_low_buckets": {
+      "label": "Low-HRV windows",
+      "summary": "6-hour windows with HRV under 20 ms"
+    },
+    "hrv_max": {
+      "label": "HRV maximum",
+      "summary": "Highest 6-hour HRV bucket value"
+    },
+    "hrv_mean": {
+      "label": "HRV mean",
+      "summary": "Mean 6-hour HRV bucket value"
+    },
+    "hrv_min": {
+      "label": "HRV minimum",
+      "summary": "Lowest 6-hour HRV bucket value"
+    },
+    "hrv_std": {
+      "label": "HRV spread",
+      "summary": "Standard deviation of 6-hour HRV buckets"
+    },
+    "hrv_trend": {
+      "label": "HRV trend",
+      "summary": "Linear trend of 6-hour HRV buckets"
+    },
+    "resting_hr_baseline": {
+      "label": "Resting heart rate",
+      "summary": "Recent resting-heart-rate baseline"
+    },
+    "sex_code": {
+      "label": "Biological sex code",
+      "summary": "1 for male, 0 for female"
+    },
+    "sleep_average_hours": {
+      "label": "Average sleep",
+      "summary": "Average nightly sleep hours"
+    },
+    "sleep_debt_hours": {
+      "label": "Sleep debt",
+      "summary": "Cumulative recent sleep debt against 7 h/night"
+    },
+    "sleep_efficiency": {
+      "label": "Sleep efficiency",
+      "summary": "Average recent sleep efficiency"
+    },
+    "sleep_latest_hours": {
+      "label": "Latest sleep",
+      "summary": "Sleep duration for the latest tracked night"
+    },
+    "spo2_critical_buckets": {
+      "label": "Critical oxygen windows",
+      "summary": "6-hour windows with SpO2 under 92%"
+    },
+    "spo2_last": {
+      "label": "Latest SpO2",
+      "summary": "Most recent 6-hour blood-oxygen bucket value"
+    },
+    "spo2_low_buckets": {
+      "label": "Low-oxygen windows",
+      "summary": "6-hour windows with SpO2 under 95%"
+    },
+    "spo2_max": {
+      "label": "SpO2 maximum",
+      "summary": "Highest 6-hour blood-oxygen bucket value"
+    },
+    "spo2_mean": {
+      "label": "SpO2 mean",
+      "summary": "Mean 6-hour blood-oxygen bucket value"
+    },
+    "spo2_min": {
+      "label": "SpO2 minimum",
+      "summary": "Lowest 6-hour blood-oxygen bucket value"
+    },
+    "spo2_std": {
+      "label": "SpO2 spread",
+      "summary": "Standard deviation of 6-hour blood-oxygen buckets"
+    },
+    "spo2_trend": {
+      "label": "SpO2 trend",
+      "summary": "Linear trend of 6-hour blood-oxygen buckets"
+    },
+    "steps_daily_cv": {
+      "label": "Daily steps consistency",
+      "summary": "Coefficient of variation for recent daily steps"
+    },
+    "steps_daily_last": {
+      "label": "Latest daily steps",
+      "summary": "Latest tracked daily step count"
+    },
+    "steps_daily_max": {
+      "label": "Daily steps max",
+      "summary": "Highest daily step count in the recent window"
+    },
+    "steps_daily_mean": {
+      "label": "Daily steps mean",
+      "summary": "Average daily steps across the recent window"
+    },
+    "steps_daily_std": {
+      "label": "Daily steps spread",
+      "summary": "Standard deviation of recent daily steps"
+    },
+    "steps_daily_trend": {
+      "label": "Daily steps trend",
+      "summary": "Linear trend of recent daily step counts"
+    },
+    "tachycardia_buckets": {
+      "label": "High-heart-rate windows",
+      "summary": "6-hour windows with heart rate over 100 bpm"
+    },
+    "weight_kg": {
+      "label": "Weight",
+      "summary": "Current weight in kilograms"
+    },
+    "workout_count_28d": {
+      "label": "Workout count",
+      "summary": "Number of recent workouts in the analysis window"
+    },
+    "workout_minutes_mean_28d": {
+      "label": "Mean workout minutes",
+      "summary": "Average workout minutes per day"
+    },
+    "workout_minutes_total_28d": {
+      "label": "Total workout minutes",
+      "summary": "Total workout minutes in the analysis window"
+    }
+  },
+  "generated_at": "2026-04-16T21:59:17.987854+00:00",
+  "models": [
+    {
+      "coefficients": {
+        "age": 0.017400739133917802,
+        "bmi": 0.31856811634923454,
+        "heart_rate_last": 0.07547978128528296,
+        "heart_rate_max": 0.14629179136437698,
+        "hrv_low_buckets": 0.785131249931058,
+        "hrv_mean": -0.6053286170471638,
+        "hrv_trend": 0.014809772995075967,
+        "sleep_debt_hours": -0.001264840564415518,
+        "steps_daily_last": -0.2523013204544244,
+        "steps_daily_mean": -0.32439228775899115,
+        "steps_daily_trend": -0.013239336237775838,
+        "tachycardia_buckets": 0.2192029933245519,
+        "weight_kg": 0.1145367655095024
+      },
+      "family": "sparse_logistic_regression",
+      "hyperparameters": {
+        "c_value": 0.1,
+        "penalty": "l1",
+        "solver": "saga"
+      },
+      "id": "heart_disease",
+      "intercept": -0.6313573099143417,
+      "label": "Heart Disease",
+      "metrics": {
+        "accuracy": 0.87,
+        "average_precision": 0.6906332016562384,
+        "decision_threshold": 0.6150000000000001,
+        "f1": 0.6138613861386139,
+        "roc_auc": 0.8470340258958144
+      },
+      "non_zero_feature_count": 13,
+      "threshold": 0.6150000000000001
+    },
+    {
+      "coefficients": {
+        "bmi": 1.0137684779127105,
+        "heart_rate_min": 0.26751714345188626,
+        "sleep_efficiency": -1.2605125457879198,
+        "steps_daily_mean": -0.5851131941131599,
+        "workout_minutes_mean_28d": 0.05477783461805177,
+        "workout_minutes_total_28d": 0.054777834618045466
+      },
+      "family": "sparse_logistic_regression",
+      "hyperparameters": {
+        "c_value": 0.1,
+        "penalty": "l1",
+        "solver": "saga"
+      },
+      "id": "diabetes",
+      "intercept": -1.2911190752036097,
+      "label": "Diabetes / Prediabetes",
+      "metrics": {
+        "accuracy": 0.9233333333333333,
+        "average_precision": 0.8292859461944982,
+        "decision_threshold": 0.7400000000000002,
+        "f1": 0.7628865979381443,
+        "roc_auc": 0.9434658235471244
+      },
+      "non_zero_feature_count": 6,
+      "threshold": 0.7400000000000002
+    },
+    {
+      "coefficients": {
+        "bmi": 0.5695301708688215,
+        "sleep_efficiency": -0.644216234296598,
+        "spo2_mean": -1.2524708090326224
+      },
+      "family": "sparse_logistic_regression",
+      "hyperparameters": {
+        "c_value": 0.05,
+        "penalty": "l1",
+        "solver": "saga"
+      },
+      "id": "sleep_apnea",
+      "intercept": -0.9667721411513344,
+      "label": "Sleep Apnea",
+      "metrics": {
+        "accuracy": 0.9366666666666666,
+        "average_precision": 0.8803423757337395,
+        "decision_threshold": 0.6100000000000001,
+        "f1": 0.822429906542056,
+        "roc_auc": 0.9631887985546523
+      },
+      "non_zero_feature_count": 3,
+      "threshold": 0.6100000000000001
+    }
+  ],
+  "preprocessing": {
+    "feature_order": [
+      "age",
+      "sex_code",
+      "height_cm",
+      "weight_kg",
+      "bmi",
+      "resting_hr_baseline",
+      "sleep_average_hours",
+      "sleep_latest_hours",
+      "sleep_debt_hours",
+      "sleep_efficiency",
+      "workout_count_28d",
+      "workout_minutes_mean_28d",
+      "workout_minutes_total_28d",
+      "heart_rate_mean",
+      "heart_rate_std",
+      "heart_rate_min",
+      "heart_rate_max",
+      "heart_rate_last",
+      "heart_rate_trend",
+      "hrv_mean",
+      "hrv_std",
+      "hrv_min",
+      "hrv_max",
+      "hrv_last",
+      "hrv_trend",
+      "spo2_mean",
+      "spo2_std",
+      "spo2_min",
+      "spo2_max",
+      "spo2_last",
+      "spo2_trend",
+      "steps_daily_mean",
+      "steps_daily_std",
+      "steps_daily_max",
+      "steps_daily_last",
+      "steps_daily_trend",
+      "steps_daily_cv",
+      "spo2_low_buckets",
+      "spo2_critical_buckets",
+      "hrv_low_buckets",
+      "tachycardia_buckets",
+      "high_step_buckets"
+    ],
+    "means": [
+      31.513333333333332,
+      0.49333333333333335,
+      172.29333333333332,
+      72.28533333333333,
+      24.524333333333335,
+      64.53691213888982,
+      7.174843480841418,
+      7.2441541981490625,
+      1.1174567025887105,
+      0.8731351182796122,
+      20.19333333333333,
+      25.953571428571433,
+      726.7,
+      80.325425091158,
+      9.881596604144933,
+      62.452216453435355,
+      96.2856399204238,
+      84.81178444860004,
+      0.10536334366320367,
+      44.62472340187621,
+      8.525580202000784,
+      30.737463292052542,
+      60.00191004448315,
+      43.88281359465471,
+      -0.03631996565887024,
+      97.27727519984956,
+      0.5040705144747047,
+      96.33353208565167,
+      98.04400640474587,
+      97.32827853029116,
+      0.001985072325172877,
+      8944.20234920635,
+      2143.930950401675,
+      12258.073333333334,
+      8946.163333333334,
+      -52.21559523809524,
+      0.25012072448011735,
+      0.13333333333333333,
+      0.05333333333333334,
+      1.47,
+      1.7233333333333334,
+      20.456666666666667
+    ],
+    "medians": [
+      31.0,
+      0.0,
+      172.0,
+      72.65,
+      24.4,
+      64.05614393821527,
+      7.187136336421699,
+      7.269939757574788,
+      0.0,
+      0.8816377117691706,
+      21.0,
+      26.339285714285715,
+      737.5,
+      79.80178779322318,
+      9.786068701849459,
+      61.805616434104586,
+      96.17069414409316,
+      84.68435139160863,
+      0.10408893781901538,
+      44.457350401855635,
+      8.139460001247523,
+      30.093622815020797,
+      60.248362390273066,
+      43.22843315011042,
+      -0.0725906759011312,
+      97.32320450331883,
+      0.46509884717802485,
+      96.40549391536133,
+      98.09032415951683,
+      97.35654709441889,
+      0.003667710727050512,
+      8896.142857142859,
+      1968.3343546727465,
+      11808.0,
+      8781.0,
+      -46.714285714285715,
+      0.2475980413251999,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      21.0
+    ],
+    "scales": [
+      7.601961735119575,
+      0.4999555535800714,
+      9.47456008946531,
+      11.770309464448626,
+      4.62274534833529,
+      7.6681668551641184,
+      0.36193416787871857,
+      0.7795644260691852,
+      2.135571941688287,
+      0.06486087456094382,
+      2.4005462341355193,
+      3.856596632399351,
+      107.98470570718182,
+      8.120098883541528,
+      1.2970662790646759,
+      7.784507202418783,
+      9.384257477616854,
+      10.767335988012134,
+      0.2634975929724523,
+      12.388316944259467,
+      2.519782888886049,
+      12.146253317633027,
+      13.70086657448436,
+      15.011647896634667,
+      0.43079344328038244,
+      0.7144545416215373,
+      0.3144489195276148,
+      1.1571216816756404,
+      0.7514711621504848,
+      0.9707773335246233,
+      0.028323195462473232,
+      3103.591420269499,
+      923.4266748988574,
+      4294.297128513065,
+      3717.438283279077,
+      378.49027252638166,
+      0.07461257476603134,
+      0.7803133273813083,
+      0.4587906809089402,
+      3.92119454588352,
+      3.496682554778013,
+      1.4949210309875534
+    ]
+  },
+  "sample_count": 300,
+  "signal_window_days": 7
+}
