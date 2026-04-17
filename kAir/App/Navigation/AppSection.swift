@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum AppSection: String, CaseIterable, Identifiable {
+enum AppSection: String, CaseIterable, Identifiable, Hashable {
     case chat
     case health
     case ai

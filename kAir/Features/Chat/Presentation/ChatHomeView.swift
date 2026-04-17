@@ -2,7 +2,7 @@
 //  ChatHomeView.swift
 //  kAir
 //
-//  Primary all-in-one conversation surface for kAir.
+//  Chat inbox plus focused conversation thread for kAir.
 //
 
 import SwiftUI
@@ -11,7 +11,111 @@ struct ChatHomeView: View {
     let bootstrap: AppBootstrap
 
     @State private var store = ChatStore()
+    @State private var isConversationPresented = false
+
+    private var dashboard: HealthDashboard? {
+        bootstrap.healthStore.dashboard
+    }
+
+    private var latestMessage: ConversationMessage? {
+        store.session.messages.last
+    }
+
+    var body: some View {
+        ZStack {
+            Color(uiColor: .systemBackground)
+                .ignoresSafeArea()
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    ConversationInboxRow(
+                        title: store.session.title,
+                        preview: latestMessage?.text ?? store.contextSummary,
+                        timestamp: latestMessage?.timestamp,
+                        onTap: {
+                            isConversationPresented = true
+                        }
+                    )
+                    .padding(.top, 10)
+
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, minHeight: 520, alignment: .top)
+            }
+            .scrollIndicators(.hidden)
+        }
+        .task(id: dashboard?.generatedAt) {
+            if let dashboard {
+                store.bootstrap(with: dashboard)
+            } else {
+                store.bootstrapWithoutDashboard(
+                    supportsHealthData: bootstrap.healthStore.supportsHealthData
+                )
+            }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            ChatInboxTopBar(
+                onAddTap: {
+                    isConversationPresented = true
+                }
+            )
+        }
+        .safeAreaInset(edge: .bottom) {
+            FloatingAskComposer(
+                text: $store.draft,
+                isTemplateChat: $store.isTemplateChat,
+                placeholder: "Ask me anything...",
+                onSend: sendFromHomeComposer,
+                onProfileTap: bootstrap.showProfile
+            )
+            .padding(.horizontal, 18)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
+            .background(Color.white.opacity(0.001))
+        }
+        .navigationDestination(isPresented: $isConversationPresented) {
+            ConversationThreadView(
+                store: store,
+                bootstrap: bootstrap
+            )
+        }
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private func sendFromHomeComposer() {
+        let prompt = store.draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard prompt.isEmpty == false else { return }
+
+        let route = store.route(for: prompt)
+        store.sendDraft(using: dashboard, target: route)
+        isConversationPresented = true
+        handleRoute(route)
+    }
+
+    private func handleRoute(_ route: ChatNavigationTarget?) {
+        guard let route else { return }
+
+        store.recordHandoff(to: route)
+
+        switch route {
+        case .section(.maps):
+            bootstrap.openMaps(with: store.consumeResolvedMapsSession())
+        case .section(.health):
+            bootstrap.openHealth(with: store.consumeResolvedHealthSession())
+        case .section(let section):
+            bootstrap.openSurface(section)
+        case .userProfile:
+            bootstrap.showProfile()
+        }
+    }
+}
+
+private struct ConversationThreadView: View {
+    let store: ChatStore
+    let bootstrap: AppBootstrap
+
     @State private var isReferencePickerPresented = false
+    @Environment(\.dismiss) private var dismiss
 
     private static let bottomAnchorID = "kair-chat-bottom"
 
@@ -19,71 +123,69 @@ struct ChatHomeView: View {
         bootstrap.healthStore.dashboard
     }
 
-    private var visibleMessages: [ConversationMessage] {
-        store.session.messages.filter { $0.role != .system }
+    private var threadMessages: [ConversationMessage] {
+        store.session.messages
     }
 
     var body: some View {
+        @Bindable var store = store
+
         ZStack {
-            Color.white
+            Color(uiColor: .systemGray6)
                 .ignoresSafeArea()
 
             ScrollViewReader { proxy in
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Color.clear
-                            .frame(height: 10)
-
-                        if visibleMessages.isEmpty {
+                    VStack(spacing: 16) {
+                        if threadMessages.isEmpty {
                             EmptyConversationState(
                                 prompts: store.suggestedPrompts,
                                 onTapPrompt: { prompt in
                                     submit(prompt, scrollProxy: proxy)
                                 }
                             )
-                            .padding(.top, 40)
+                            .padding(.top, 24)
                         } else {
-                            VStack(spacing: 0) {
-                                ForEach(Array(visibleMessages.enumerated()), id: \.element.id) { index, message in
-                                    ConversationInboxRow(
-                                        message: message,
-                                        badgeCount: badgeCount(for: message),
-                                        onTap: {
-                                            focus(message: message, scrollProxy: proxy)
-                                        }
-                                    )
-
-                                    if index != visibleMessages.count - 1 {
-                                        Divider()
-                                            .padding(.leading, 84)
-                                    }
+                            LazyVStack(spacing: 14) {
+                                ForEach(threadMessages) { message in
+                                    MessageBubble(message: message)
                                 }
                             }
+                        }
+
+                        if threadMessages.count <= 2 {
+                            ConversationPromptTray(
+                                prompts: store.suggestedPrompts,
+                                onTapPrompt: { prompt in
+                                    submit(prompt, scrollProxy: proxy)
+                                }
+                            )
+                            .padding(.top, 6)
                         }
 
                         Color.clear
                             .frame(height: 1)
                             .id(Self.bottomAnchorID)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 10)
-                    .padding(.bottom, 154)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 14)
+                    .padding(.bottom, 108)
                 }
                 .scrollIndicators(.hidden)
-                .task(id: dashboard?.generatedAt) {
-                    if let dashboard {
-                        store.bootstrap(with: dashboard)
-                    } else {
-                        store.bootstrapWithoutDashboard(
-                            supportsHealthData: bootstrap.healthStore.supportsHealthData
-                        )
-                    }
-                }
                 .onChange(of: store.session.messages.count) { _, newCount in
                     guard newCount > 1 else { return }
                     scrollToBottom(proxy)
                 }
             }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            ConversationThreadTopBar(
+                title: store.session.title,
+                onBackTap: dismiss.callAsFunction,
+                onOptionsTap: {
+                    isReferencePickerPresented = true
+                }
+            )
         }
         .sheet(isPresented: $isReferencePickerPresented) {
             ReferencePickerSheet(
@@ -93,42 +195,25 @@ struct ChatHomeView: View {
             .presentationDragIndicator(.visible)
         }
         .safeAreaInset(edge: .bottom) {
-            FloatingAskComposer(
+            ConversationThreadComposer(
                 text: $store.draft,
-                placeholder: "Ask me anything...",
+                isTemplateChat: $store.isTemplateChat,
                 onSend: sendFromComposer,
-                onUserTap: bootstrap.showProfile
+                onReferenceTap: {
+                    isReferencePickerPresented = true
+                }
             )
-            .padding(.horizontal, 20)
-            .padding(.top, 10)
-            .padding(.bottom, 12)
-            .background(Color.white.opacity(0.001))
+            .padding(.horizontal, 10)
+            .padding(.top, 8)
+            .padding(.bottom, 8)
+            .background(Color(uiColor: .systemGray6).opacity(0.96))
         }
         .toolbar(.hidden, for: .navigationBar)
     }
 
-    private func handleAccessory(_ accessory: ComposerAccessory) {
-        switch accessory.id {
-        case "health":
-            bootstrap.openSurface(.health)
-            store.recordHandoff(to: .health)
-        case "ai":
-            bootstrap.openSurface(.ai)
-            store.recordHandoff(to: .ai)
-        case "maps":
-            bootstrap.openSurface(.maps)
-            store.recordHandoff(to: .maps)
-        case "store":
-            bootstrap.openSurface(.store)
-            store.recordHandoff(to: .store)
-        default:
-            break
-        }
-    }
-
     private func submit(_ prompt: String, scrollProxy: ScrollViewProxy) {
         let route = store.route(for: prompt)
-        store.submitPrompt(prompt, using: dashboard)
+        store.submitPrompt(prompt, using: dashboard, target: route)
         handleRoute(route)
         scrollToBottom(scrollProxy)
     }
@@ -158,38 +243,29 @@ struct ChatHomeView: View {
         }
     }
 
-    private func badgeCount(for message: ConversationMessage) -> Int? {
-        guard message.role == .assistant else { return nil }
-
-        if message.toolResults.isEmpty == false {
-            return message.toolResults.count
-        }
-
-        if message.tags.contains("Maps") || message.tags.contains("Route") || message.tags.contains("路线") {
-            return 1
-        }
-
-        return nil
-    }
-
     private func sendFromComposer() {
         let prompt = store.draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard prompt.isEmpty == false else { return }
 
         let route = store.route(for: prompt)
-        store.sendDraft(using: dashboard)
+        store.sendDraft(using: dashboard, target: route)
         handleRoute(route)
     }
 
-    private func handleRoute(_ route: AppSection?) {
+    private func handleRoute(_ route: ChatNavigationTarget?) {
         guard let route else { return }
 
         store.recordHandoff(to: route)
 
-        if route == .maps {
+        switch route {
+        case .section(.maps):
             bootstrap.openMaps(with: store.consumeResolvedMapsSession())
-        } else {
-            bootstrap.openSurface(route)
+        case .section(.health):
+            bootstrap.openHealth(with: store.consumeResolvedHealthSession())
+        case .section(let section):
+            bootstrap.openSurface(section)
+        case .userProfile:
+            bootstrap.showProfile()
         }
     }
 
@@ -198,170 +274,171 @@ struct ChatHomeView: View {
             proxy.scrollTo(Self.bottomAnchorID, anchor: .bottom)
         }
     }
+}
 
-    private func focus(message _: ConversationMessage, scrollProxy: ScrollViewProxy) {
-        scrollToBottom(scrollProxy)
+private struct ChatInboxTopBar: View {
+    let onAddTap: () -> Void
+
+    var body: some View {
+        HStack {
+            Spacer()
+
+            Button(action: onAddTap) {
+                Image(systemName: "plus.circle")
+                    .font(.title3.weight(.regular))
+                    .foregroundStyle(Color.black.opacity(0.76))
+                    .frame(width: 36, height: 36)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+        .background(
+            Color(uiColor: .systemBackground)
+                .ignoresSafeArea(edges: .top)
+        )
     }
 }
 
 private struct ConversationInboxRow: View {
-    let message: ConversationMessage
-    let badgeCount: Int?
+    let title: String
+    let preview: String
+    let timestamp: Date?
     let onTap: () -> Void
-
-    private var title: String {
-        switch message.role {
-        case .assistant:
-            if message.tags.contains("Maps") || message.tags.contains("Route") || message.tags.contains("路线") {
-                return "Maps"
-            }
-            if message.tags.contains("Health") {
-                return "Health"
-            }
-            if message.tags.contains("AI") {
-                return "AI"
-            }
-            if message.tags.contains("Store") {
-                return "Store"
-            }
-            return "kAir"
-        case .user:
-            return "User"
-        case .system:
-            return "System"
-        }
-    }
-
-    private var avatarLabel: String {
-        let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let pieces = title.split(separator: " ")
-        if pieces.count > 1 {
-            return pieces.prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
-        }
-        return String(title.prefix(2)).uppercased()
-    }
-
-    private var timestamp: String {
-        message.timestamp.formatted(date: .omitted, time: .shortened)
-    }
-
-    private var subtitle: String {
-        let trimmed = message.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "Ready." : trimmed
-    }
 
     var body: some View {
         Button(action: onTap) {
-            HStack(alignment: .top, spacing: 14) {
-                Circle()
+            HStack(alignment: .center, spacing: 12) {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(
-                        RadialGradient(
+                        LinearGradient(
                             colors: [
-                                Color(red: 0.74, green: 0.74, blue: 0.79),
-                                Color(red: 0.62, green: 0.62, blue: 0.67)
+                                Color(red: 0.33, green: 0.43, blue: 0.56),
+                                Color(red: 0.16, green: 0.20, blue: 0.27)
                             ],
-                            center: .topLeading,
-                            startRadius: 2,
-                            endRadius: 34
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 50, height: 50)
+                    .frame(width: 42, height: 42)
                     .overlay(
-                        Text(avatarLabel)
-                            .font(.title3.weight(.medium))
-                            .foregroundStyle(Color.white)
+                        Image(systemName: "sparkles")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.white.opacity(0.9))
                     )
-                    .padding(.top, 2)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(title)
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(Color.black)
-                            .lineLimit(1)
+                    Text(title)
+                        .font(.title3.weight(.regular))
+                        .foregroundStyle(Color.black.opacity(0.82))
 
-                        Spacer(minLength: 10)
+                    Text(preview)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.black.opacity(0.26))
+                        .lineLimit(1)
+                }
 
-                        Text(timestamp)
-                            .font(.title3.weight(.regular))
-                            .foregroundStyle(Color.black.opacity(0.88))
-                            .lineLimit(1)
-                    }
+                Spacer(minLength: 12)
 
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Text(subtitle)
-                            .font(.title3.weight(.regular))
-                            .foregroundStyle(Color.black.opacity(0.92))
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(2)
-
-                        Spacer(minLength: 8)
-
-                        if let badgeCount, badgeCount > 0 {
-                            Text("\(badgeCount)")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(.white)
-                                .frame(minWidth: 22, minHeight: 22)
-                                .padding(.horizontal, 2)
-                                .background(
-                                    Circle()
-                                        .fill(Color(red: 0.90, green: 0.23, blue: 0.20))
-                                )
-                        }
-                    }
+                if let timestamp {
+                    Text(
+                        timestamp.formatted(
+                            .dateTime
+                                .year()
+                                .month()
+                                .day()
+                        )
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(Color.black.opacity(0.14))
                 }
             }
-            .padding(.vertical, 14)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 12)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .overlay(alignment: .bottom) {
+            Divider()
+                .padding(.leading, 66)
+        }
     }
 }
 
-private struct EmptyConversationState: View {
+private struct ConversationThreadTopBar: View {
+    let title: String
+    let onBackTap: () -> Void
+    let onOptionsTap: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button(action: onBackTap) {
+                    Image(systemName: "chevron.left")
+                        .font(.headline.weight(.medium))
+                        .foregroundStyle(Color.black.opacity(0.82))
+                        .frame(width: 32, height: 32)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Text(title)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(Color.black.opacity(0.82))
+
+                Spacer()
+
+                Button(action: onOptionsTap) {
+                    Image(systemName: "ellipsis")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(Color.black.opacity(0.82))
+                        .frame(width: 32, height: 32)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 10)
+            .padding(.top, 8)
+            .padding(.bottom, 10)
+        }
+        .background(
+            Color(uiColor: .systemGray6)
+                .ignoresSafeArea(edges: .top)
+        )
+    }
+}
+
+private struct ConversationPromptTray: View {
     let prompts: [String]
     let onTapPrompt: (String) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Text("Ask me anything.")
-                .font(.largeTitle.weight(.bold))
-                .foregroundStyle(Color.black)
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Try a prompt")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.black.opacity(0.28))
+                .textCase(.uppercase)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    ForEach(prompts, id: \.self) { prompt in
+                    ForEach(prompts.prefix(4), id: \.self) { prompt in
                         Button {
                             onTapPrompt(prompt)
                         } label: {
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text(prompt)
-                                    .font(.footnote.weight(.semibold))
-                                    .foregroundStyle(Color.black)
-                                    .multilineTextAlignment(.leading)
-                                    .lineLimit(2)
-
-                                Text("Start from intent")
-                                    .font(.caption2.weight(.medium))
-                                    .foregroundStyle(Color.black.opacity(0.45))
-                            }
-                            .frame(width: 180, alignment: .leading)
-                            .padding(14)
-                            .background(
-                                RoundedRectangle(
-                                    cornerRadius: 18,
-                                    style: .continuous
+                            Text(prompt)
+                                .font(.footnote.weight(.medium))
+                                .foregroundStyle(Color.black.opacity(0.78))
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 10)
+                                .background(
+                                    Capsule(style: .continuous)
+                                        .fill(Color.white.opacity(0.92))
                                 )
-                                .fill(Color.white)
-                            )
-                            .overlay(
-                                RoundedRectangle(
-                                    cornerRadius: 18,
-                                    style: .continuous
+                                .overlay(
+                                    Capsule(style: .continuous)
+                                        .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
                                 )
-                                .strokeBorder(Color.black.opacity(0.07), lineWidth: 1)
-                            )
-                            .shadow(color: Color.black.opacity(0.08), radius: 22, x: 0, y: 10)
                         }
                         .buttonStyle(.plain)
                     }
@@ -371,70 +448,225 @@ private struct EmptyConversationState: View {
     }
 }
 
-private struct FloatingAskComposer: View {
-    @Binding var text: String
+private struct EmptyConversationState: View {
+    let prompts: [String]
+    let onTapPrompt: (String) -> Void
 
-    let placeholder: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("kAir is ready.")
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(Color.black.opacity(0.88))
+
+            Text("Start with a direct request, then let the thread open Health, Maps, AI, or Store only when it needs to.")
+                .font(.subheadline)
+                .foregroundStyle(Color.black.opacity(0.44))
+
+            ConversationPromptTray(
+                prompts: prompts,
+                onTapPrompt: onTapPrompt
+            )
+        }
+    }
+}
+
+private struct ConversationThreadComposer: View {
+    @Binding var text: String
+    @Binding var isTemplateChat: Bool
+
     let onSend: () -> Void
-    let onUserTap: () -> Void
+    let onReferenceTap: () -> Void
+
+    @FocusState private var isFocused: Bool
 
     private var canSend: Bool {
         text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }
 
+    private var showsTemplateToggle: Bool {
+        isFocused || canSend || isTemplateChat
+    }
+
     var body: some View {
-        HStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
+            if showsTemplateToggle {
+                TemplateChatToggle(isOn: $isTemplateChat)
+            }
+
             HStack(spacing: 10) {
-                TextField(placeholder, text: $text, axis: .vertical)
-                    .lineLimit(1 ... 3)
+                Button(action: {}) {
+                    Image(systemName: "waveform.circle")
+                        .font(.title2.weight(.regular))
+                        .foregroundStyle(Color.black.opacity(0.68))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+
+                HStack(spacing: 8) {
+                    TextField("", text: $text, prompt: Text("Message"))
+                        .font(.body)
+                        .foregroundStyle(Color.black.opacity(0.88))
+                        .lineLimit(1 ... 4)
+                        .submitLabel(.send)
+                        .onSubmit(onSend)
+                        .focused($isFocused)
+
+                    Button(action: canSend ? onSend : {}) {
+                        Image(systemName: canSend ? "arrow.up.circle.fill" : "mic")
+                            .font(.headline.weight(.medium))
+                            .foregroundStyle(canSend ? Color.black.opacity(0.82) : Color.black.opacity(0.38))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(canSend == false)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color.white)
+                )
+
+                Button(action: {}) {
+                    Image(systemName: "face.smiling")
+                        .font(.title3.weight(.regular))
+                        .foregroundStyle(Color.black.opacity(0.72))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+
+                Button(action: onReferenceTap) {
+                    Image(systemName: "plus.circle")
+                        .font(.title2.weight(.regular))
+                        .foregroundStyle(Color.black.opacity(0.72))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+private struct FloatingAskComposer: View {
+    @Binding var text: String
+    @Binding var isTemplateChat: Bool
+
+    let placeholder: String
+    let onSend: () -> Void
+    let onProfileTap: () -> Void
+
+    @FocusState private var isFocused: Bool
+
+    private var canSend: Bool {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+    }
+
+    private var showsSendButton: Bool {
+        isFocused || canSend
+    }
+
+    private var showsTemplateToggle: Bool {
+        isFocused || canSend || isTemplateChat
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if showsTemplateToggle {
+                TemplateChatToggle(isOn: $isTemplateChat)
+            }
+
+            HStack(spacing: 12) {
+                HStack(spacing: 10) {
+                    TextField(
+                        "",
+                        text: $text,
+                        prompt: Text(placeholder)
+                            .font(.title3.weight(.regular))
+                            .foregroundStyle(Color.black.opacity(0.92))
+                    )
+                    .lineLimit(1 ... 2)
                     .font(.title3.weight(.regular))
                     .foregroundStyle(Color.black)
                     .submitLabel(.send)
                     .onSubmit(onSend)
+                    .focused($isFocused)
 
-                Button(action: onSend) {
-                    Image(systemName: "arrow.up")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(canSend ? Color.white : Color.black.opacity(0.35))
-                        .frame(width: 34, height: 34)
+                    if showsSendButton {
+                        Button(action: onSend) {
+                            Image(systemName: "arrow.up")
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(canSend ? Color.white : Color.black.opacity(0.35))
+                                .frame(width: 34, height: 34)
+                                .background(
+                                    Circle()
+                                        .fill(canSend ? Color.black : Color.black.opacity(0.08))
+                                )
+                        }
+                        .disabled(canSend == false)
+                        .buttonStyle(.plain)
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                    }
+                }
+                .padding(.horizontal, 22)
+                .padding(.vertical, 18)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.55), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.08), radius: 16, x: 0, y: 8)
+
+                Button(action: onProfileTap) {
+                    Circle()
+                        .fill(Color.white.opacity(0.36))
+                        .frame(width: 48, height: 48)
                         .background(
                             Circle()
-                                .fill(canSend ? Color.black : Color.black.opacity(0.06))
+                                .fill(.ultraThinMaterial)
                         )
+                        .overlay(
+                            Circle()
+                                .strokeBorder(Color.black.opacity(0.82), lineWidth: 1.6)
+                        )
+                        .overlay {
+                            Text("K")
+                                .font(.headline.weight(.semibold))
+                                .foregroundStyle(Color.black.opacity(0.88))
+                        }
                 }
                 .buttonStyle(.plain)
-                .disabled(canSend == false)
             }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 18)
+        }
+        .animation(.easeInOut(duration: 0.18), value: showsSendButton)
+    }
+}
+
+private struct TemplateChatToggle: View {
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Button {
+            isOn.toggle()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: isOn ? "checkmark.square.fill" : "square")
+                    .font(.subheadline.weight(.semibold))
+
+                Text("Template chat")
+                    .font(.footnote.weight(.medium))
+            }
+            .foregroundStyle(Color.black.opacity(0.78))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
             .background(
                 Capsule(style: .continuous)
-                    .fill(Color.white)
+                    .fill(Color.white.opacity(0.92))
             )
             .overlay(
                 Capsule(style: .continuous)
-                    .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
+                    .strokeBorder(Color.black.opacity(0.08), lineWidth: 1)
             )
-            .shadow(color: Color.black.opacity(0.09), radius: 20, x: 0, y: 8)
-
-            Button(action: onUserTap) {
-                Text("User")
-                    .font(.title3.weight(.medium))
-                    .foregroundStyle(Color.black)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 18)
-                    .background(
-                        Capsule(style: .continuous)
-                            .fill(Color.white)
-                    )
-                    .overlay(
-                        Capsule(style: .continuous)
-                            .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
-                    )
-                    .shadow(color: Color.black.opacity(0.09), radius: 20, x: 0, y: 8)
-            }
-            .buttonStyle(.plain)
         }
+        .buttonStyle(.plain)
     }
 }
 

@@ -15,6 +15,7 @@ final class AppBootstrap {
     var presentedSurface: AppSection?
     var isProfilePresented = false
     var activeMapsSession: MapsRouteSession?
+    var activeHealthSession: HealthRouteSession?
     let healthStore: HealthDashboardStore
 
     init(healthStore: HealthDashboardStore? = nil) {
@@ -42,9 +43,18 @@ final class AppBootstrap {
         openSurface(.maps)
     }
 
+    func openHealth(with session: HealthRouteSession? = nil) {
+        if let session {
+            activeHealthSession = session
+        }
+        openSurface(.health)
+    }
+
     func closeSurface() {
         currentSection = .chat
         presentedSurface = nil
+        activeMapsSession = nil
+        activeHealthSession = nil
     }
 
     static var preview: AppBootstrap {

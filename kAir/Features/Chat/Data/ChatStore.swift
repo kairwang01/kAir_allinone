@@ -27,12 +27,17 @@ final class ChatStore {
 
     var session = ChatSession(title: "kAir", messages: [])
     var draft = ""
+    var isTemplateChat = false {
+        didSet {
+            handleTemplateChatChange()
+        }
+    }
     var selectedModeID = "ask"
-    var contextSummary = "One thread across Health, AI, Maps, and Store"
+    var contextSummary = "One thread across AI, Maps, Store, and optional Health"
     var suggestedPrompts: [String] = [
-        "Connect Apple Health",
         "我想去超市",
         "Which model is active?",
+        "Find a nearby pharmacy",
         "What can kAir do for me?"
     ]
 
@@ -40,10 +45,18 @@ final class ChatStore {
     private var supportsHealthData = true
     private var pendingMapsIntent: PendingMapsIntent?
     private var resolvedMapsSession: MapsRouteSession?
+    private var resolvedHealthSession: HealthRouteSession?
+    private let persistence = ChatSessionPersistence()
+
+    init() {
+        if let restoredSession = persistence.load() {
+            session = restoredSession
+        }
+    }
 
     func bootstrap(with dashboard: HealthDashboard) {
         supportsHealthData = true
-        contextSummary = "\(dashboard.hero.band) · Apple Health \(dashboard.generatedAt.formatted(.dateTime.hour().minute())) · local-first"
+        contextSummary = "AI, Maps, and Store are live. Apple Health is available on-device only when you ask for it."
         suggestedPrompts = Self.suggestedPrompts(for: dashboard)
 
         guard lastRefreshDate != dashboard.generatedAt else { return }
@@ -53,18 +66,11 @@ final class ChatStore {
                 .assistant(
                     text: Self.welcomeMessage(for: dashboard),
                     timestamp: dashboard.generatedAt,
-                    tags: ["All-in-one", dashboard.hero.band],
-                    toolResults: [Self.healthSnapshotResult(for: dashboard)]
+                    tags: ["All-in-one", "Local-first"],
+                    toolResults: [Self.runtimeShellResult(healthReady: true)]
                 ),
             ]
-        } else {
-            session.messages.append(
-                .system(
-                    text: "Apple Health refreshed. The leading focus is \(Self.leadingInsight(in: dashboard)?.title.lowercased() ?? "recent health trends").",
-                    timestamp: dashboard.generatedAt,
-                    tags: ["Updated"]
-                )
-            )
+            persistIfNeeded()
         }
 
         lastRefreshDate = dashboard.generatedAt
@@ -73,7 +79,7 @@ final class ChatStore {
     func bootstrapWithoutDashboard(supportsHealthData: Bool) {
         self.supportsHealthData = supportsHealthData
         contextSummary = supportsHealthData
-            ? "Chat-first shell · attach Apple Health when you want grounded health answers"
+            ? "Chat-first shell · AI, Maps, and Store are ready; Health stays on-demand"
             : "HealthKit unavailable · AI, Maps, and Store remain available"
         suggestedPrompts = Self.fallbackSuggestedPrompts(supportsHealthData: supportsHealthData)
 
@@ -83,33 +89,50 @@ final class ChatStore {
             .assistant(
                 text: Self.welcomeMessageWithoutDashboard(supportsHealthData: supportsHealthData),
                 tags: ["Chat-first", "Local-first"],
-                toolResults: [Self.healthAccessResult(supportsHealthData: supportsHealthData)]
+                toolResults: [Self.runtimeShellResult(healthReady: false, supportsHealthData: supportsHealthData)]
             ),
         ]
+        persistIfNeeded()
     }
 
     func selectMode(_ mode: ComposerMode) {
         selectedModeID = mode.id
     }
 
-    func sendDraft(using dashboard: HealthDashboard?) {
+    func sendDraft(
+        using dashboard: HealthDashboard?,
+        target: ChatNavigationTarget? = nil
+    ) {
         let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         draft = ""
-        submit(prompt: trimmed, using: dashboard)
+        submit(prompt: trimmed, using: dashboard, target: target)
     }
 
-    func submitPrompt(_ prompt: String, using dashboard: HealthDashboard?) {
-        submit(prompt: prompt, using: dashboard)
+    func submitPrompt(
+        _ prompt: String,
+        using dashboard: HealthDashboard?,
+        target: ChatNavigationTarget? = nil
+    ) {
+        submit(prompt: prompt, using: dashboard, target: target)
     }
 
-    func recordHandoff(to section: AppSection) {
+    func recordHandoff(to target: ChatNavigationTarget) {
+        let text: String
+        switch target {
+        case .section(let section):
+            text = "Opened \(section.title) as a focused surface. You are still in this same conversation and can return to chat anytime."
+        case .userProfile:
+            text = "Opened User as a profile sheet. You are still in this same conversation and can return to chat anytime."
+        }
+
         session.messages.append(
             .system(
-                text: "Opened \(section.title) as a focused surface while keeping this thread intact.",
-                tags: ["\(section.title) handoff"]
+                text: text,
+                tags: ["\(target.title) handoff"]
             )
         )
+        persistIfNeeded()
     }
 
     func attachReference(_ title: String, detail: String) {
@@ -119,6 +142,7 @@ final class ChatStore {
                 tags: ["Reference"]
             )
         )
+        persistIfNeeded()
     }
 
     func consumeResolvedMapsSession() -> MapsRouteSession? {
@@ -127,19 +151,41 @@ final class ChatStore {
         return session
     }
 
-    func route(for prompt: String) -> AppSection? {
+    func consumeResolvedHealthSession() -> HealthRouteSession? {
+        let session = resolvedHealthSession
+        resolvedHealthSession = nil
+        return session
+    }
+
+    func route(for prompt: String) -> ChatNavigationTarget? {
+        resolvedHealthSession = nil
+
         if pendingMapsIntent != nil, travelMode(from: prompt) != nil {
-            return .maps
+            return .section(.maps)
         }
 
         if explicitMapsIntent(from: prompt) != nil {
             return nil
         }
 
-        let normalized = prompt.lowercased()
+        let trimmed = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalized = trimmed.lowercased()
+
+        if isUserCommand(normalized, prompt: trimmed) {
+            return .userProfile
+        }
+
+        if let healthSession = exactHealthCommand(normalized: normalized, prompt: trimmed) {
+            resolvedHealthSession = healthSession
+            return .section(.health)
+        }
+
+        if isMapsCommand(normalized, prompt: trimmed) {
+            return .section(.maps)
+        }
 
         if Self.isGenericMapsPrompt(normalized, prompt: prompt) {
-            return .maps
+            return .section(.maps)
         }
 
         if normalized.contains("buy") ||
@@ -149,27 +195,26 @@ final class ChatStore {
             normalized.contains("device") ||
             normalized.contains("bundle")
         {
-            return .store
+            return .section(.store)
         }
 
         if normalized.contains("model") || normalized.contains("ai") {
-            return .ai
+            return .section(.ai)
         }
 
-        if normalized.contains("sleep") ||
-            normalized.contains("recovery") ||
-            normalized.contains("health") ||
-            normalized.contains("heart") ||
-            normalized.contains("hrv") ||
-            normalized.contains("ecg")
-        {
-            return .health
+        if let healthSession = explicitHealthIntent(from: prompt) {
+            resolvedHealthSession = healthSession
+            return .section(.health)
         }
 
         return nil
     }
 
-    private func submit(prompt: String, using dashboard: HealthDashboard?) {
+    private func submit(
+        prompt: String,
+        using dashboard: HealthDashboard?,
+        target: ChatNavigationTarget?
+    ) {
         session.messages.append(
             .user(
                 text: prompt,
@@ -179,6 +224,31 @@ final class ChatStore {
 
         if let mapsMessage = handleMapsFlow(prompt: prompt) {
             session.messages.append(mapsMessage)
+            persistIfNeeded()
+            return
+        }
+
+        if case .section(.health) = target, let healthSession = resolvedHealthSession {
+            session.messages.append(
+                .assistant(
+                    text: healthHandoffText(for: healthSession, dashboard: dashboard),
+                    tags: healthHandoffTags(for: healthSession),
+                    toolResults: [healthHandoffResult(for: healthSession, dashboard: dashboard)]
+                )
+            )
+            persistIfNeeded()
+            return
+        }
+
+        if case .userProfile = target {
+            session.messages.append(
+                .assistant(
+                    text: "Opening User settings while keeping this thread intact.",
+                    tags: ["User", "Focused surface"],
+                    toolResults: [userProfileResult()]
+                )
+            )
+            persistIfNeeded()
             return
         }
 
@@ -206,6 +276,7 @@ final class ChatStore {
                 )
             )
         )
+        persistIfNeeded()
     }
 
     private var selectedMode: ComposerMode {
@@ -214,19 +285,18 @@ final class ChatStore {
 
     private static func suggestedPrompts(for dashboard: HealthDashboard) -> [String] {
         [
-            "What changed most in my health today?",
-            "Which nearby place fits recovery best?",
-            "Which model should answer a health question?",
             "I want to go to Apple Store",
-            "What should I buy for sleep and recovery?"
+            "Which model should answer a health question?",
+            "Find a nearby pharmacy",
+            "What can kAir do for me?"
         ]
     }
 
     private static func fallbackSuggestedPrompts(supportsHealthData: Bool) -> [String] {
         if supportsHealthData {
             [
-                "Connect Apple Health",
                 "I want to go to Apple Store",
+                "Find a nearby pharmacy",
                 "Which model is active?",
                 "What can kAir do for me?"
             ]
@@ -241,12 +311,12 @@ final class ChatStore {
     }
 
     private static func welcomeMessage(for dashboard: HealthDashboard) -> String {
-        "You are in kAir. I can read your local Apple Health snapshot, explain it in plain language, route you into AI, prep nearby places, and stage store suggestions without breaking the thread. \(dashboard.hero.summary)"
+        "You are in kAir. Chat is the main surface. I can route into AI, Maps, and Store from this thread, and Apple Health stays available as an on-device tool only when you ask for it."
     }
 
     private static func welcomeMessageWithoutDashboard(supportsHealthData: Bool) -> String {
         if supportsHealthData {
-            return "You are in kAir. Chat is already live, and Health can be attached when you want grounded Apple Health answers. Until then I can still route AI, Maps, and Store from this same thread."
+            return "You are in kAir. Chat is already live, and AI, Maps, and Store can open from this thread immediately. Apple Health stays optional until you explicitly ask for health context."
         }
         return "You are in kAir. This device cannot attach Apple Health right now, but the chat, AI, Maps, and Store surfaces still live in one thread."
     }
@@ -275,9 +345,9 @@ final class ChatStore {
 
         if normalized.contains("model") || normalized.contains("ai") || modeID == "route" {
             if let prediction = dashboard.predictions.first {
-                return "The active AI posture is local-first. I would keep health explanations grounded in your Apple Health snapshot, use a compact planner to decide which surface to open next, and reserve specialized models for \(prediction.title.lowercased()) or other deep reads when needed."
+                return "The active AI posture is local-first. One orchestrator keeps the thread intact, decides which surface to open next, and only reaches for specialized health reasoning when you explicitly ask for health context. \(prediction.title) remains available as an on-device specialist."
             }
-            return "The AI layer is designed as a routing surface: one general model for conversation, one health explainer, and one planner for when to open Maps, Store, or a deeper Health view."
+            return "The AI layer is designed as a routing surface: one general model for conversation, one planner for opening Maps or Store, and an optional on-device health explainer only when the thread calls for it."
         }
 
         if normalized.contains("buy") || normalized.contains("store") || normalized.contains("supplement") || normalized.contains("device") || modeID == "shop" {
@@ -285,10 +355,10 @@ final class ChatStore {
         }
 
         if normalized.contains("privacy") || normalized.contains("local") {
-            return "kAir reads Apple Health through HealthKit on-device. The design keeps health, AI, maps, and store inside one shell, but the health context stays local-first and visible."
+            return "kAir stays local-first. The shell keeps chat, AI, Maps, and Store together, while Health remains an on-device capability that only comes into play when you explicitly ask for it."
         }
 
-        return "Right now your overall health status is \(dashboard.hero.band.lowercased()), and the clearest focus is \(leadingInsight(in: dashboard)?.title.lowercased() ?? "recent trends"). If you want, I can unpack the data itself, open a nearby route, explain the AI stack, or stage store recommendations."
+        return "kAir is set up as one conversation that can open deeper tools only when needed. I can stage nearby routes, explain the AI runtime, prepare store suggestions, or bring in Health only if you want that context."
     }
 
     private static func replyWithoutDashboard(
@@ -318,7 +388,7 @@ final class ChatStore {
         }
 
         return supportsHealthData
-            ? "kAir is already chat-first. You can explore AI, Maps, and Store now, and attach Apple Health later when you want grounded health guidance."
+            ? "kAir is already chat-first. AI, Maps, and Store are available now, and Health remains optional until you explicitly ask for it."
             : "kAir is already chat-first. AI, Maps, and Store are available now, but Health grounding is unavailable on this device."
     }
 
@@ -336,8 +406,10 @@ final class ChatStore {
             tags.append("Store")
         } else if normalized.contains("model") || normalized.contains("ai") {
             tags.append("AI")
-        } else {
+        } else if isHealthPrompt(normalized) {
             tags.append("Health")
+        } else {
+            tags.append("General")
         }
 
         if let prediction = dashboard.predictions.first {
@@ -365,8 +437,10 @@ final class ChatStore {
             tags.append("Store")
         } else if normalized.contains("model") || normalized.contains("ai") {
             tags.append("AI")
+        } else if isHealthPrompt(normalized) {
+            tags.append(supportsHealthData ? "Health" : "Health unavailable")
         } else {
-            tags.append(supportsHealthData ? "Connect Health" : "Health unavailable")
+            tags.append("General")
         }
 
         return tags
@@ -391,7 +465,11 @@ final class ChatStore {
             return [sleepResult(for: dashboard)]
         }
 
-        return [healthSnapshotResult(for: dashboard)]
+        if isHealthPrompt(normalized) {
+            return [healthSnapshotResult(for: dashboard)]
+        }
+
+        return [runtimeShellResult(healthReady: true)]
     }
 
     private static func toolResultsWithoutDashboard(
@@ -412,7 +490,32 @@ final class ChatStore {
             return [storeResult()]
         }
 
-        return [healthAccessResult(supportsHealthData: supportsHealthData)]
+        if isHealthPrompt(normalized) {
+            return [healthAccessResult(supportsHealthData: supportsHealthData)]
+        }
+
+        return [runtimeShellResult(healthReady: false, supportsHealthData: supportsHealthData)]
+    }
+
+    private static func runtimeShellResult(
+        healthReady: Bool,
+        supportsHealthData: Bool = true
+    ) -> ConversationToolResult {
+        ConversationToolResult(
+            id: healthReady ? "runtime_shell_ready" : "runtime_shell_base",
+            title: "kAir Runtime",
+            summary: "The app is chat-first. It opens AI, Maps, Store, and Health only when the current request needs them.",
+            state: .ready,
+            metrics: [
+                .init(key: "Chat", value: "Primary"),
+                .init(key: "Maps", value: "Ready"),
+                .init(key: "Store", value: "Ready"),
+                .init(key: "Health", value: healthReady ? "On-demand" : (supportsHealthData ? "Available later" : "Unavailable"))
+            ],
+            footer: healthReady
+                ? "Apple Health is available locally, but it is not foregrounded unless the user asks."
+                : "Health stays dormant until the thread explicitly asks for it."
+        )
     }
 
     private static func healthSnapshotResult(for dashboard: HealthDashboard) -> ConversationToolResult {
@@ -524,8 +627,165 @@ final class ChatStore {
         )
     }
 
+    private func userProfileResult() -> ConversationToolResult {
+        ConversationToolResult(
+            id: "user_profile_surface",
+            title: "User",
+            summary: "Prepared the user settings sheet from inside the current thread.",
+            state: .ready,
+            metrics: [
+                .init(key: "Surface", value: "Profile sheet"),
+                .init(key: "Thread", value: "Same conversation"),
+                .init(key: "Storage", value: isTemplateChat ? "Template only" : "Saved locally")
+            ],
+            footer: "Use this testing route to jump into the user interface from chat."
+        )
+    }
+
     private static func leadingInsight(in dashboard: HealthDashboard) -> InsightCard? {
         dashboard.insights.max(by: { $0.score < $1.score })
+    }
+
+    private static func isHealthPrompt(_ normalized: String) -> Bool {
+        normalized.contains("sleep") ||
+            normalized.contains("recovery") ||
+            normalized.contains("health") ||
+            normalized.contains("heart") ||
+            normalized.contains("hrv") ||
+            normalized.contains("ecg")
+    }
+
+    private func healthHandoffText(
+        for session: HealthRouteSession,
+        dashboard: HealthDashboard?
+    ) -> String {
+        let topic = session.topic.title(for: session.language)
+
+        switch session.language {
+        case .chinese:
+            if dashboard != nil {
+                return "这是一个\(topic)状态查询。我会把它交给 Health 页面，用本地 Apple Health 证据和趋势来完成；你仍然留在同一个会话里。"
+            }
+
+            if supportsHealthData {
+                return "这是一个\(topic)状态查询。我先把它交给 Health 页面；如果这台设备还没授权，页面会先说明为什么需要 Apple Health 权限。"
+            }
+
+            return "这是一个\(topic)状态查询。我会打开 Health 页面，但这台设备当前不能提供本地 Apple Health 证据。"
+        case .english:
+            if dashboard != nil {
+                return "This is a focused \(topic.lowercased()) check. I’m handing it to Health so the page can answer with local evidence and trends while keeping this thread intact."
+            }
+
+            if supportsHealthData {
+                return "This is a focused \(topic.lowercased()) check. I’m handing it to Health now, and the page will explain Apple Health access first if this device has not been authorized yet."
+            }
+
+            return "This is a focused \(topic.lowercased()) check. I can open Health, but this device cannot provide local Apple Health evidence right now."
+        }
+    }
+
+    private func healthHandoffResult(
+        for session: HealthRouteSession,
+        dashboard: HealthDashboard?
+    ) -> ConversationToolResult {
+        switch session.language {
+        case .chinese:
+            if dashboard != nil {
+                return ConversationToolResult(
+                    id: "health_handoff_ready",
+                    title: "Health 已接管",
+                    summary: "聊天已把这次查询切到 Health 页面，由本地数据完成结论、证据和限制说明。",
+                    state: .ready,
+                    metrics: [
+                        .init(key: "主题", value: session.topic.title(for: .chinese)),
+                        .init(key: "数据", value: "本地 Apple Health"),
+                        .init(key: "线程", value: "保持同一会话")
+                    ],
+                    footer: "聊天层只保留摘要与 handoff 记录，不暴露原始 Health 数据。"
+                )
+            }
+
+            if supportsHealthData {
+                return ConversationToolResult(
+                    id: "health_handoff_auth",
+                    title: "Health 等待授权",
+                    summary: "Health 页面会先解释权限用途，再继续本地分析。",
+                    state: .working,
+                    metrics: [
+                        .init(key: "主题", value: session.topic.title(for: .chinese)),
+                        .init(key: "下一步", value: "授权 Apple Health"),
+                        .init(key: "线程", value: "保持同一会话")
+                    ],
+                    footer: "权限是 just-in-time 触发，不会在聊天首页强行索取。"
+                )
+            }
+
+            return ConversationToolResult(
+                id: "health_handoff_unavailable",
+                title: "Health 不可用",
+                summary: "这台设备当前不能提供本地 Apple Health 证据。",
+                state: .warning,
+                metrics: [
+                    .init(key: "主题", value: session.topic.title(for: .chinese)),
+                    .init(key: "Health", value: "不可用"),
+                    .init(key: "线程", value: "保持同一会话")
+                ],
+                footer: "聊天仍可继续，但这里不能给出本地健康结论。"
+            )
+        case .english:
+            if dashboard != nil {
+                return ConversationToolResult(
+                    id: "health_handoff_ready",
+                    title: "Health Focused Surface",
+                    summary: "The chat thread handed this request to Health, where the conclusion, evidence, and limitations stay grounded locally.",
+                    state: .ready,
+                    metrics: [
+                        .init(key: "Topic", value: session.topic.title(for: .english)),
+                        .init(key: "Data", value: "Local Apple Health"),
+                        .init(key: "Thread", value: "Same conversation")
+                    ],
+                    footer: "Chat receives only summarized output and the handoff record, not raw Health data."
+                )
+            }
+
+            if supportsHealthData {
+                return ConversationToolResult(
+                    id: "health_handoff_auth",
+                    title: "Health Authorization",
+                    summary: "Health will explain the permission step first, then continue the local analysis flow.",
+                    state: .working,
+                    metrics: [
+                        .init(key: "Topic", value: session.topic.title(for: .english)),
+                        .init(key: "Next", value: "Authorize Apple Health"),
+                        .init(key: "Thread", value: "Same conversation")
+                    ],
+                    footer: "The permission request is just-in-time. It does not interrupt chat unless the user asks for Health."
+                )
+            }
+
+            return ConversationToolResult(
+                id: "health_handoff_unavailable",
+                title: "Health Unavailable",
+                summary: "This device cannot provide local Apple Health evidence for the requested health check.",
+                state: .warning,
+                metrics: [
+                    .init(key: "Topic", value: session.topic.title(for: .english)),
+                    .init(key: "Health", value: "Unavailable"),
+                    .init(key: "Thread", value: "Same conversation")
+                ],
+                footer: "The conversation can continue, but this request cannot be grounded in local Health data here."
+            )
+        }
+    }
+
+    private func healthHandoffTags(for session: HealthRouteSession) -> [String] {
+        switch session.language {
+        case .chinese:
+            return ["Health", session.topic.title(for: .chinese), "Focused surface"]
+        case .english:
+            return ["Health", session.topic.title(for: .english), "Focused surface"]
+        }
     }
 
     private func handleMapsFlow(prompt: String) -> ConversationMessage? {
@@ -765,6 +1025,283 @@ final class ChatStore {
         }
 
         return nil
+    }
+
+    private func explicitHealthIntent(from prompt: String) -> HealthRouteSession? {
+        let trimmed = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else { return nil }
+
+        let normalized = trimmed.lowercased()
+        guard shouldHandoffToHealth(normalized: normalized, prompt: trimmed) else {
+            return nil
+        }
+
+        let language: HealthConversationLanguage = Self.containsChinese(in: trimmed) ? .chinese : .english
+        let topic = healthTopic(normalized: normalized, prompt: trimmed)
+
+        return HealthRouteSession(
+            topic: topic,
+            language: language,
+            originalPrompt: prompt
+        )
+    }
+
+    private func shouldHandoffToHealth(normalized: String, prompt: String) -> Bool {
+        guard containsHealthTopic(normalized: normalized, prompt: prompt) else {
+            return false
+        }
+
+        if isDirectHealthOpenRequest(normalized: normalized, prompt: prompt) {
+            return true
+        }
+
+        if containsNonHealthProductContext(normalized: normalized, prompt: prompt) {
+            return false
+        }
+
+        return isHealthStatusQuery(normalized: normalized, prompt: prompt)
+    }
+
+    private func healthTopic(normalized: String, prompt: String) -> HealthFocusedTopic {
+        if normalized.contains("ecg") || normalized.contains("electrocardiogram") || prompt.contains("心电") {
+            return .ecg
+        }
+
+        if normalized.contains("sleep") || normalized.contains("slept") || normalized.contains("bed") || prompt.contains("睡") {
+            return .sleep
+        }
+
+        if normalized.contains("recovery") || normalized.contains("recover") || normalized.contains("readiness") || prompt.contains("恢复") || prompt.contains("疲劳") {
+            return .recovery
+        }
+
+        if normalized.contains("step") ||
+            normalized.contains("walking") ||
+            normalized.contains("walked") ||
+            normalized.contains("workout") ||
+            normalized.contains("activity") ||
+            prompt.contains("步数") ||
+            prompt.contains("运动") ||
+            prompt.contains("锻炼")
+        {
+            return .activity
+        }
+
+        if normalized.contains("heart rate") ||
+            normalized.contains("resting heart") ||
+            normalized.contains("pulse") ||
+            normalized.contains("bpm") ||
+            normalized.contains("hrv") ||
+            prompt.contains("心率") ||
+            prompt.contains("心跳")
+        {
+            return .heart
+        }
+
+        return .overall
+    }
+
+    private func containsHealthTopic(normalized: String, prompt: String) -> Bool {
+        let englishTokens = [
+            "sleep",
+            "slept",
+            "recovery",
+            "recover",
+            "health",
+            "wellness",
+            "heart",
+            "hrv",
+            "bpm",
+            "pulse",
+            "step",
+            "steps",
+            "workout",
+            "activity",
+            "ecg",
+            "electrocardiogram",
+        ]
+        let chineseTokens = [
+            "健康",
+            "睡",
+            "恢复",
+            "心率",
+            "心跳",
+            "步数",
+            "运动",
+            "锻炼",
+            "心电",
+        ]
+
+        if englishTokens.contains(where: normalized.contains) {
+            return true
+        }
+
+        return chineseTokens.contains(where: prompt.contains)
+    }
+
+    private func containsNonHealthProductContext(normalized: String, prompt: String) -> Bool {
+        let englishTokens = [
+            "healthkit",
+            "permission",
+            "privacy",
+            "policy",
+            "feature",
+            "tool",
+            "route",
+            "page",
+            "surface",
+            "design",
+            "sdk",
+            "api",
+            "integration",
+            "import",
+            "export",
+            "chat",
+        ]
+        let chineseTokens = [
+            "权限",
+            "隐私",
+            "设计",
+            "页面",
+            "入口",
+            "工具",
+            "路由",
+            "功能",
+            "接口",
+            "导入",
+            "导出",
+            "聊天",
+        ]
+
+        if englishTokens.contains(where: normalized.contains) {
+            return true
+        }
+
+        return chineseTokens.contains(where: prompt.contains)
+    }
+
+    private func isDirectHealthOpenRequest(normalized: String, prompt: String) -> Bool {
+        let englishPhrases = [
+            "open health",
+            "open health page",
+            "show health",
+            "show me health",
+            "take me to health",
+            "go to health",
+        ]
+        let chinesePhrases = [
+            "打开健康",
+            "打开健康页面",
+            "进入健康",
+            "去健康页",
+            "看健康页",
+        ]
+
+        if englishPhrases.contains(where: normalized.contains) {
+            return true
+        }
+
+        return chinesePhrases.contains(where: prompt.contains)
+    }
+
+    private func isHealthStatusQuery(normalized: String, prompt: String) -> Bool {
+        let englishPhrases = [
+            "how is",
+            "how's",
+            "how am",
+            "what is",
+            "what's",
+            "did i",
+            "am i",
+            "show me",
+            "check my",
+            "review my",
+            "analyze my",
+            "analyse my",
+            "tell me",
+            "today",
+            "tonight",
+            "last night",
+            "recent",
+            "lately",
+            "trend",
+            "status",
+            "overview",
+        ]
+        let chinesePhrases = [
+            "怎么样",
+            "如何",
+            "好吗",
+            "睡得",
+            "情况",
+            "状态",
+            "趋势",
+            "最近",
+            "昨晚",
+            "今天",
+            "看下",
+            "看看",
+            "查下",
+            "查一下",
+            "分析",
+            "评估",
+        ]
+
+        if normalized.contains("?") || prompt.contains("？") {
+            return true
+        }
+
+        if englishPhrases.contains(where: normalized.contains) {
+            return true
+        }
+
+        return chinesePhrases.contains(where: prompt.contains)
+    }
+
+    private func exactHealthCommand(
+        normalized: String,
+        prompt: String
+    ) -> HealthRouteSession? {
+        let englishCommands = ["health", "open health", "health page"]
+        let chineseCommands = ["健康", "打开健康", "健康页"]
+
+        guard englishCommands.contains(normalized) || chineseCommands.contains(prompt) else {
+            return nil
+        }
+
+        let language: HealthConversationLanguage = Self.containsChinese(in: prompt) ? .chinese : .english
+        return HealthRouteSession(
+            topic: .overall,
+            language: language,
+            originalPrompt: prompt
+        )
+    }
+
+    private func isMapsCommand(_ normalized: String, prompt: String) -> Bool {
+        let englishCommands = ["map", "maps", "open maps"]
+        let chineseCommands = ["地图", "打开地图", "maps"]
+        return englishCommands.contains(normalized) || chineseCommands.contains(prompt)
+    }
+
+    private func isUserCommand(_ normalized: String, prompt: String) -> Bool {
+        let englishCommands = ["user", "profile", "me", "open user"]
+        let chineseCommands = ["用户", "个人资料", "设置", "我的"]
+        return englishCommands.contains(normalized) || chineseCommands.contains(prompt)
+    }
+
+    private func handleTemplateChatChange() {
+        if isTemplateChat {
+            persistence.remove()
+        } else {
+            persistIfNeeded()
+        }
+    }
+
+    private func persistIfNeeded() {
+        guard isTemplateChat == false else {
+            return
+        }
+        persistence.save(session)
     }
 
     private func sanitizedDestination(from raw: String) -> String {

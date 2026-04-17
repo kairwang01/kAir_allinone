@@ -119,8 +119,14 @@ final class HealthDashboardStore {
             try await service.requestAuthorization()
             await refreshDashboard()
         } catch {
-            phase = .failed
-            errorMessage = Self.userFacingError(for: error)
+            if Self.isAuthorizationDenied(error) {
+                phase = .intro
+                errorMessage = nil
+                statusMessage = "Health access was not granted. You can authorize it later when you want local evidence and trends."
+            } else {
+                phase = .failed
+                errorMessage = Self.userFacingError(for: error)
+            }
         }
     }
 
@@ -141,8 +147,15 @@ final class HealthDashboardStore {
             phase = .loaded
             statusMessage = "Last refreshed \(dashboard.generatedAt.formatted(.dateTime.month(.abbreviated).day().hour().minute()))"
         } catch {
-            phase = .failed
-            errorMessage = Self.userFacingError(for: error)
+            if Self.isAuthorizationDenied(error) {
+                phase = .intro
+                dashboard = nil
+                errorMessage = nil
+                statusMessage = "Authorize Apple Health when you want kAir to ground this thread in local evidence."
+            } else {
+                phase = .failed
+                errorMessage = Self.userFacingError(for: error)
+            }
         }
     }
 
@@ -151,5 +164,15 @@ final class HealthDashboardStore {
             return message
         }
         return error.localizedDescription
+    }
+
+    private static func isAuthorizationDenied(_ error: Error) -> Bool {
+        if let healthError = error as? HKError {
+            return healthError.code == .errorAuthorizationDenied
+        }
+
+        let nsError = error as NSError
+        return nsError.domain == HKError.errorDomain &&
+            nsError.code == HKError.Code.errorAuthorizationDenied.rawValue
     }
 }

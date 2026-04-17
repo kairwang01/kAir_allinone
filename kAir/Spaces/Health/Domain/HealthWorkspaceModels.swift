@@ -15,6 +15,96 @@ typealias HealthWorkspaceSignal = SignalSeries
 typealias HealthWorkspaceModelWatchpoint = ConditionPrediction
 typealias HealthWorkspaceModelSummary = OnDeviceModelSummary
 
+enum HealthConversationLanguage: String, Hashable {
+    case chinese
+    case english
+}
+
+enum HealthFocusedTopic: String, Hashable {
+    case overall
+    case sleep
+    case heart
+    case recovery
+    case activity
+    case ecg
+
+    func title(for language: HealthConversationLanguage) -> String {
+        switch (self, language) {
+        case (.overall, .chinese):
+            "整体健康"
+        case (.sleep, .chinese):
+            "睡眠"
+        case (.heart, .chinese):
+            "心率"
+        case (.recovery, .chinese):
+            "恢复"
+        case (.activity, .chinese):
+            "步数与活动"
+        case (.ecg, .chinese):
+            "ECG"
+        case (.overall, .english):
+            "Overall Health"
+        case (.sleep, .english):
+            "Sleep"
+        case (.heart, .english):
+            "Heart Rate"
+        case (.recovery, .english):
+            "Recovery"
+        case (.activity, .english):
+            "Activity"
+        case (.ecg, .english):
+            "ECG"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .overall:
+            "heart.text.square"
+        case .sleep:
+            "bed.double.fill"
+        case .heart:
+            "waveform.path.ecg"
+        case .recovery:
+            "figure.cooldown"
+        case .activity:
+            "figure.walk"
+        case .ecg:
+            "waveform.ecg"
+        }
+    }
+
+    var preferredTab: DashboardTab {
+        switch self {
+        case .overall, .recovery:
+            .overview
+        case .sleep, .heart, .activity:
+            .signals
+        case .ecg:
+            .data
+        }
+    }
+}
+
+struct HealthRouteSession: Hashable {
+    let topic: HealthFocusedTopic
+    let language: HealthConversationLanguage
+    let originalPrompt: String
+    let generatedAt: Date
+
+    init(
+        topic: HealthFocusedTopic,
+        language: HealthConversationLanguage,
+        originalPrompt: String,
+        generatedAt: Date = .now
+    ) {
+        self.topic = topic
+        self.language = language
+        self.originalPrompt = originalPrompt
+        self.generatedAt = generatedAt
+    }
+}
+
 enum HealthWorkspacePrivacyBoundary: String {
     case localOnly
     case redactedForChat

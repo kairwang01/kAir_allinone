@@ -85,7 +85,7 @@ private struct PresentedSurfaceView: View {
                 Button {
                     bootstrap.closeSurface()
                 } label: {
-                    Label("Chat", systemImage: "chevron.left")
+                    Label("Back to chat", systemImage: "chevron.left")
                         .foregroundStyle(AppTheme.Palette.textPrimary)
                 }
             }

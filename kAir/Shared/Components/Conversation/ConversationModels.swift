@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum ConversationRole: String, Hashable {
+enum ConversationRole: String, Hashable, Codable {
     case assistant
     case user
     case system
@@ -36,20 +36,20 @@ struct ComposerAccessory: Identifiable, Hashable {
     let systemImage: String
 }
 
-enum ConversationToolResultState: String, Hashable {
+enum ConversationToolResultState: String, Hashable, Codable {
     case ready
     case working
     case warning
 }
 
-struct ConversationToolMetric: Identifiable, Hashable {
+struct ConversationToolMetric: Identifiable, Hashable, Codable {
     let key: String
     let value: String
 
     var id: String { key }
 }
 
-struct ConversationToolResult: Identifiable, Hashable {
+struct ConversationToolResult: Identifiable, Hashable, Codable {
     let id: String
     let title: String
     let summary: String
@@ -58,7 +58,7 @@ struct ConversationToolResult: Identifiable, Hashable {
     let footer: String?
 }
 
-struct ConversationMessage: Identifiable, Hashable {
+struct ConversationMessage: Identifiable, Hashable, Codable {
     let id: String
     let role: ConversationRole
     let author: String
