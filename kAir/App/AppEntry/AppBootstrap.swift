@@ -123,6 +123,16 @@ final class AppBootstrap {
         let t12b = ChatHomeMixedRecommendationBehaviorTests.runAll()
         print("[T12b Chat Home Mixed Recommendation Behavior Tests] passed=\(t12b.passedCount) failed=\(t12b.failedCount)")
         for result in t12b.results { print(result.line) }
+
+        // T13 — Continuation Runtime v1 contract tests. Locks the
+        // post-return runtime contract defined in
+        // Contracts/UX/continuation-runtime-v1.md. Pure-value contract
+        // validation — no ChatStore dependency, no flag gate. Runs at
+        // every startup alongside T10–T12b because a contract test
+        // belongs on the main trunk, not behind a rollout flag.
+        let t13 = ContinuationRuntimeContractTests.runAll()
+        print("[T13 Continuation Runtime Contract Tests] passed=\(t13.passedCount) failed=\(t13.failedCount)")
+        for result in t13.results { print(result.line) }
     }
 
     func showProfile() {
