@@ -1,0 +1,183 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:40.857Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+      {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "outcome" : "completed",
+        "section" : "chat"
+      }
+    ],
+    "foldedIntentTags" : [
+      "navigation",
+      "planning"
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "focus",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "planning",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+      "navigation",
+      "planning",
+      "search"
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "directions to St. Lawrence Market",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:40.712Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:40.712Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:40.712Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:40.712Z"
+      },
+      {
+        "stage" : "accept",
+        "subject" : "prompt",
+        "timestamp" : "2026-04-19T21:21:40.755Z"
+      },
+      {
+        "candidateId" : "route-target-3",
+        "objectType" : "route",
+        "stage" : "accept",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:40.755Z"
+      },
+      {
+        "candidateId" : "route-target-3",
+        "objectType" : "route",
+        "stage" : "completion",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:40.755Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+      "route-target-3"
+    ],
+    "threadDepth" : 3
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "search-distractor-route-3",
+      "answer-distractor-route-3"
+    ],
+    "directSlotCandidateId" : "route-target-3",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:40.857Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-3",
+      "search-distractor-route-3",
+      "answer-distractor-route-3"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633700856-11717664238684653126",
+    "suppressionReasons" : [
+      "history_conflict",
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-3",
+      "executionSurfaceType" : "maps",
+      "id" : "C697B99B-E4A2-49C9-821C-7D0A7FC05CC5",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633700856-11717664238684653126",
+      "sessionId" : "scenario-route-3",
+      "timestamp" : "2026-04-19T21:21:40.857Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-route-3",
+      "id" : "DFCB16D8-318B-4705-8AF9-EC4F5A7CF3A2",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633700856-11717664238684653126",
+      "sessionId" : "scenario-route-3",
+      "timestamp" : "2026-04-19T21:21:40.857Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-3",
+      "id" : "C7247A3D-31A5-4A38-9F1A-E696496D1E07",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633700856-11717664238684653126",
+      "sessionId" : "scenario-route-3",
+      "timestamp" : "2026-04-19T21:21:40.857Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-3",
+      "executionSurfaceType" : "maps",
+      "id" : "FA116F0C-39CA-40A8-8041-FAC63E7214A5",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633700856-11717664238684653126",
+      "sessionId" : "scenario-route-3",
+      "timestamp" : "2026-04-19T21:21:40.857Z",
+      "type" : "abandon"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:40.857Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-3"
+}

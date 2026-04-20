@@ -7,20 +7,6 @@
 
 import Foundation
 
-enum ChatNavigationTarget: Hashable {
-    case section(AppSection)
-    case userProfile
-
-    var title: String {
-        switch self {
-        case .section(let section):
-            return section.title
-        case .userProfile:
-            return "User"
-        }
-    }
-}
-
 struct ChatSession: Identifiable, Codable {
     var id: UUID
     var title: String

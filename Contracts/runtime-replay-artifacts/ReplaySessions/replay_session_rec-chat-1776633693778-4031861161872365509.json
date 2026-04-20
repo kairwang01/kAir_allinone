@@ -1,0 +1,204 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:33.779Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "text Sarah that I'll be 10 minutes late",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:33.737Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:33.737Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:33.737Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:33.737Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-message-0",
+      "answer-distractor-message-0"
+    ],
+    "directSlotCandidateId" : "message-target-0",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:33.779Z",
+    "objectType" : "contact",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "message-target-0",
+      "music-distractor-message-0",
+      "answer-distractor-message-0"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633693778-4031861161872365509",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "message-target-0",
+      "id" : "1F784AC8-08E6-4B21-8085-8AF9F4EEF8D3",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633693778-4031861161872365509",
+      "sessionId" : "scenario-message-0",
+      "timestamp" : "2026-04-19T21:21:33.779Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-message-0",
+      "executionSurfaceType" : "music",
+      "id" : "0F2A46C2-6915-43A2-971D-F4759C768661",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633693778-4031861161872365509",
+      "sessionId" : "scenario-message-0",
+      "timestamp" : "2026-04-19T21:21:33.779Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-message-0",
+      "id" : "3E86305D-5164-41DA-9D34-0F324D595930",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633693778-4031861161872365509",
+      "sessionId" : "scenario-message-0",
+      "timestamp" : "2026-04-19T21:21:33.779Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "message-target-0",
+      "id" : "583252AC-45B5-42AB-A09B-09D31122A63B",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633693778-4031861161872365509",
+      "sessionId" : "scenario-message-0",
+      "timestamp" : "2026-04-19T21:21:33.780Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "message-target-0",
+      "executionSurfaceType" : "chat",
+      "id" : "4A1860C8-9C68-4F72-92DF-C6D0C9A54D62",
+      "objectType" : "contact",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633693778-4031861161872365509",
+      "sessionId" : "scenario-message-0",
+      "timestamp" : "2026-04-19T21:21:33.780Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "message-target-0",
+      "executionSurfaceType" : "chat",
+      "id" : "96D70F26-4EAC-4912-BD1F-4CCD754BC736",
+      "objectType" : "contact",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633693778-4031861161872365509",
+      "sessionId" : "scenario-message-0",
+      "timestamp" : "2026-04-19T21:21:33.780Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "message-target-0",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "planning",
+          "social"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "message-target-0"
+        ],
+        "summary" : "text Sarah that I'll be 10 minutes late"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:33.780Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-message-0"
+}

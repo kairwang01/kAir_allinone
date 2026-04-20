@@ -1,0 +1,153 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:36.155Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "planning",
+      "shopping",
+      "social"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "message Nina that the reservation is confirmed",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:36.115Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:36.115Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:36.115Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:36.115Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-message-5",
+      "answer-distractor-message-5"
+    ],
+    "directSlotCandidateId" : "message-target-5",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:36.155Z",
+    "objectType" : "contact",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "message-target-5",
+      "music-distractor-message-5",
+      "answer-distractor-message-5"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633696154-6842036257647454983",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "message-target-5",
+      "id" : "0C45E293-33D9-46EA-8634-FB20AC699B5D",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633696154-6842036257647454983",
+      "sessionId" : "scenario-message-5",
+      "timestamp" : "2026-04-19T21:21:36.155Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-message-5",
+      "executionSurfaceType" : "music",
+      "id" : "4A21FD12-9742-4753-8527-C3D441C590DA",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633696154-6842036257647454983",
+      "sessionId" : "scenario-message-5",
+      "timestamp" : "2026-04-19T21:21:36.155Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-message-5",
+      "id" : "CE1825E3-7737-41C5-838E-F58446418DB6",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633696154-6842036257647454983",
+      "sessionId" : "scenario-message-5",
+      "timestamp" : "2026-04-19T21:21:36.155Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "message-target-5",
+      "feedbackOption" : "not_interested",
+      "id" : "7215D972-E086-494E-8CBF-967483F864CA",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633696154-6842036257647454983",
+      "sessionId" : "scenario-message-5",
+      "timestamp" : "2026-04-19T21:21:36.155Z",
+      "type" : "dismiss"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:36.155Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-message-5"
+}

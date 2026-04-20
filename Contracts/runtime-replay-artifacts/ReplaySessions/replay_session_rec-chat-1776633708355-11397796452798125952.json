@@ -1,0 +1,205 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:48.356Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "search",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "search for how to renew a passport in Canada",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:48.316Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:48.316Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:48.316Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:48.316Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-search-8",
+      "answer-distractor-search-8"
+    ],
+    "directSlotCandidateId" : "search-target-8",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:48.356Z",
+    "objectType" : "searchResult",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "search-target-8",
+      "music-distractor-search-8",
+      "answer-distractor-search-8"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633708355-11397796452798125952",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "search-target-8",
+      "id" : "E58E0839-1DA5-4DC7-B893-7C904DA978F9",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633708355-11397796452798125952",
+      "sessionId" : "scenario-search-8",
+      "timestamp" : "2026-04-19T21:21:48.356Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-search-8",
+      "executionSurfaceType" : "music",
+      "id" : "63CDCD53-7FE5-4CE1-9BD4-CB4766F4C82C",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633708355-11397796452798125952",
+      "sessionId" : "scenario-search-8",
+      "timestamp" : "2026-04-19T21:21:48.356Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-search-8",
+      "id" : "94D6C10E-0440-4E6A-ADDF-721199E56332",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633708355-11397796452798125952",
+      "sessionId" : "scenario-search-8",
+      "timestamp" : "2026-04-19T21:21:48.356Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-target-8",
+      "id" : "F6C6B0E8-3BF0-431A-9F3B-145F9BB47F1F",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633708355-11397796452798125952",
+      "sessionId" : "scenario-search-8",
+      "timestamp" : "2026-04-19T21:21:48.357Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "search-target-8",
+      "executionSurfaceType" : "chat",
+      "id" : "6C7243A7-9EFC-4A65-97EB-5427EBDC6CD5",
+      "objectType" : "searchResult",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633708355-11397796452798125952",
+      "sessionId" : "scenario-search-8",
+      "timestamp" : "2026-04-19T21:21:48.357Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "search-target-8",
+      "executionSurfaceType" : "chat",
+      "id" : "38D82F91-57E8-4094-B448-8600AE8D7E40",
+      "objectType" : "searchResult",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633708355-11397796452798125952",
+      "sessionId" : "scenario-search-8",
+      "timestamp" : "2026-04-19T21:21:48.357Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "search-target-8",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "learning",
+          "search"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "search-target-8"
+        ],
+        "summary" : "search for how to renew a passport in Canada"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:48.357Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-search-8"
+}

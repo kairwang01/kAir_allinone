@@ -1,0 +1,19 @@
+{
+  "artifactDirectory" : "\/Users\/kair\/Library\/Developer\/CoreSimulator\/Devices\/27DD0203-B1F5-4429-9E0C-A82D2905C336\/data\/Containers\/Data\/Application\/67B4E678-B87E-48BA-9DE5-BFAF7D998137\/Library\/Application Support\/kAir\/ReplayArtifacts",
+  "expectedMinimumSessionCount" : 120,
+  "exportDirectory" : "\/Users\/kair\/Library\/Developer\/CoreSimulator\/Devices\/27DD0203-B1F5-4429-9E0C-A82D2905C336\/data\/Containers\/Data\/Application\/67B4E678-B87E-48BA-9DE5-BFAF7D998137\/Library\/Application Support\/kAir\/ReplaySessions",
+  "generatedAt" : "2026-04-19T21:22:03.165Z",
+  "persistedSessionCount" : 302,
+  "terminalOutcomeDistribution" : {
+    "abandon" : 234,
+    "completion" : 29,
+    "dismiss" : 39
+  },
+  "toolScenarioCount" : {
+    "answer" : 26,
+    "message" : 26,
+    "music" : 26,
+    "route" : 26,
+    "search" : 26
+  }
+}

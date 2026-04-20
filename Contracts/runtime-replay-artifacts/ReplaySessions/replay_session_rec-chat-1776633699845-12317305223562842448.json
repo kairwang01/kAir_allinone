@@ -1,0 +1,153 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:39.846Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "navigate to Pearson Airport",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:39.807Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:39.807Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:39.807Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:39.807Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-route-1",
+      "answer-distractor-route-1"
+    ],
+    "directSlotCandidateId" : "route-target-1",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:39.846Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-1",
+      "music-distractor-route-1",
+      "answer-distractor-route-1"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633699845-12317305223562842448",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-1",
+      "executionSurfaceType" : "maps",
+      "id" : "DF0F3927-A558-4E64-8274-AAF2E4ACC819",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699845-12317305223562842448",
+      "sessionId" : "scenario-route-1",
+      "timestamp" : "2026-04-19T21:21:39.846Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-route-1",
+      "executionSurfaceType" : "music",
+      "id" : "88337E96-299C-42A7-9FC8-9A7517B099FF",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699845-12317305223562842448",
+      "sessionId" : "scenario-route-1",
+      "timestamp" : "2026-04-19T21:21:39.846Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-1",
+      "id" : "1B3BCA54-17A5-49C9-AA98-9C2FA57A9B8E",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699845-12317305223562842448",
+      "sessionId" : "scenario-route-1",
+      "timestamp" : "2026-04-19T21:21:39.846Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-1",
+      "executionSurfaceType" : "maps",
+      "feedbackOption" : "not_interested",
+      "id" : "2E6B2464-F118-4D11-AE37-39E69968B6F4",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699845-12317305223562842448",
+      "sessionId" : "scenario-route-1",
+      "timestamp" : "2026-04-19T21:21:39.847Z",
+      "type" : "dismiss"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:39.847Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-1"
+}

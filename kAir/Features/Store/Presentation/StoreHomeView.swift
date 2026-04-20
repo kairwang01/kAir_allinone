@@ -78,7 +78,7 @@ struct StoreHomeView: View {
                                 .foregroundStyle(AppTheme.Palette.textSecondary)
 
                             Button {
-                                bootstrap.closeSurface()
+                                bootstrap.returnToChat()
                             } label: {
                                 KAirActionCapsule(
                                     title: "Back to chat",

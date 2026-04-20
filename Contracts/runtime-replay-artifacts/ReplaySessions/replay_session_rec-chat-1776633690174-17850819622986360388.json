@@ -1,0 +1,218 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:30.174Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "focus",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "relaxation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "play ambient music for deep work",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:30.133Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:30.133Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:30.133Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:30.133Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "answer-distractor-music-4",
+      "search-distractor-music-4"
+    ],
+    "directSlotCandidateId" : "music-target-4",
+    "executionSurfaceType" : "music",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:30.174Z",
+    "objectType" : "song",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "music-target-4",
+      "answer-distractor-music-4",
+      "search-distractor-music-4"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633690174-17850819622986360388",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "music-target-4",
+      "executionSurfaceType" : "music",
+      "id" : "E01D6543-66BB-4DC4-8F3D-3885E31B3B41",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633690174-17850819622986360388",
+      "sessionId" : "scenario-music-4",
+      "timestamp" : "2026-04-19T21:21:30.174Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-music-4",
+      "id" : "4EED2320-3D37-4857-A064-61D0F1CE58FD",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633690174-17850819622986360388",
+      "sessionId" : "scenario-music-4",
+      "timestamp" : "2026-04-19T21:21:30.174Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-music-4",
+      "id" : "DF6583FA-E08B-46A7-AD2E-44A112E98303",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633690174-17850819622986360388",
+      "sessionId" : "scenario-music-4",
+      "timestamp" : "2026-04-19T21:21:30.174Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-target-4",
+      "executionSurfaceType" : "music",
+      "id" : "E79BE2C3-891D-4563-92C1-5CB65A1CE22F",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633690174-17850819622986360388",
+      "sessionId" : "scenario-music-4",
+      "timestamp" : "2026-04-19T21:21:30.175Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "music-target-4",
+      "executionSurfaceType" : "music",
+      "id" : "182BF733-EB84-4A02-9660-FD6E18CF80E8",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633690174-17850819622986360388",
+      "sessionId" : "scenario-music-4",
+      "timestamp" : "2026-04-19T21:21:30.175Z",
+      "type" : "click"
+    },
+    {
+      "candidateId" : "music-target-4",
+      "executionSurfaceType" : "music",
+      "id" : "2A53BCA2-40D9-4D5D-B846-FC250E501AE8",
+      "objectType" : "song",
+      "outcome" : {
+        "completionScore" : 0.68,
+        "downstreamValue" : 0.7,
+        "dwellSeconds" : 2.300739288330078e-05,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633690174-17850819622986360388",
+      "sessionId" : "scenario-music-4",
+      "timestamp" : "2026-04-19T21:21:30.175Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "music-target-4",
+      "executionSurfaceType" : "music",
+      "id" : "65A6BD86-A798-4C3F-A861-DD023CBEE269",
+      "objectType" : "song",
+      "outcome" : {
+        "completionScore" : 0.68,
+        "downstreamValue" : 0.7,
+        "dwellSeconds" : 2.300739288330078e-05,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633690174-17850819622986360388",
+      "sessionId" : "scenario-music-4",
+      "timestamp" : "2026-04-19T21:21:30.175Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 2.300739288330078e-05,
+      "executedCandidateId" : "music-target-4",
+      "executionSurfaceType" : "music",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "entertainment",
+          "focus"
+        ],
+        "completionScore" : 0.68,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.7,
+        "resolvedObjectIds" : [
+          "music-target-4"
+        ],
+        "summary" : "play ambient music for deep work"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:30.175Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-music-4"
+}

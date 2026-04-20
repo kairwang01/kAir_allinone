@@ -1,0 +1,153 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:43.298Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "get me to Kensington Market",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:43.257Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:43.257Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:43.257Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:43.257Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-route-9",
+      "answer-distractor-route-9"
+    ],
+    "directSlotCandidateId" : "route-target-9",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:43.298Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-9",
+      "music-distractor-route-9",
+      "answer-distractor-route-9"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633703297-15275691843841178910",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-9",
+      "executionSurfaceType" : "maps",
+      "id" : "0177AFF2-9F86-489A-9FB0-18D5B5F198F7",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633703297-15275691843841178910",
+      "sessionId" : "scenario-route-9",
+      "timestamp" : "2026-04-19T21:21:43.298Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-route-9",
+      "executionSurfaceType" : "music",
+      "id" : "D6978D94-FD45-4814-A20F-7AE629F33330",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633703297-15275691843841178910",
+      "sessionId" : "scenario-route-9",
+      "timestamp" : "2026-04-19T21:21:43.298Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-9",
+      "id" : "07B350BF-B909-47CF-81B4-F7F37670522A",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633703297-15275691843841178910",
+      "sessionId" : "scenario-route-9",
+      "timestamp" : "2026-04-19T21:21:43.298Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-9",
+      "executionSurfaceType" : "maps",
+      "feedbackOption" : "not_interested",
+      "id" : "98687C73-6616-4F89-B13F-E6B128E8A34B",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633703297-15275691843841178910",
+      "sessionId" : "scenario-route-9",
+      "timestamp" : "2026-04-19T21:21:43.299Z",
+      "type" : "dismiss"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:43.299Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-9"
+}

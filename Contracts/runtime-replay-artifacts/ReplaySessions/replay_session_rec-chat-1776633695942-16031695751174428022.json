@@ -1,0 +1,156 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:35.943Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+      "planning",
+      "search"
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "send that note",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:35.803Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:35.803Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:35.803Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:35.803Z"
+      },
+      {
+        "stage" : "accept",
+        "subject" : "prompt",
+        "timestamp" : "2026-04-19T21:21:35.845Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 3
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "search-distractor-message-104",
+      "answer-distractor-message-104"
+    ],
+    "directSlotCandidateId" : "message-target-104",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:35.943Z",
+    "objectType" : "contact",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "message-target-104",
+      "search-distractor-message-104",
+      "answer-distractor-message-104"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633695942-16031695751174428022",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "message-target-104",
+      "id" : "32C919D6-3A3F-415C-93AD-98A0EB4AC795",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695942-16031695751174428022",
+      "sessionId" : "scenario-message-104",
+      "timestamp" : "2026-04-19T21:21:35.943Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-message-104",
+      "id" : "4E640563-A1AD-4D9F-8222-1EBD336BE2D4",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695942-16031695751174428022",
+      "sessionId" : "scenario-message-104",
+      "timestamp" : "2026-04-19T21:21:35.943Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-message-104",
+      "id" : "C5BD64C9-7455-4323-9FCA-8B7CC5F80B89",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695942-16031695751174428022",
+      "sessionId" : "scenario-message-104",
+      "timestamp" : "2026-04-19T21:21:35.943Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "message-target-104",
+      "executionSurfaceType" : "chat",
+      "id" : "972A1ED9-0508-493B-8534-45D414D2C0B7",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695942-16031695751174428022",
+      "sessionId" : "scenario-message-104",
+      "timestamp" : "2026-04-19T21:21:35.944Z",
+      "type" : "abandon"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:35.944Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-message-104"
+}

@@ -1,0 +1,152 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:35.198Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "planning",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "text Jordan I'll call after the meeting",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:35.156Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:35.156Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:35.156Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:35.156Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-message-3",
+      "answer-distractor-message-3"
+    ],
+    "directSlotCandidateId" : "message-target-3",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:35.198Z",
+    "objectType" : "contact",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "message-target-3",
+      "music-distractor-message-3",
+      "answer-distractor-message-3"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633695197-10162588047654038632",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "message-target-3",
+      "id" : "FDE86F3A-8223-4D38-9D8D-BA09D31014C7",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695197-10162588047654038632",
+      "sessionId" : "scenario-message-3",
+      "timestamp" : "2026-04-19T21:21:35.198Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-message-3",
+      "executionSurfaceType" : "music",
+      "id" : "FD51E731-833C-497E-83AB-DF9E2DF6E0C6",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695197-10162588047654038632",
+      "sessionId" : "scenario-message-3",
+      "timestamp" : "2026-04-19T21:21:35.198Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-message-3",
+      "id" : "F87F785E-4989-4EAB-9762-BF371132F27A",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695197-10162588047654038632",
+      "sessionId" : "scenario-message-3",
+      "timestamp" : "2026-04-19T21:21:35.198Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "message-target-3",
+      "feedbackOption" : "not_now",
+      "id" : "E7A36B4B-46E5-4802-ABC9-27E7C8B03316",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695197-10162588047654038632",
+      "sessionId" : "scenario-message-3",
+      "timestamp" : "2026-04-19T21:21:35.199Z",
+      "type" : "dismiss"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:35.199Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-message-3"
+}

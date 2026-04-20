@@ -1,0 +1,151 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:37.066Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "text Ben that practice starts at 6",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:37.023Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:37.023Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:37.023Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:37.023Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-message-7",
+      "answer-distractor-message-7"
+    ],
+    "directSlotCandidateId" : "message-target-7",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:37.066Z",
+    "objectType" : "contact",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "message-target-7",
+      "music-distractor-message-7",
+      "answer-distractor-message-7"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633697065-18020230690911524903",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "message-target-7",
+      "id" : "B6175F5E-9A5A-4A2C-8064-73C93C830057",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697065-18020230690911524903",
+      "sessionId" : "scenario-message-7",
+      "timestamp" : "2026-04-19T21:21:37.066Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-message-7",
+      "executionSurfaceType" : "music",
+      "id" : "37000D49-0E36-4645-9731-4EF4912282BD",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697065-18020230690911524903",
+      "sessionId" : "scenario-message-7",
+      "timestamp" : "2026-04-19T21:21:37.066Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-message-7",
+      "id" : "D70F7954-8C7F-4DD3-B0A8-36BEB36551B1",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697065-18020230690911524903",
+      "sessionId" : "scenario-message-7",
+      "timestamp" : "2026-04-19T21:21:37.066Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "message-target-7",
+      "feedbackOption" : "not_now",
+      "id" : "FA9DD51C-17C8-45C5-9672-7710426A2F70",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697065-18020230690911524903",
+      "sessionId" : "scenario-message-7",
+      "timestamp" : "2026-04-19T21:21:37.067Z",
+      "type" : "dismiss"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:37.067Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-message-7"
+}

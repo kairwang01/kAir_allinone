@@ -1,0 +1,217 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:39.386Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "navigate to Union Station",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:39.347Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:39.347Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:39.347Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:39.347Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-route-0",
+      "answer-distractor-route-0"
+    ],
+    "directSlotCandidateId" : "route-target-0",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:39.386Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-0",
+      "music-distractor-route-0",
+      "answer-distractor-route-0"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633699385-17744676912741127714",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-0",
+      "executionSurfaceType" : "maps",
+      "id" : "61AD77B6-C0AA-4988-8543-A94D23EE2A0C",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699385-17744676912741127714",
+      "sessionId" : "scenario-route-0",
+      "timestamp" : "2026-04-19T21:21:39.386Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-route-0",
+      "executionSurfaceType" : "music",
+      "id" : "8537DD99-530D-4419-A77C-4435C01922E8",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699385-17744676912741127714",
+      "sessionId" : "scenario-route-0",
+      "timestamp" : "2026-04-19T21:21:39.386Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-0",
+      "id" : "1AEAFA43-6190-4278-A6E8-01C1AAF44446",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699385-17744676912741127714",
+      "sessionId" : "scenario-route-0",
+      "timestamp" : "2026-04-19T21:21:39.386Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-0",
+      "executionSurfaceType" : "maps",
+      "id" : "5134A69C-BF63-464B-AF16-824C47D7D827",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699385-17744676912741127714",
+      "sessionId" : "scenario-route-0",
+      "timestamp" : "2026-04-19T21:21:39.387Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "route-target-0",
+      "executionSurfaceType" : "maps",
+      "id" : "57EC36EB-0D85-4508-AA62-24A9692DD8FD",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699385-17744676912741127714",
+      "sessionId" : "scenario-route-0",
+      "timestamp" : "2026-04-19T21:21:39.387Z",
+      "type" : "click"
+    },
+    {
+      "candidateId" : "route-target-0",
+      "executionSurfaceType" : "maps",
+      "id" : "6441B317-FE9B-483B-B4BB-468C1E7D5793",
+      "objectType" : "route",
+      "outcome" : {
+        "completionScore" : 0.78,
+        "downstreamValue" : 0.84,
+        "dwellSeconds" : 4.100799560546875e-05,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699385-17744676912741127714",
+      "sessionId" : "scenario-route-0",
+      "timestamp" : "2026-04-19T21:21:39.387Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "route-target-0",
+      "executionSurfaceType" : "maps",
+      "id" : "CE893626-34A3-4776-B172-98B849C0D4B5",
+      "objectType" : "route",
+      "outcome" : {
+        "completionScore" : 0.78,
+        "downstreamValue" : 0.84,
+        "dwellSeconds" : 4.100799560546875e-05,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699385-17744676912741127714",
+      "sessionId" : "scenario-route-0",
+      "timestamp" : "2026-04-19T21:21:39.387Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 4.100799560546875e-05,
+      "executedCandidateId" : "route-target-0",
+      "executionSurfaceType" : "maps",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "navigation",
+          "planning"
+        ],
+        "completionScore" : 0.78,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.84,
+        "resolvedObjectIds" : [
+          "route-target-0"
+        ],
+        "summary" : "navigate to Union Station"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:39.387Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-0"
+}

@@ -1,0 +1,217 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:40.754Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "directions to St. Lawrence Market",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:40.712Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:40.712Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:40.712Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:40.712Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-route-3",
+      "answer-distractor-route-3"
+    ],
+    "directSlotCandidateId" : "route-target-3",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:40.754Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-3",
+      "music-distractor-route-3",
+      "answer-distractor-route-3"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633700753-11717664238684653126",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-3",
+      "executionSurfaceType" : "maps",
+      "id" : "E69CE7EE-FCB2-4828-B721-F01BBB8E7CDF",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633700753-11717664238684653126",
+      "sessionId" : "scenario-route-3",
+      "timestamp" : "2026-04-19T21:21:40.754Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-route-3",
+      "executionSurfaceType" : "music",
+      "id" : "2B7EFA4D-6E90-4E70-B124-CEF006269114",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633700753-11717664238684653126",
+      "sessionId" : "scenario-route-3",
+      "timestamp" : "2026-04-19T21:21:40.754Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-3",
+      "id" : "038BACE9-CABD-4AB8-A4DC-A3BC8753C940",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633700753-11717664238684653126",
+      "sessionId" : "scenario-route-3",
+      "timestamp" : "2026-04-19T21:21:40.754Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-3",
+      "executionSurfaceType" : "maps",
+      "id" : "5FFBE649-CDE8-46B6-953B-78102A4393A8",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633700753-11717664238684653126",
+      "sessionId" : "scenario-route-3",
+      "timestamp" : "2026-04-19T21:21:40.755Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "route-target-3",
+      "executionSurfaceType" : "maps",
+      "id" : "AC20CAA3-13E6-4E5E-893F-9C2115DB92F7",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633700753-11717664238684653126",
+      "sessionId" : "scenario-route-3",
+      "timestamp" : "2026-04-19T21:21:40.755Z",
+      "type" : "click"
+    },
+    {
+      "candidateId" : "route-target-3",
+      "executionSurfaceType" : "chat",
+      "id" : "6A3AFEF4-B4BB-49F6-B2CF-6AA3F77A51A2",
+      "objectType" : "route",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633700753-11717664238684653126",
+      "sessionId" : "scenario-route-3",
+      "timestamp" : "2026-04-19T21:21:40.755Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "route-target-3",
+      "executionSurfaceType" : "chat",
+      "id" : "46346AC7-5D7F-4647-A88A-E1813015C2B7",
+      "objectType" : "route",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633700753-11717664238684653126",
+      "sessionId" : "scenario-route-3",
+      "timestamp" : "2026-04-19T21:21:40.755Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "route-target-3",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "navigation",
+          "planning"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "route-target-3"
+        ],
+        "summary" : "directions to St. Lawrence Market"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:40.755Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-3"
+}

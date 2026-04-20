@@ -1,0 +1,157 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:44.013Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+      "planning",
+      "search"
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "let's get moving",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:43.873Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:43.873Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:43.873Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:43.873Z"
+      },
+      {
+        "stage" : "accept",
+        "subject" : "prompt",
+        "timestamp" : "2026-04-19T21:21:43.915Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 3
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "search-distractor-route-110",
+      "answer-distractor-route-110"
+    ],
+    "directSlotCandidateId" : "route-target-110",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:44.013Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-110",
+      "search-distractor-route-110",
+      "answer-distractor-route-110"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633704013-17678479849556436884",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-110",
+      "executionSurfaceType" : "maps",
+      "id" : "8E5AAAF6-BEA5-4A14-95F9-41F4821D7FC4",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704013-17678479849556436884",
+      "sessionId" : "scenario-route-110",
+      "timestamp" : "2026-04-19T21:21:44.014Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-route-110",
+      "id" : "9EB24AA7-1497-456E-9CBF-E3DBEA6E1AAB",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704013-17678479849556436884",
+      "sessionId" : "scenario-route-110",
+      "timestamp" : "2026-04-19T21:21:44.014Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-110",
+      "id" : "2B198113-BEC3-4063-940C-DA4D89F2BCB9",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704013-17678479849556436884",
+      "sessionId" : "scenario-route-110",
+      "timestamp" : "2026-04-19T21:21:44.014Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-110",
+      "executionSurfaceType" : "chat",
+      "id" : "7B16C4D5-15C6-4A41-A6F6-0CFBF76E77E8",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704013-17678479849556436884",
+      "sessionId" : "scenario-route-110",
+      "timestamp" : "2026-04-19T21:21:44.014Z",
+      "type" : "abandon"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:44.014Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-110"
+}

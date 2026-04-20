@@ -1,0 +1,153 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:30.611Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "relaxation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "play relaxing music before bed",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:30.571Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:30.571Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:30.571Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:30.571Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "answer-distractor-music-5",
+      "search-distractor-music-5"
+    ],
+    "directSlotCandidateId" : "music-target-5",
+    "executionSurfaceType" : "music",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:30.611Z",
+    "objectType" : "song",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "music-target-5",
+      "answer-distractor-music-5",
+      "search-distractor-music-5"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633690611-10873503385340680116",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "music-target-5",
+      "executionSurfaceType" : "music",
+      "id" : "F42EDE71-CF73-4C69-A9F6-23264F99D931",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633690611-10873503385340680116",
+      "sessionId" : "scenario-music-5",
+      "timestamp" : "2026-04-19T21:21:30.611Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-music-5",
+      "id" : "FEC244E7-456B-4DE0-B35B-D2B9B5AF268F",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633690611-10873503385340680116",
+      "sessionId" : "scenario-music-5",
+      "timestamp" : "2026-04-19T21:21:30.611Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-music-5",
+      "id" : "DF6D7966-282F-42FB-B512-F18B30ACEE87",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633690611-10873503385340680116",
+      "sessionId" : "scenario-music-5",
+      "timestamp" : "2026-04-19T21:21:30.611Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-target-5",
+      "executionSurfaceType" : "music",
+      "feedbackOption" : "not_interested",
+      "id" : "F1462F66-5D7F-4F91-A4F4-04F75B28A938",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633690611-10873503385340680116",
+      "sessionId" : "scenario-music-5",
+      "timestamp" : "2026-04-19T21:21:30.612Z",
+      "type" : "dismiss"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:30.612Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-music-5"
+}

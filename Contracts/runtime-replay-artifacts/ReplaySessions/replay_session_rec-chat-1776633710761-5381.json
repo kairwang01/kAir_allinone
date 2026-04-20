@@ -1,0 +1,120 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:50.762Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "",
+    "recentBehavior" : [
+
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "search-distractor-answer-101",
+      "music-distractor-answer-101"
+    ],
+    "directSlotCandidateId" : "answer-target-101",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:50.762Z",
+    "objectType" : "answerCard",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "answer-target-101",
+      "search-distractor-answer-101",
+      "music-distractor-answer-101"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633710761-5381",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "answer-target-101",
+      "id" : "7208A4B5-7D55-4EAB-937E-9BE9CD855193",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633710761-5381",
+      "sessionId" : "scenario-answer-101",
+      "timestamp" : "2026-04-19T21:21:50.762Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-answer-101",
+      "id" : "EB05EDCA-D586-4E4D-920C-27121324D4E8",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633710761-5381",
+      "sessionId" : "scenario-answer-101",
+      "timestamp" : "2026-04-19T21:21:50.762Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-answer-101",
+      "executionSurfaceType" : "music",
+      "id" : "62287714-F6A0-4908-B7EA-EED961AA409C",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633710761-5381",
+      "sessionId" : "scenario-answer-101",
+      "timestamp" : "2026-04-19T21:21:50.762Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-target-101",
+      "executionSurfaceType" : "chat",
+      "id" : "AE2E8BDF-F872-491D-AA48-C0EB96C417AD",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633710761-5381",
+      "sessionId" : "scenario-answer-101",
+      "timestamp" : "2026-04-19T21:21:50.804Z",
+      "type" : "abandon"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:50.804Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-answer-101"
+}

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Kernel - High-Fidelity Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #09090b;
+    --glass-bg: rgba(28, 28, 30, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+    --accent-blue: #3b82f6;
+    --accent-purple: #8b5cf6;
+    --accent-green: #10b981;
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+  }
+
+  body { 
+    margin: 0; 
+    background: #000; 
+    color: var(--text-primary); 
+    font-family: 'Inter', sans-serif; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    overflow: hidden; 
+  }
+  
+  /* Mock Device Constraints */
+  #device { 
+    width: 390px; 
+    height: 844px; 
+    background: radial-gradient(circle at 50% 0%, #1a1a24 0%, var(--bg-dark) 100%);
+    border-radius: 40px; 
+    border: 12px solid #1f1f22; 
+    position: relative; 
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden; 
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Status Bar Mock */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 24px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    z-index: 50;
+  }
+  
+  /* Layer 3: Feed */
+  #feed { 
+    flex: 1; 
+    overflow-y: auto; 
+    padding: 16px 20px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 20px; 
+    padding-bottom: 180px; 
+    justify-content: flex-end;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+  }
+  #feed::-webkit-scrollbar { display: none; }
+  
+  /* User Message */
+  .user-message {
+    align-self: flex-end; 
+    background: rgba(255,255,255,0.08); 
+    padding: 14px 20px; 
+    border-radius: 20px 20px 4px 20px; 
+    max-width: 80%; 
+    font-size: 15px; 
+    line-height: 1.5;
+    border: 1px solid var(--glass-border); 
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  /* Layer 2: Recommended Next (Chips) */
+  #recommended-next { 
+    position: absolute; 
+    bottom: 100px; 
+    left: 0; 
+    right: 0; 
+    padding: 10px 20px; 
+    display: flex; 
+    gap: 12px; 
+    overflow-x: auto; 
+    opacity: 0; 
+    transition: opacity 0.4s ease, transform 0.4s ease; 
+    transform: translateY(10px);
+    scrollbar-width: none; 
+    z-index: 5;
+    background: linear-gradient(to top, var(--bg-dark) 20%, transparent);
+  }
+  #recommended-next.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  #recommended-next::-webkit-scrollbar { display: none; }
+  .chip { 
+    background: var(--glass-bg); 
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px; 
+    padding: 10px 18px; 
+    font-size: 14px; 
+    white-space: nowrap; 
+    border: 1px solid var(--glass-border); 
+    cursor: pointer; 
+    color: #e4e4e7; 
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  .chip:active { transform: scale(0.95); }
+  
+  /* Layer 1: Chat Input */
+  #chat-layer { 
+    position: absolute; 
+    bottom: 0; 
+    left: 0; 
+    right: 0; 
+    padding: 16px 20px 34px 20px; 
+    background: linear-gradient(to top, rgba(9,9,11,1) 60%, rgba(9,9,11,0));
+    z-index: 10; 
+  }
+  .input-box { 
+    background: var(--glass-bg); 
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 30px; 
+    padding: 16px 24px; 
+    font-size: 16px; 
+    color: var(--text-primary); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border: 1px solid var(--glass-border); 
+    transition: all 0.3s ease; 
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .input-text { 
+    color: var(--text-secondary); 
+    flex: 1; 
+    font-weight: 500;
+  }
+  .input-icon {
+    width: 28px;
+    height: 28px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  
+  /* Layer 3: Action Cards */
+  .card { 
+    background: #18181b; 
+    border-radius: var(--radius-lg); 
+    padding: 0; 
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
+    border: 1px solid var(--glass-border); 
+    position: relative; 
+    overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+  @keyframes slideUp { 
+    from { transform: translateY(30px) scale(0.98); opacity: 0; } 
+    to { transform: translateY(0) scale(1); opacity: 1; } 
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  .card-media {
+    width: 100%;
+    height: 160px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+  }
+  .card-media::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0; height: 50%;
+    background: linear-gradient(to top, #18181b, transparent);
+  }
+  .card-content { padding: 20px; }
+  .card-header { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    font-size: 12px; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent-blue); 
+    margin-bottom: 12px; 
+    font-weight: 700;
+  }
+  .card-title { 
+    font-size: 24px; 
+    font-weight: 700; 
+    margin-bottom: 6px; 
+    letter-spacing: -0.5px;
+  }
+  .card-sub { 
+    font-size: 15px; 
+    color: var(--text-secondary); 
+    margin-bottom: 24px; 
+    line-height: 1.4;
+  }
+  .cta-primary { 
+    background: var(--text-primary); 
+    color: #000; 
+    padding: 16px; 
+    border-radius: var(--radius-md); 
+    text-align: center; 
+    font-weight: 600; 
+    font-size: 15px;
+    cursor: pointer; 
+    transition: transform 0.15s, background 0.15s; 
+  }
+  .cta-primary:active { transform: scale(0.97); }
+  .cta-primary.running { background: var(--accent-green); color: #fff; }
+  
+  /* Layer 4: Execution Surface */
+  #sheet { 
+    position: absolute; 
+    bottom: 0; left: 0; right: 0; 
+    height: 88%; 
+    background: #18181b; 
+    border-radius: 32px 32px 0 0; 
+    z-index: 20; 
+    transform: translateY(100%); 
+    transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1); 
+    padding: 24px; 
+    box-shadow: 0 -20px 60px rgba(0,0,0,0.8); 
+    border-top: 1px solid var(--glass-border);
+  }
+  #sheet.open { transform: translateY(0); }
+  .sheet-handle { 
+    width: 48px; height: 5px; 
+    background: #3f3f46; 
+    border-radius: 3px; 
+    margin: 0 auto 24px; 
+    cursor: grab;
+  }
+  #sheet-content { height: calc(100% - 40px); color: var(--text-primary); display: flex; flex-direction: column; }
+  
+  /* Mini Player Layer 4 */
+  #mini-player { 
+    position: absolute; 
+    bottom: 145px; left: 20px; right: 20px; 
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 20px; 
+    padding: 14px 16px; 
+    display: flex; 
+    align-items: center; 
+    z-index: 15; 
+    transform: translateY(150%) scale(0.9); 
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+    border: 1px solid var(--glass-border); 
+  }
+  #mini-player.show { 
+    transform: translateY(0) scale(1); 
+    opacity: 1;
+  }
+  .player-art {
+    width: 44px; height: 44px; 
+    border-radius: 12px; 
+    margin-right: 14px;
+    background-size: cover;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+
+  /* Dev tools overlay */
+  #dev-controls { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 100; font-family: monospace; }
+  .dev-btn { padding: 12px 16px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); color: #fff; border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; font-weight: bold;}
+  .dev-btn:hover { background: rgba(255,255,255,0.1); }
+</style>
+</head>
+<body>
+
+<div id="dev-controls">
+  <div style="color:#aaa; font-size:12px; margin-bottom: 4px; text-shadow: 0 1px 2px #000;">Trigger Flows:</div>
+  <button class="dev-btn" onclick="runFlow('dining')">▶ 1. 吃饭决策流</button>
+  <button class="dev-btn" onclick="runFlow('commute')">▶ 2. 通勤导航流</button>
+  <button class="dev-btn" onclick="runFlow('music')">▶ 3. 情境听歌流</button>
+  <button class="dev-btn" onclick="runFlow('search')">▶ 4. 深度检索流</button>
+  <button class="dev-btn" onclick="runFlow('tool')">▶ 5. 工具执行流</button>
+  <button class="dev-btn" onclick="reset()" style="margin-top:20px; border-color:#ef4444; color:#fca5a5;">↺ Reset</button>
+</div>
+
+<div id="device">
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>5G 🔋</span>
+  </div>
+
+  <div id="feed">
+    <div style="color:var(--text-secondary); text-align:center; font-size:13px; font-weight:500; margin-bottom:auto">Super Kernel Active</div>
+  </div>
+  
+  <div id="mini-player">
+    <div class="player-art" style="background-image: url('file:///Users/kair/.gemini/antigravity/brain/643f4059-b6f9-443b-9f84-b85b436c644d/deep_focus_album_1776577145575.png');"></div>
+    <div style="flex:1;">
+      <div style="font-size:15px; font-weight:600; color:#fff; line-height:1.2;">Deep Focus</div>
+      <div style="font-size:13px; color:var(--text-secondary); margin-top:2px;">Playing · 50 tracks</div>
+    </div>
+    <div style="font-size:24px; color:#fff; cursor:pointer;">⏸</div>
+  </div>
+
+  <div id="recommended-next"></div>
+  
+  <div id="chat-layer">
+    <div class="input-box">
+      <div class="input-text" id="input-display">Ask me anything...</div>
+      <div class="input-icon">✧</div>
+    </div>
+  </div>
+
+  <div id="sheet">
+    <div class="sheet-handle" onclick="closeSheet()"></div>
+    <div id="sheet-content"></div>
+  </div>
+</div>
+
+<script>
+  const feed = document.getElementById('feed');
+  const inputDisplay = document.getElementById('input-display');
+  const recommendedNext = document.getElementById('recommended-next');
+  const sheet = document.getElementById('sheet');
+  const sheetContent = document.getElementById('sheet-content');
+  const miniPlayer = document.getElementById('mini-player');
+  const chatLayerBox = document.querySelector('.input-box');
+
+  const assets = {
+    dining: "file:///Users/kair/.gemini/antigravity/brain/643f4059-b6f9-443b-9f84-b85b436c644d/bistro_yin_restaurant_1776577133284.png",
+    music: "file:///Users/kair/.gemini/antigravity/brain/643f4059-b6f9-443b-9f84-b85b436c644d/deep_focus_album_1776577145575.png",
+    commute: "file:///Users/kair/.gemini/antigravity/brain/643f4059-b6f9-443b-9f84-b85b436c644d/commute_map_3d_1776577156447.png"
+  };
+
+  function reset() {
+    feed.innerHTML = '<div style="color:var(--text-secondary); text-align:center; font-size:13px; font-weight:500; margin-bottom:auto">Super Kernel Active</div>';
+    inputDisplay.innerHTML = 'Ask me anything...';
+    inputDisplay.style.color = 'var(--text-secondary)';
+    chatLayerBox.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+    hideChips();
+    sheet.classList.remove('open');
+    miniPlayer.classList.remove('show');
+  }
+
+  function appendUserMessage(text) {
+    const msg = document.createElement('div');
+    msg.className = 'user-message';
+    msg.innerText = text;
+    feed.appendChild(msg);
+    scrollToBottom();
+  }
+
+  function scrollToBottom() {
+    setTimeout(() => { feed.scrollTop = feed.scrollHeight; }, 50);
+  }
+
+  function setChips(chips) {
+    recommendedNext.innerHTML = chips.map(c => `<div class="chip">${c}</div>`).join('');
+    recommendedNext.classList.add('show');
+  }
+
+  function hideChips() {
+    recommendedNext.classList.remove('show');
+  }
+
+  function appendCard(html) {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+    feed.appendChild(wrapper.firstElementChild);
+    scrollToBottom();
+  }
+
+  function openSheet(contentHTML) {
+    sheetContent.innerHTML = contentHTML;
+    sheet.classList.add('open');
+    hideChips();
+  }
+
+  function closeSheet() {
+    sheet.classList.remove('open');
+    
+    // Demonstrate return-to-chat context update
+    if(currentFlow === 'dining') {
+      setTimeout(()=>setChips(['🚕 打车去这里', '🔗 发给朋友']), 300);
+    } else if (currentFlow === 'commute') {
+      setTimeout(()=>setChips(['🏠 开启回家模式', '🎵 放松音乐']), 300);
+    } else if (currentFlow === 'search') {
+      setTimeout(()=>setChips(['追问：内存需求？', '生成摘要卡片']), 300);
+    }
+  }
+
+  let currentFlow = '';
+
+  async function runFlow(type) {
+    reset();
+    currentFlow = type;
+    inputDisplay.innerText = 'Listening...';
+    inputDisplay.style.color = '#fff';
+    chatLayerBox.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.4)'; // Listening glow
+    
+    if (type === 'dining') {
+      await sleep(400);
+      inputDisplay.innerText = '这附近有什么安静吃饭的地方？';
+      appendUserMessage('这附近有什么安静吃饭的地方？');
+      await sleep(600);
+      inputDisplay.innerText = 'Ask me anything...';
+      inputDisplay.style.color = 'var(--text-secondary)';
+      chatLayerBox.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+      setChips(['距离优先', '人均 < 300']);
+      
+      appendCard(`
+        <div class="card">
+          <div class="card-media" style="background-image: url('${assets.dining}')"></div>
+          <div class="card-content">
+            <div class="card-header" style="color: #f59e0b;">📍 附近地点推荐</div>
+            <div class="card-title">Bistro 隐</div>
+            <div class="card-sub">4.8分 · 极其安静 · 距您 800m</div>
+            <div class="cta-primary" onclick="openSheet('<h2 style=\\'margin-top:0; font-size:28px\\'>Bistro 隐</h2><div style=\\'background:url(${assets.dining}) center/cover; height:240px; border-radius:16px; margin-bottom:20px; box-shadow: 0 10px 20px rgba(0,0,0,0.5)\\'></div><p style=\\'color:var(--text-secondary); line-height:1.6; font-size:15px\\'>环境极佳，适合安静约会。全暗调氛围，主打创意日料。<br><br>(Layer 4: 半屏 Modal，承载详细执行流)</p><div class=\\'cta-primary\\' onclick=\\'closeSheet()\\' style=\\'margin-top:auto\\'>完成浏览 (触发弱回流)</div>')">查看详情与菜单</div>
+          </div>
+        </div>
+      `);
+    } else if (type === 'commute') {
+      await sleep(400);
+      inputDisplay.innerText = '我现在回家最快怎么走？';
+      appendUserMessage('我现在回家最快怎么走？');
+      await sleep(600);
+      inputDisplay.innerText = 'Ask me anything...';
+      inputDisplay.style.color = 'var(--text-secondary)';
+      chatLayerBox.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+      setChips(['⚠️ 主干道拥堵']);
+      
+      appendCard(`
+        <div class="card">
+          <div class="card-media" style="background-image: url('${assets.commute}'); height: 120px;"></div>
+          <div class="card-content">
+            <div class="card-header" style="color: var(--accent-blue);">🚗 路线决策</div>
+            <div class="card-title">回家：地铁更优</div>
+            <div class="card-sub">地铁 35分钟 · 驾车 45分钟(拥堵)</div>
+            <div class="cta-primary" onclick="openSheet('<h2 style=\\'margin-top:0\\'>导航进行中</h2><div style=\\'flex:1; background:url(${assets.commute}) center/cover; border-radius:16px; margin-bottom:20px; box-shadow: inset 0 0 50px rgba(0,0,0,0.8)\\'></div><div class=\\'cta-primary\\' onclick=\\'closeSheet()\\'>到达目的地 (触发强回流)</div>')">开始地铁导航</div>
+          </div>
+        </div>
+      `);
+    } else if (type === 'music') {
+      await sleep(400);
+      inputDisplay.innerText = '放点适合写代码听的歌';
+      appendUserMessage('放点适合写代码听的歌');
+      await sleep(600);
+      inputDisplay.innerText = 'Ask me anything...';
+      inputDisplay.style.color = 'var(--text-secondary)';
+      chatLayerBox.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+      setChips(['纯音乐', '电子', '环境音']);
+      
+      appendCard(`
+        <div class="card">
+           <div class="card-media" style="background-image: url('${assets.music}'); height: 140px; background-position: top;"></div>
+           <div class="card-content">
+            <div class="card-header" style="color: var(--accent-purple);">🎵 情境音乐</div>
+            <div class="card-title">Deep Focus</div>
+            <div class="card-sub">播放列表 · 50首纯音乐</div>
+            <div class="cta-primary" onclick="miniPlayer.classList.add('show'); setChips(['⏱️ 开启番茄钟', '🌙 屏幕免打扰']); this.innerText='正在播放'; this.style.background='#27272a'; this.style.color='#fff';">立即播放 (后台接管)</div>
+          </div>
+        </div>
+      `);
+    } else if (type === 'search') {
+      await sleep(400);
+      inputDisplay.innerText = '解释最新的 AI 架构';
+      appendUserMessage('解释最新的 AI 架构');
+      await sleep(600);
+      inputDisplay.innerText = 'Ask me anything...';
+      inputDisplay.style.color = 'var(--text-secondary)';
+      chatLayerBox.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+      setChips(['仅看官方文档', '科技媒体解析']);
+      
+      appendCard(`
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header" style="color: #0ea5e9;">🔍 深度解答</div>
+            <div class="card-title">最新 AI 混合架构</div>
+            <div class="card-sub" style="line-height:1.6; margin-bottom:16px;">最新架构包含端云协同。本地小模型处理强隐私任务，云端大模型路由复杂推断。<span style="color:var(--accent-blue)">[1][2]</span></div>
+            <div class="cta-primary" onclick="openSheet('<h2 style=\\'margin-top:0\\'>沉浸式阅读器</h2><div style=\\'flex:1; overflow-y:auto; color:var(--text-secondary); line-height:1.7; font-size:16px;\\'><p>这是通过 Layer 4 全屏展开的深度阅读体验，去除了所有网页广告干扰...</p><p>本地 AI OS 正在改变计算范式，将推理下放到终端设备...</p></div><div class=\\'cta-primary\\' onclick=\\'closeSheet()\\' style=\\'margin-top:20px\\'>关闭阅读 (弱回流)</div>')">阅读完整来源文章</div>
+          </div>
+        </div>
+      `);
+    } else if (type === 'tool') {
+      await sleep(400);
+      inputDisplay.innerText = '帮我倒计时 15 分钟';
+      appendUserMessage('帮我倒计时 15 分钟');
+      await sleep(600);
+      inputDisplay.innerText = 'Ask me anything...';
+      inputDisplay.style.color = 'var(--text-secondary)';
+      chatLayerBox.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+      setChips(['重新计时', '设定为 30 分钟']);
+      
+      appendCard(`
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header" style="color: var(--accent-green);">⏱️ 工具引擎</div>
+            <div class="card-title" style="font-size:56px; font-weight:800; font-variant-numeric: tabular-nums; text-align:center; padding: 10px 0 0 0; letter-spacing:-2px;">14:59</div>
+            <div class="card-sub" style="text-align:center; color: var(--accent-green);">倒计时进行中... (Live Card)</div>
+            <div class="cta-primary running" onclick="this.innerText='已暂停'; this.classList.remove('running'); this.style.background='#27272a'; this.style.color='#fff';">暂停</div>
+          </div>
+        </div>
+      `);
+    }
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>

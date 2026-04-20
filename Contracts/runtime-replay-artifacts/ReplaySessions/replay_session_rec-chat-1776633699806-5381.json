@@ -1,0 +1,120 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:39.806Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "",
+    "recentBehavior" : [
+
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "answer-distractor-route-1",
+      "search-distractor-route-1"
+    ],
+    "directSlotCandidateId" : "route-target-1",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:39.806Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-1",
+      "answer-distractor-route-1",
+      "search-distractor-route-1"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633699806-5381",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-1",
+      "executionSurfaceType" : "maps",
+      "id" : "886AC033-1AC4-4DAF-9FC5-1ACF4C70FD60",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699806-5381",
+      "sessionId" : "scenario-route-1",
+      "timestamp" : "2026-04-19T21:21:39.807Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-1",
+      "id" : "9A9CA438-B197-49EF-91FB-2C313B954E5D",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699806-5381",
+      "sessionId" : "scenario-route-1",
+      "timestamp" : "2026-04-19T21:21:39.807Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-route-1",
+      "id" : "14B14FF6-A58E-45C5-BFAD-6ABC7D3A3613",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699806-5381",
+      "sessionId" : "scenario-route-1",
+      "timestamp" : "2026-04-19T21:21:39.807Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-1",
+      "executionSurfaceType" : "maps",
+      "id" : "2144082B-EBDD-406C-AB36-9E52D5C256DF",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633699806-5381",
+      "sessionId" : "scenario-route-1",
+      "timestamp" : "2026-04-19T21:21:39.846Z",
+      "type" : "abandon"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:39.846Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-1"
+}

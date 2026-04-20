@@ -57,7 +57,9 @@ struct ContentView: View {
             }
         }
         .task {
-            store.bootstrap()
+            if FeatureFlag.allInOneShellEnabled == false {
+                store.bootstrap()
+            }
         }
     }
 

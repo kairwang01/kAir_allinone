@@ -22,6 +22,8 @@ final class ChatStore {
         ComposerAccessory(id: "health", title: "Health", systemImage: "heart.text.square"),
         ComposerAccessory(id: "ai", title: "AI", systemImage: "cpu"),
         ComposerAccessory(id: "maps", title: "Maps", systemImage: "map"),
+        ComposerAccessory(id: "music", title: "Music", systemImage: "music.note"),
+        ComposerAccessory(id: "video", title: "Video", systemImage: "play.rectangle"),
         ComposerAccessory(id: "store", title: "Store", systemImage: "bag"),
     ]
 
@@ -33,30 +35,148 @@ final class ChatStore {
         }
     }
     var selectedModeID = "ask"
-    var contextSummary = "One thread across AI, Maps, Store, and optional Health"
+    var contextSummary = "One thread across AI, Maps, Music, Video, Store, and optional Health"
+    var recommendedMatches: [UnifiedMatchRecommendation] = []
     var suggestedPrompts: [String] = [
         "我想去超市",
+        "播放一些专注音乐",
+        "Show me a yoga stretch video",
         "Which model is active?",
-        "Find a nearby pharmacy",
-        "What can kAir do for me?"
+        "Find a nearby pharmacy"
     ]
 
     private var lastRefreshDate: Date?
     private var supportsHealthData = true
-    private var pendingMapsIntent: PendingMapsIntent?
-    private var resolvedMapsSession: MapsRouteSession?
+    private var healthAvailability: MatchingHealthAvailability = .availableLater
+    private var locationState: MatchingLocationState = .unknown
+    private var motionContext: MatchingMotionContext = .stationary
+    private var pendingMapTask: MapTask?
+    private var resolvedMapTask: MapTask?
     private var resolvedHealthSession: HealthRouteSession?
+    private var resolvedMusicSession: MusicPlaybackSession?
+    private var resolvedVideoSession: VideoPlaybackSession?
+    private var behaviorLog: [MatchingBehaviorEvent] = []
+    private var lastImpressedRecommendationIDs: [String] = []
+    private var pendingAcceptedRecommendation: UnifiedMatchRecommendation?
+    private var activeRecommendationBySection: [AppSection: UnifiedMatchRecommendation] = [:]
+    private var pendingReturnContextState: ExecutionReturnContextState?
+    private var pendingSurfaceEntryRequests: [AppSection: SurfaceEntryRequest] = [:]
+    private var activeSurfaceEntryRequests: [AppSection: SurfaceEntryRequest] = [:]
+    private let matchingEngine: UnifiedMatchingEngine
+    private let replayLab: MatchingReplayLab
     private let persistence = ChatSessionPersistence()
+    private let eventRecorder: MatchingEventRecorder
+    private var activeDecision: RecommendationDecision?
+    private var executionStartDates: [AppSection: Date] = [:]
+    var replayFrames: [MatchingReplayFrame] = []
+    var lastExportedSession: ReplayExportedSession?
 
-    init() {
+    var currentRecommendationId: String? {
+        activeDecision?.recommendationId
+    }
+
+    var preferredMapsLanguage: MapsConversationLanguage {
+        if let task = resolvedMapTask { return task.language }
+        if let task = pendingMapTask { return task.language }
+        return .english
+    }
+
+    init(
+        replayLab: MatchingReplayLab,
+        autostartLifecycle: Bool = true
+    ) {
+        self.matchingEngine = UnifiedMatchingEngine()
+        self.eventRecorder = MatchingEventRecorder()
+        self.replayLab = replayLab
+        Self.wireReplayFeed(recorder: eventRecorder, lab: replayLab)
         if let restoredSession = persistence.load() {
             session = restoredSession
         }
+        if autostartLifecycle {
+            refreshRecommendedMatches()
+        }
+    }
+
+    init(
+        replayLab: MatchingReplayLab,
+        matchingEngine: UnifiedMatchingEngine,
+        eventRecorder: MatchingEventRecorder,
+        autostartLifecycle: Bool = true
+    ) {
+        self.matchingEngine = matchingEngine
+        self.eventRecorder = eventRecorder
+        self.replayLab = replayLab
+        Self.wireReplayFeed(recorder: eventRecorder, lab: replayLab)
+        if let restoredSession = persistence.load() {
+            session = restoredSession
+        }
+        if autostartLifecycle {
+            refreshRecommendedMatches()
+        }
+    }
+
+    private static func wireReplayFeed(
+        recorder: MatchingEventRecorder,
+        lab: MatchingReplayLab
+    ) {
+        recorder.onEventAppended = { [weak lab] event in
+            lab?.submitSurfaceEntryEvent(event)
+        }
+        recorder.onSurfaceEntryRequestRetained = { [weak lab] request in
+            lab?.retainSurfaceEntryRequest(request)
+        }
+        recorder.onExecutionReturnPayloadRetained = { [weak lab] payload in
+            lab?.retainSurfaceEntryReturnPayload(payload)
+        }
+    }
+
+    var latestMessagePreview: String {
+        session.messages
+            .last(where: { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false })?
+            .text ?? contextSummary
+    }
+
+    var latestActivityDate: Date? {
+        session.messages.last?.timestamp
+    }
+
+    var canResumeThread: Bool {
+        session.messages.contains(where: { $0.role == .user }) || session.messages.count > 1
+    }
+
+    var homeContextItems: [ConversationContextItem] {
+        [
+            ConversationContextItem(
+                id: "default-thread",
+                title: "Thread",
+                value: "Same default session",
+                systemImage: "bubble.left.and.bubble.right"
+            ),
+            ConversationContextItem(
+                id: "add-reference",
+                title: "Add",
+                value: "References first",
+                systemImage: "plus.circle"
+            ),
+            ConversationContextItem(
+                id: "focused-surfaces",
+                title: "Surfaces",
+                value: supportsHealthData ? "Health on-demand" : "Health unavailable",
+                systemImage: "square.stack.3d.up"
+            ),
+            ConversationContextItem(
+                id: "matcher",
+                title: "Matcher",
+                value: recommendedMatches.isEmpty ? "Warming up" : "Next step ready",
+                systemImage: "point.3.connected.trianglepath.dotted"
+            )
+        ]
     }
 
     func bootstrap(with dashboard: HealthDashboard) {
         supportsHealthData = true
-        contextSummary = "AI, Maps, and Store are live. Apple Health is available on-device only when you ask for it."
+        healthAvailability = .ready
+        contextSummary = "AI, Maps, Music, Video, and Store are live. Apple Health is available on-device only when you ask for it."
         suggestedPrompts = Self.suggestedPrompts(for: dashboard)
 
         guard lastRefreshDate != dashboard.generatedAt else { return }
@@ -74,13 +194,15 @@ final class ChatStore {
         }
 
         lastRefreshDate = dashboard.generatedAt
+        refreshRecommendedMatches()
     }
 
     func bootstrapWithoutDashboard(supportsHealthData: Bool) {
         self.supportsHealthData = supportsHealthData
+        healthAvailability = supportsHealthData ? .availableLater : .unavailable
         contextSummary = supportsHealthData
-            ? "Chat-first shell · AI, Maps, and Store are ready; Health stays on-demand"
-            : "HealthKit unavailable · AI, Maps, and Store remain available"
+            ? "Chat-first shell · AI, Maps, Music, Video, and Store are ready; Health stays on-demand"
+            : "HealthKit unavailable · AI, Maps, Music, Video, and Store remain available"
         suggestedPrompts = Self.fallbackSuggestedPrompts(supportsHealthData: supportsHealthData)
 
         guard session.messages.isEmpty else { return }
@@ -93,6 +215,7 @@ final class ChatStore {
             ),
         ]
         persistIfNeeded()
+        refreshRecommendedMatches()
     }
 
     func selectMode(_ mode: ComposerMode) {
@@ -101,35 +224,47 @@ final class ChatStore {
 
     func sendDraft(
         using dashboard: HealthDashboard?,
-        target: ChatNavigationTarget? = nil
-    ) {
+        mapsRuntime: MapsRuntime
+    ) async -> ConversationRoute? {
         let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty else { return nil }
         draft = ""
-        submit(prompt: trimmed, using: dashboard, target: target)
+        return await submit(prompt: trimmed, using: dashboard, mapsRuntime: mapsRuntime)
     }
 
     func submitPrompt(
         _ prompt: String,
         using dashboard: HealthDashboard?,
-        target: ChatNavigationTarget? = nil
-    ) {
-        submit(prompt: prompt, using: dashboard, target: target)
+        mapsRuntime: MapsRuntime
+    ) async -> ConversationRoute? {
+        await submit(prompt: prompt, using: dashboard, mapsRuntime: mapsRuntime)
     }
 
-    func recordHandoff(to target: ChatNavigationTarget) {
-        let text: String
-        switch target {
-        case .section(let section):
-            text = "Opened \(section.title) as a focused surface. You are still in this same conversation and can return to chat anytime."
-        case .userProfile:
-            text = "Opened User as a profile sheet. You are still in this same conversation and can return to chat anytime."
-        }
+    func shouldRecordGenericHandoff(for route: ConversationRoute) -> Bool {
+        route.shouldRecordSystemNote
+    }
+
+    func recordHandoff(for route: ConversationRoute) {
+        let destination = route.destination.title
+        let reason = route.handoffReason
+        let text = "Entering \(destination) \(reason). This thread stays here."
 
         session.messages.append(
             .system(
                 text: text,
-                tags: ["\(target.title) handoff"]
+                tags: ["\(destination) handoff"]
+            )
+        )
+        recordEvent(
+            stage: .accept,
+            subject: .route,
+            surface: routeSection(for: route.destination),
+            rawText: text,
+            tags: matchingTags(from: text),
+            outcome: MatchingOutcomeMetrics(
+                downstreamValue: 0.45,
+                completionScore: 0.2,
+                wasSuccessful: true
             )
         )
         persistIfNeeded()
@@ -138,17 +273,226 @@ final class ChatStore {
     func attachReference(_ title: String, detail: String) {
         session.messages.append(
             .system(
-                text: "\(title) attached. \(detail)",
+                text: "\(title) added. \(detail)",
                 tags: ["Reference"]
             )
         )
+        recordEvent(
+            stage: .accept,
+            subject: .reference,
+            rawText: "\(title) \(detail)",
+            tags: matchingTags(from: "\(title) \(detail)"),
+            outcome: MatchingOutcomeMetrics(
+                downstreamValue: 0.32,
+                completionScore: 0.28,
+                wasSuccessful: true
+            )
+        )
         persistIfNeeded()
+        refreshRecommendedMatches(
+            seedPrompt: detail,
+            replaceActiveLifecycle: true
+        )
     }
 
-    func consumeResolvedMapsSession() -> MapsRouteSession? {
-        let session = resolvedMapsSession
-        resolvedMapsSession = nil
-        return session
+    func recordRecommendationTap(_ recommendation: UnifiedMatchRecommendation) {
+        pendingAcceptedRecommendation = recommendation
+        recordEvent(
+            stage: .click,
+            subject: .recommendation,
+            candidateID: recommendation.candidate.id,
+            objectKind: recommendation.candidate.objectKind,
+            surface: recommendation.candidate.preferredSection,
+            rawText: recommendation.candidate.activationPrompt,
+            tags: recommendation.candidate.tags,
+            outcome: MatchingOutcomeMetrics(
+                downstreamValue: 0.2,
+                completionScore: 0,
+                wasSuccessful: true
+            )
+        )
+        eventRecorder.recordClick(candidate: recommendation)
+    }
+
+    func prepareRecommendationForAccept(_ recommendation: UnifiedMatchRecommendation) {
+        pendingAcceptedRecommendation = recommendation
+    }
+
+    func dismissRecommendation(
+        _ recommendation: UnifiedMatchRecommendation,
+        feedback: MatchingFeedbackKind
+    ) {
+        if pendingAcceptedRecommendation?.id == recommendation.id {
+            pendingAcceptedRecommendation = nil
+        }
+
+        let stage: MatchingBehaviorEvent.Stage = feedback == .alreadyDone ? .completion : .dismiss
+        recordEvent(
+            stage: stage,
+            subject: .recommendation,
+            candidateID: recommendation.candidate.id,
+            objectKind: recommendation.candidate.objectKind,
+            surface: recommendation.candidate.preferredSection,
+            rawText: recommendation.candidate.activationPrompt,
+            tags: recommendation.candidate.tags,
+            feedback: feedback,
+            outcome: outcomeMetrics(for: feedback)
+        )
+        eventRecorder.recordDismiss(
+            candidate: recommendation,
+            feedback: FeedbackOption(from: feedback)
+        )
+        syncClosedLifecycleArtifacts()
+
+        recommendedMatches.removeAll { $0.id == recommendation.id }
+        activeRecommendationBySection = activeRecommendationBySection.filter { _, value in
+            value.id != recommendation.id
+        }
+        refreshRecommendedMatches()
+    }
+
+    func recordSurfaceReturn(
+        from context: AppSurfaceReturnContext,
+        dashboard: HealthDashboard?,
+        healthSession: HealthRouteSession?
+    ) {
+        let linkedRecommendation = activeRecommendationBySection.removeValue(forKey: context.section)
+
+        switch context.section {
+        case .health:
+            guard
+                let dashboard,
+                let healthSession,
+                let message = healthReturnMessage(for: healthSession, dashboard: dashboard)
+            else {
+                return
+            }
+            session.messages.append(message)
+        case .ai:
+            session.messages.append(aiReturnMessage(dashboard: dashboard))
+        case .music:
+            session.messages.append(musicReturnMessage(session: context.musicSession))
+        case .store:
+            session.messages.append(storeReturnMessage())
+        case .video:
+            session.messages.append(videoReturnMessage(session: context.videoSession))
+        case .chat, .maps:
+            return
+        }
+
+        let returnStage = surfaceReturnStage(for: context)
+        let metrics = outcomeMetrics(
+            for: context,
+            healthSession: healthSession
+        )
+        recordEvent(
+            stage: returnStage,
+            subject: .surface,
+            candidateID: linkedRecommendation?.candidate.id,
+            objectKind: linkedRecommendation?.candidate.objectKind,
+            surface: context.section,
+            rawText: context.section.title,
+            tags: linkedRecommendation?.candidate.tags ?? matchingTags(from: context.section.title),
+            outcome: metrics
+        )
+        let payload = executionReturnPayload(
+            for: context.section,
+            candidate: linkedRecommendation,
+            stage: returnStage,
+            metrics: metrics
+        )
+        eventRecorder.recordExecutionReturn(
+            payload: payload,
+            candidate: linkedRecommendation
+        )
+        applyExecutionReturnPayload(payload)
+        syncClosedLifecycleArtifacts()
+        executionStartDates[context.section] = nil
+        persistIfNeeded()
+        refreshRecommendedMatches(seedPrompt: context.section.title)
+    }
+
+    func recordMapReturn(from task: MapTask) {
+        pendingMapTask = nil
+        resolvedMapTask = nil
+        syncSpatialContext(from: task)
+
+        session.messages.append(
+            .assistant(
+                text: task.summaryForChatReturn(),
+                tags: ["Maps", task.language.usesChineseCopy ? "返回聊天" : "Back in chat"],
+                toolResults: [
+                    ConversationToolResult(
+                        id: "maps-return-summary",
+                        title: task.language.usesChineseCopy ? "Maps 已回写线程" : "Maps wrote back into the thread",
+                        summary: task.summaryForChatReturn(),
+                        state: .ready,
+                        metrics: [
+                            .init(key: task.language.usesChineseCopy ? "任务" : "Task", value: task.taskType.title(for: task.language)),
+                            .init(key: task.language.usesChineseCopy ? "线程" : "Thread", value: task.language.usesChineseCopy ? "原会话已保留" : "Original thread kept"),
+                            .init(key: task.language.usesChineseCopy ? "返回" : "Return", value: task.language.usesChineseCopy ? "已完成" : "Complete")
+                        ],
+                        footer: task.language.usesChineseCopy
+                            ? "Maps 退出后不会新开会话，也不会丢失上下文。"
+                            : "Leaving Maps does not start a new session or lose context."
+                    )
+                ]
+            )
+        )
+        let linkedRecommendation = activeRecommendationBySection.removeValue(forKey: .maps)
+        let mapStage = mapReturnStage(for: task)
+        let mapMetrics = outcomeMetrics(for: task)
+        recordEvent(
+            stage: mapStage,
+            subject: .surface,
+            candidateID: linkedRecommendation?.candidate.id,
+            objectKind: linkedRecommendation?.candidate.objectKind ?? mapObjectKind(for: task),
+            surface: .maps,
+            rawText: task.summaryForChatReturn(),
+            tags: linkedRecommendation?.candidate.tags ?? matchingTags(from: task.query),
+            outcome: mapMetrics
+        )
+        let payload = executionReturnPayload(
+            for: .maps,
+            candidate: linkedRecommendation,
+            stage: mapStage,
+            metrics: mapMetrics
+        )
+        eventRecorder.recordExecutionReturn(
+            payload: payload,
+            candidate: linkedRecommendation
+        )
+        applyExecutionReturnPayload(payload)
+        syncClosedLifecycleArtifacts()
+        executionStartDates[.maps] = nil
+        persistIfNeeded()
+        refreshRecommendedMatches(seedPrompt: task.summaryForChatReturn())
+    }
+
+    func recordSilentSurfaceExit(_ section: AppSection) {
+        let linkedRecommendation = activeRecommendationBySection.removeValue(forKey: section)
+        recordEvent(
+            stage: .abandon,
+            subject: .surface,
+            candidateID: linkedRecommendation?.candidate.id,
+            objectKind: linkedRecommendation?.candidate.objectKind,
+            surface: section,
+            rawText: "\(section.title) closed",
+            tags: linkedRecommendation?.candidate.tags ?? matchingTags(from: section.title),
+            outcome: .neutral
+        )
+        eventRecorder.recordAbandon(
+            candidate: linkedRecommendation,
+            surface: section
+        )
+        executionStartDates[section] = nil
+        syncClosedLifecycleArtifacts()
+    }
+
+    func consumeResolvedMapTask() -> MapTask? {
+        let task = resolvedMapTask
+        resolvedMapTask = nil
+        return task
     }
 
     func consumeResolvedHealthSession() -> HealthRouteSession? {
@@ -157,35 +501,112 @@ final class ChatStore {
         return session
     }
 
-    func route(for prompt: String) -> ChatNavigationTarget? {
+    func consumeResolvedMusicSession() -> MusicPlaybackSession? {
+        let session = resolvedMusicSession
+        resolvedMusicSession = nil
+        return session
+    }
+
+    func consumeResolvedVideoSession() -> VideoPlaybackSession? {
+        let session = resolvedVideoSession
+        resolvedVideoSession = nil
+        return session
+    }
+
+    func handleConversationAction(
+        _ action: ConversationToolAction,
+        using dashboard: HealthDashboard?,
+        mapsRuntime: MapsRuntime
+    ) async -> ConversationRoute? {
+        if let resolution = await ConversationIntentEngine.handleAction(
+            action,
+            pendingMapTask: pendingMapTask,
+            runtime: mapsRuntime
+        ) {
+            pendingMapTask = resolution.pendingMapTask
+            resolvedMapTask = resolution.resolvedMapTask
+
+            if let message = resolution.message {
+                session.messages.append(message)
+            }
+            recordEvent(
+                stage: .click,
+                subject: .tool,
+                surface: routeSection(for: resolution.route?.destination),
+                rawText: action.title,
+                tags: matchingTags(from: action.title),
+                outcome: MatchingOutcomeMetrics(
+                    downstreamValue: 0.3,
+                    completionScore: resolution.route == nil ? 0.45 : 0.15,
+                    wasSuccessful: true
+                )
+            )
+            persistIfNeeded()
+            if resolution.route == nil {
+                refreshRecommendedMatches(
+                    seedPrompt: action.title,
+                    replaceActiveLifecycle: true
+                )
+            }
+            return resolution.route
+        }
+
+        return nil
+    }
+
+    private func legacyRoute(for prompt: String) -> ConversationRoute? {
         resolvedHealthSession = nil
-
-        if pendingMapsIntent != nil, travelMode(from: prompt) != nil {
-            return .section(.maps)
-        }
-
-        if explicitMapsIntent(from: prompt) != nil {
-            return nil
-        }
 
         let trimmed = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalized = trimmed.lowercased()
 
         if isUserCommand(normalized, prompt: trimmed) {
-            return .userProfile
+            return ConversationRoute(
+                destination: .userProfile,
+                handoffReason: "to open settings",
+                shouldRecordSystemNote: true
+            )
         }
 
         if let healthSession = exactHealthCommand(normalized: normalized, prompt: trimmed) {
             resolvedHealthSession = healthSession
-            return .section(.health)
+            return ConversationRoute(
+                destination: .surface(.health),
+                handoffReason: "for grounded health context",
+                shouldRecordSystemNote: false
+            )
         }
 
         if isMapsCommand(normalized, prompt: trimmed) {
-            return .section(.maps)
+            return ConversationRoute(
+                destination: .surface(.maps),
+                handoffReason: "for location and route work",
+                shouldRecordSystemNote: true
+            )
         }
 
         if Self.isGenericMapsPrompt(normalized, prompt: prompt) {
-            return .section(.maps)
+            return ConversationRoute(
+                destination: .surface(.maps),
+                handoffReason: "for location and route work",
+                shouldRecordSystemNote: true
+            )
+        }
+
+        if isMusicCommand(normalized, prompt: trimmed) {
+            return ConversationRoute(
+                destination: .surface(.music),
+                handoffReason: "to adjust the current player",
+                shouldRecordSystemNote: true
+            )
+        }
+
+        if isVideoCommand(normalized, prompt: trimmed) {
+            return ConversationRoute(
+                destination: .surface(.video),
+                handoffReason: "for a focused video response",
+                shouldRecordSystemNote: true
+            )
         }
 
         if normalized.contains("buy") ||
@@ -195,16 +616,28 @@ final class ChatStore {
             normalized.contains("device") ||
             normalized.contains("bundle")
         {
-            return .section(.store)
+            return ConversationRoute(
+                destination: .surface(.store),
+                handoffReason: "for curated product suggestions",
+                shouldRecordSystemNote: true
+            )
         }
 
         if normalized.contains("model") || normalized.contains("ai") {
-            return .section(.ai)
+            return ConversationRoute(
+                destination: .surface(.ai),
+                handoffReason: "for deeper AI context",
+                shouldRecordSystemNote: true
+            )
         }
 
         if let healthSession = explicitHealthIntent(from: prompt) {
             resolvedHealthSession = healthSession
-            return .section(.health)
+            return ConversationRoute(
+                destination: .surface(.health),
+                handoffReason: "for grounded health context",
+                shouldRecordSystemNote: false
+            )
         }
 
         return nil
@@ -213,34 +646,89 @@ final class ChatStore {
     private func submit(
         prompt: String,
         using dashboard: HealthDashboard?,
-        target: ChatNavigationTarget?
-    ) {
+        mapsRuntime: MapsRuntime
+    ) async -> ConversationRoute? {
+        let acceptedRecommendation = consumeAcceptedRecommendation(for: prompt)
         session.messages.append(
             .user(
                 text: prompt,
                 tags: selectedModeID == "ask" ? [] : [selectedMode.title]
             )
         )
+        recordEvent(
+            stage: .accept,
+            subject: .prompt,
+            rawText: prompt,
+            tags: matchingTags(from: prompt),
+            outcome: MatchingOutcomeMetrics(
+                downstreamValue: 0.3,
+                completionScore: 0.18,
+                wasSuccessful: true
+            )
+        )
 
-        if let mapsMessage = handleMapsFlow(prompt: prompt) {
-            session.messages.append(mapsMessage)
-            persistIfNeeded()
-            return
+        if let acceptedRecommendation {
+            recordEvent(
+                stage: .accept,
+                subject: .recommendation,
+                candidateID: acceptedRecommendation.candidate.id,
+                objectKind: acceptedRecommendation.candidate.objectKind,
+                surface: acceptedRecommendation.candidate.preferredSection,
+                rawText: acceptedRecommendation.candidate.activationPrompt,
+                tags: acceptedRecommendation.candidate.tags,
+                outcome: MatchingOutcomeMetrics(
+                    downstreamValue: 0.42,
+                    completionScore: 0.24,
+                    wasSuccessful: true
+                )
+            )
+            eventRecorder.recordAccept(candidate: acceptedRecommendation)
         }
 
-        if case .section(.health) = target, let healthSession = resolvedHealthSession {
+        if let resolution = await ConversationIntentEngine.handlePrompt(
+            prompt,
+            threadId: session.id,
+            pendingMapTask: pendingMapTask,
+            runtime: mapsRuntime
+        ) {
+            pendingMapTask = resolution.pendingMapTask
+            resolvedMapTask = resolution.resolvedMapTask
+            resolvedMusicSession = resolution.resolvedMusicSession
+            resolvedVideoSession = resolution.resolvedVideoSession
+
+            if let message = resolution.message {
+                session.messages.append(message)
+            }
+            registerAcceptedRecommendation(
+                acceptedRecommendation,
+                for: resolution.route
+            )
+            persistIfNeeded()
+            if resolution.route != nil {
+                return resolution.route
+            }
+            refreshRecommendedMatches(
+                seedPrompt: prompt,
+                replaceActiveLifecycle: true
+            )
+            return resolution.route
+        }
+
+        let route = legacyRoute(for: prompt)
+        registerAcceptedRecommendation(acceptedRecommendation, for: route)
+
+        if case .surface(.health) = route?.destination, let healthSession = resolvedHealthSession {
             session.messages.append(
-                .assistant(
+                .system(
                     text: healthHandoffText(for: healthSession, dashboard: dashboard),
-                    tags: healthHandoffTags(for: healthSession),
                     toolResults: [healthHandoffResult(for: healthSession, dashboard: dashboard)]
                 )
             )
             persistIfNeeded()
-            return
+            return route
         }
 
-        if case .userProfile = target {
+        if case .userProfile = route?.destination {
             session.messages.append(
                 .assistant(
                     text: "Opening User settings while keeping this thread intact.",
@@ -249,7 +737,7 @@ final class ChatStore {
                 )
             )
             persistIfNeeded()
-            return
+            return route
         }
 
         session.messages.append(
@@ -276,19 +764,54 @@ final class ChatStore {
                 )
             )
         )
+        if let acceptedRecommendation {
+            let completionMetrics = MatchingOutcomeMetrics(
+                downstreamValue: 0.55,
+                completionScore: 0.58,
+                wasSuccessful: true
+            )
+            recordEvent(
+                stage: .completion,
+                subject: .recommendation,
+                candidateID: acceptedRecommendation.candidate.id,
+                objectKind: acceptedRecommendation.candidate.objectKind,
+                surface: acceptedRecommendation.candidate.preferredSection,
+                rawText: acceptedRecommendation.candidate.activationPrompt,
+                tags: acceptedRecommendation.candidate.tags,
+                outcome: completionMetrics
+            )
+            let payload = executionReturnPayload(
+                for: .chat,
+                candidate: acceptedRecommendation,
+                stage: .completion,
+                metrics: completionMetrics
+            )
+            eventRecorder.recordExecutionReturn(
+                payload: payload,
+                candidate: acceptedRecommendation
+            )
+            applyExecutionReturnPayload(payload)
+            syncClosedLifecycleArtifacts()
+        }
         persistIfNeeded()
+        refreshRecommendedMatches(
+            seedPrompt: prompt,
+            replaceActiveLifecycle: true
+        )
+        return route
     }
 
     private var selectedMode: ComposerMode {
         modes.first(where: { $0.id == selectedModeID }) ?? modes[0]
     }
 
-    private static func suggestedPrompts(for dashboard: HealthDashboard) -> [String] {
+    private static func suggestedPrompts(for _: HealthDashboard) -> [String] {
         [
             "I want to go to Apple Store",
+            "Play focus music",
+            "Show me a yoga stretch video",
             "Which model should answer a health question?",
-            "Find a nearby pharmacy",
-            "What can kAir do for me?"
+            "Find a nearby pharmacy"
         ]
     }
 
@@ -296,29 +819,31 @@ final class ChatStore {
         if supportsHealthData {
             [
                 "I want to go to Apple Store",
-                "Find a nearby pharmacy",
+                "Play focus music",
+                "Show me a nearby pharmacy",
                 "Which model is active?",
-                "What can kAir do for me?"
+                "Show me a workout video"
             ]
         } else {
             [
                 "I want to go to Apple Store",
+                "播放一些专注音乐",
                 "Show me a nearby pharmacy",
                 "Which model is active?",
-                "What can kAir do for me?"
+                "Show me a workout video"
             ]
         }
     }
 
-    private static func welcomeMessage(for dashboard: HealthDashboard) -> String {
-        "You are in kAir. Chat is the main surface. I can route into AI, Maps, and Store from this thread, and Apple Health stays available as an on-device tool only when you ask for it."
+    private static func welcomeMessage(for _: HealthDashboard) -> String {
+        "You are in kAir. Chat is the main surface. I can route into AI, Maps, Music, Video, and Store from this thread, and Apple Health stays available as an on-device tool only when you ask for it."
     }
 
     private static func welcomeMessageWithoutDashboard(supportsHealthData: Bool) -> String {
         if supportsHealthData {
-            return "You are in kAir. Chat is already live, and AI, Maps, and Store can open from this thread immediately. Apple Health stays optional until you explicitly ask for health context."
+            return "You are in kAir. Chat is already live, and AI, Maps, Music, Video, and Store can open from this thread immediately. Apple Health stays optional until you explicitly ask for health context."
         }
-        return "You are in kAir. This device cannot attach Apple Health right now, but the chat, AI, Maps, and Store surfaces still live in one thread."
+        return "You are in kAir. This device cannot attach Apple Health right now, but the chat, AI, Maps, Music, Video, and Store surfaces still live in one thread."
     }
 
     private static func reply(to prompt: String, modeID: String, dashboard: HealthDashboard) -> String {
@@ -343,11 +868,19 @@ final class ChatStore {
             return "Maps should stay quiet and utilitarian inside kAir: nearby clinics, pharmacies, gyms, and walking routes, surfaced as task-ready places instead of a noisy standalone map first."
         }
 
+        if isMusicPrompt(normalized, prompt: prompt) {
+            return "Music should remain a quiet capability layer. It can start from chat, collapse into a persistent player, and keep the thread as the primary surface."
+        }
+
+        if isVideoPrompt(normalized, prompt: prompt) {
+            return "Video should open only when the request needs a visual explanation or guided session. It is a focused surface, then it returns to the same thread."
+        }
+
         if normalized.contains("model") || normalized.contains("ai") || modeID == "route" {
             if let prediction = dashboard.predictions.first {
                 return "The active AI posture is local-first. One orchestrator keeps the thread intact, decides which surface to open next, and only reaches for specialized health reasoning when you explicitly ask for health context. \(prediction.title) remains available as an on-device specialist."
             }
-            return "The AI layer is designed as a routing surface: one general model for conversation, one planner for opening Maps or Store, and an optional on-device health explainer only when the thread calls for it."
+            return "The AI layer is designed as a routing surface: one general model for conversation, one planner for opening Maps, Music, Video, or Store, and an optional on-device health explainer only when the thread calls for it."
         }
 
         if normalized.contains("buy") || normalized.contains("store") || normalized.contains("supplement") || normalized.contains("device") || modeID == "shop" {
@@ -355,10 +888,10 @@ final class ChatStore {
         }
 
         if normalized.contains("privacy") || normalized.contains("local") {
-            return "kAir stays local-first. The shell keeps chat, AI, Maps, and Store together, while Health remains an on-device capability that only comes into play when you explicitly ask for it."
+            return "kAir stays local-first. The shell keeps chat, AI, Maps, Music, Video, and Store together, while Health remains an on-device capability that only comes into play when you explicitly ask for it."
         }
 
-        return "kAir is set up as one conversation that can open deeper tools only when needed. I can stage nearby routes, explain the AI runtime, prepare store suggestions, or bring in Health only if you want that context."
+        return "kAir is set up as one conversation that can open deeper tools only when needed. I can stage nearby routes, start music, open a video surface, explain the AI runtime, prepare store suggestions, or bring in Health only if you want that context."
     }
 
     private static func replyWithoutDashboard(
@@ -379,6 +912,14 @@ final class ChatStore {
             return "Maps can still be invoked immediately from chat. I will preserve this thread, then hand off into a focused navigation surface."
         }
 
+        if isMusicPrompt(normalized, prompt: prompt) {
+            return "Music can start directly from chat and stay attached as a persistent player while the conversation continues."
+        }
+
+        if isVideoPrompt(normalized, prompt: prompt) {
+            return "Video can open as a focused surface from chat, then return a compact summary into the same thread."
+        }
+
         if normalized.contains("buy") || normalized.contains("store") || normalized.contains("shop") || modeID == "shop" {
             return "Store can still open from the conversation, but curation will be broader until Apple Health is attached."
         }
@@ -388,8 +929,8 @@ final class ChatStore {
         }
 
         return supportsHealthData
-            ? "kAir is already chat-first. AI, Maps, and Store are available now, and Health remains optional until you explicitly ask for it."
-            : "kAir is already chat-first. AI, Maps, and Store are available now, but Health grounding is unavailable on this device."
+            ? "kAir is already chat-first. AI, Maps, Music, Video, and Store are available now, and Health remains optional until you explicitly ask for it."
+            : "kAir is already chat-first. AI, Maps, Music, Video, and Store are available now, but Health grounding is unavailable on this device."
     }
 
     private static func replyTags(for prompt: String, modeID: String, dashboard: HealthDashboard) -> [String] {
@@ -402,6 +943,10 @@ final class ChatStore {
 
         if isGenericMapsPrompt(normalized, prompt: prompt) {
             tags.append("Maps")
+        } else if isMusicPrompt(normalized, prompt: prompt) {
+            tags.append("Music")
+        } else if isVideoPrompt(normalized, prompt: prompt) {
+            tags.append("Video")
         } else if normalized.contains("store") || normalized.contains("buy") || normalized.contains("supplement") {
             tags.append("Store")
         } else if normalized.contains("model") || normalized.contains("ai") {
@@ -433,6 +978,10 @@ final class ChatStore {
 
         if normalized.contains("map") || normalized.contains("route") || normalized.contains("nearby") {
             tags.append("Maps")
+        } else if isMusicPrompt(normalized, prompt: prompt) {
+            tags.append("Music")
+        } else if isVideoPrompt(normalized, prompt: prompt) {
+            tags.append("Video")
         } else if normalized.contains("store") || normalized.contains("buy") || normalized.contains("shop") {
             tags.append("Store")
         } else if normalized.contains("model") || normalized.contains("ai") {
@@ -451,6 +1000,14 @@ final class ChatStore {
 
         if isGenericMapsPrompt(normalized, prompt: prompt) {
             return [mapsResult()]
+        }
+
+        if isMusicPrompt(normalized, prompt: prompt) {
+            return [musicSurfaceResult()]
+        }
+
+        if isVideoPrompt(normalized, prompt: prompt) {
+            return [videoSurfaceResult()]
         }
 
         if normalized.contains("model") || normalized.contains("ai") {
@@ -482,6 +1039,14 @@ final class ChatStore {
             return [mapsResult()]
         }
 
+        if isMusicPrompt(normalized, prompt: prompt) {
+            return [musicSurfaceResult()]
+        }
+
+        if isVideoPrompt(normalized, prompt: prompt) {
+            return [videoSurfaceResult()]
+        }
+
         if normalized.contains("model") || normalized.contains("ai") {
             return [ungroundedAIResult()]
         }
@@ -504,16 +1069,19 @@ final class ChatStore {
         ConversationToolResult(
             id: healthReady ? "runtime_shell_ready" : "runtime_shell_base",
             title: "kAir Runtime",
-            summary: "The app is chat-first. It opens AI, Maps, Store, and Health only when the current request needs them.",
+            summary: "The app is chat-first. A unified matching layer decides which content, tool, or surface should come next.",
             state: .ready,
             metrics: [
                 .init(key: "Chat", value: "Primary"),
+                .init(key: "Matcher", value: "Live"),
                 .init(key: "Maps", value: "Ready"),
+                .init(key: "Music", value: "Player ready"),
+                .init(key: "Video", value: "Surface ready"),
                 .init(key: "Store", value: "Ready"),
                 .init(key: "Health", value: healthReady ? "On-demand" : (supportsHealthData ? "Available later" : "Unavailable"))
             ],
             footer: healthReady
-                ? "Apple Health is available locally, but it is not foregrounded unless the user asks."
+                ? "Apple Health is available locally, but the matcher keeps it dormant until the thread explicitly asks for grounded context."
                 : "Health stays dormant until the thread explicitly asks for it."
         )
     }
@@ -582,14 +1150,45 @@ final class ChatStore {
         ConversationToolResult(
             id: "maps_surface",
             title: "Maps Surface",
-            summary: "Prepared nearby places and route context inside the app shell.",
-            state: .working,
+            summary: "Prepared nearby places, live route context, and in-app navigation inside the shell.",
+            state: .ready,
             metrics: [
                 .init(key: "Places", value: "Clinics · Pharmacy · Gym"),
                 .init(key: "Mode", value: "Task-first"),
-                .init(key: "Map", value: "Surface ready")
+                .init(key: "Route", value: "In-app"),
+                .init(key: "CarPlay", value: "Ready")
             ],
-            footer: "Live location search and route execution are still placeholders in this pass."
+            footer: "Chat can hand off into live map search, navigation, and route return without breaking the thread."
+        )
+    }
+
+    private static func musicSurfaceResult() -> ConversationToolResult {
+        ConversationToolResult(
+            id: "music_surface",
+            title: "Music Layer",
+            summary: "Prepared a persistent music player that keeps playback live while chat stays primary.",
+            state: .ready,
+            metrics: [
+                .init(key: "Player", value: "Persistent"),
+                .init(key: "Entry", value: "Intent-driven"),
+                .init(key: "Thread", value: "Unchanged")
+            ],
+            footer: "Music is not a permanent tab. It hangs off the shell while the conversation keeps going."
+        )
+    }
+
+    private static func videoSurfaceResult() -> ConversationToolResult {
+        ConversationToolResult(
+            id: "video_surface",
+            title: "Video Layer",
+            summary: "Prepared a focused video surface for visual answers, demos, and guided sessions.",
+            state: .ready,
+            metrics: [
+                .init(key: "Surface", value: "Focused"),
+                .init(key: "Return", value: "Summary only"),
+                .init(key: "Thread", value: "Preserved")
+            ],
+            footer: "Video opens only when the answer needs a visual surface instead of a long chat reply."
         )
     }
 
@@ -619,11 +1218,12 @@ final class ChatStore {
             metrics: [
                 .init(key: "Chat", value: "Ready"),
                 .init(key: "Health", value: supportsHealthData ? "Connect" : "Unavailable"),
-                .init(key: "Maps", value: "Ready")
+                .init(key: "Maps", value: "Ready"),
+                .init(key: "Music", value: "Ready")
             ],
             footer: supportsHealthData
                 ? "Open the Health surface to grant Apple Health access."
-                : "Use AI, Maps, and Store without local Apple Health."
+                : "Use AI, Maps, Music, Video, and Store without local Apple Health."
         )
     }
 
@@ -640,6 +1240,201 @@ final class ChatStore {
             ],
             footer: "Use this testing route to jump into the user interface from chat."
         )
+    }
+
+    private func healthReturnMessage(
+        for session: HealthRouteSession,
+        dashboard: HealthDashboard
+    ) -> ConversationMessage? {
+        let summary = healthReturnSummary(for: session, dashboard: dashboard)
+        let title = session.language == .chinese ? "Health 已回写线程" : "Health wrote back to chat"
+        let text = session.language == .chinese
+            ? "已回到聊天。Health 保留了原线程，并把本地摘要写回这里。"
+            : "Back in chat. Health kept the same thread and wrote the local summary below."
+
+        return .assistant(
+            text: text,
+            tags: [
+                "Health",
+                session.language == .chinese ? "返回聊天" : "Back in chat"
+            ],
+            toolResults: [
+                ConversationToolResult(
+                    id: "health-return-\(session.topic.rawValue)",
+                    title: title,
+                    summary: summary,
+                    state: .ready,
+                    metrics: [
+                        .init(
+                            key: session.language == .chinese ? "主题" : "Topic",
+                            value: session.topic.title(for: session.language)
+                        ),
+                        .init(
+                            key: session.language == .chinese ? "数据" : "Data",
+                            value: session.language == .chinese ? "本地 Apple Health" : "Local Apple Health"
+                        ),
+                        .init(
+                            key: session.language == .chinese ? "线程" : "Thread",
+                            value: session.language == .chinese ? "原会话保留" : "Original thread kept"
+                        )
+                    ],
+                    footer: session.language == .chinese
+                        ? "回到聊天后只保留摘要，不回写原始健康数据。"
+                        : "Only summarized output returns to chat, not raw Health data."
+                )
+            ]
+        )
+    }
+
+    private func healthReturnSummary(
+        for session: HealthRouteSession,
+        dashboard: HealthDashboard
+    ) -> String {
+        switch (session.topic, session.language) {
+        case (.sleep, .chinese):
+            return "最近 \(dashboard.sleepSummary.nightsTracked) 晚平均睡眠 \(dashboard.sleepSummary.averageHours.formattedOneDecimal) 小时，最新一晚 \(dashboard.sleepSummary.latestHours.formattedOneDecimal) 小时。"
+        case (.sleep, .english):
+            return "Sleep averaged \(dashboard.sleepSummary.averageHours.formattedOneDecimal) h/night across \(dashboard.sleepSummary.nightsTracked) nights. The latest night was \(dashboard.sleepSummary.latestHours.formattedOneDecimal) h."
+        case (.activity, .chinese):
+            return "最近分析窗口内记录了 \(dashboard.workouts.count) 次运动，最新一次是 \(dashboard.workouts.first?.activity ?? "最新活动")。"
+        case (.activity, .english):
+            return "The current window includes \(dashboard.workouts.count) workouts, with \(dashboard.workouts.first?.activity ?? "the latest activity") as the newest session."
+        case (.heart, .chinese):
+            if let signal = heartSignal(in: dashboard) {
+                return "心率相关信号提示：\(signal.highlight)"
+            }
+            return dashboard.hero.summary
+        case (.heart, .english):
+            if let signal = heartSignal(in: dashboard) {
+                return "Heart-rate signal update: \(signal.highlight)"
+            }
+            return dashboard.hero.summary
+        case (.ecg, .chinese):
+            if let latestReading = dashboard.ecgReadings.first {
+                return "最近 ECG 记录为“\(latestReading.classification)”，当前窗口共 \(dashboard.ecgReadings.count) 条。"
+            }
+            return "当前窗口没有可回写的 ECG 记录。"
+        case (.ecg, .english):
+            if let latestReading = dashboard.ecgReadings.first {
+                return "The latest ECG reading is “\(latestReading.classification),” with \(dashboard.ecgReadings.count) readings in the current window."
+            }
+            return "There are no ECG readings available to write back in the current window."
+        case (.recovery, .chinese), (.overall, .chinese):
+            return Self.leadingInsight(in: dashboard)?.summary ?? dashboard.hero.summary
+        case (.recovery, .english), (.overall, .english):
+            return Self.leadingInsight(in: dashboard)?.summary ?? dashboard.hero.summary
+        }
+    }
+
+    private func aiReturnMessage(dashboard: HealthDashboard?) -> ConversationMessage {
+        let summary: String
+        let primaryRuntime: String
+        let healthState: String
+
+        if let dashboard {
+            summary = "AI surfaced the current runtime: one local-first orchestrator stays primary, Health grounding remains on-demand, and cloud fallback stays off by default."
+            primaryRuntime = dashboard.modelSummary?.engine ?? "Local-first"
+            healthState = "Grounded on demand"
+        } else {
+            summary = "AI surfaced the current runtime: the conversation layer is live, Health grounding can be attached later, and cloud fallback stays off by default."
+            primaryRuntime = "kAir Orchestrator"
+            healthState = supportsHealthData ? "Attach later" : "Unavailable"
+        }
+
+        return .assistant(
+            text: "Back in chat. AI returned the runtime summary below.",
+            tags: ["AI", "Back in chat"],
+            toolResults: [
+                ConversationToolResult(
+                    id: "ai-return",
+                    title: "AI wrote back to chat",
+                    summary: summary,
+                    state: .ready,
+                    metrics: [
+                        .init(key: "Primary", value: primaryRuntime),
+                        .init(key: "Health", value: healthState),
+                        .init(key: "Thread", value: "Original thread kept")
+                    ],
+                    footer: "The AI page stays a focused surface while chat remains the default entry."
+                )
+            ]
+        )
+    }
+
+    private func storeReturnMessage() -> ConversationMessage {
+        .assistant(
+            text: "Back in chat. Store returned the curation summary below.",
+            tags: ["Store", "Back in chat"],
+            toolResults: [
+                ConversationToolResult(
+                    id: "store-return",
+                    title: "Store wrote back to chat",
+                    summary: "Store kept the same thread and returned curated directions around recovery, wearables, and nutrition. Checkout remains intentionally unwired.",
+                    state: .ready,
+                    metrics: [
+                        .init(key: "Focus", value: "Recovery first"),
+                        .init(key: "Catalog", value: "Curated"),
+                        .init(key: "Thread", value: "Original thread kept")
+                    ],
+                    footer: "The commerce layer is still a focused surface, not a separate conversation."
+                )
+            ]
+        )
+    }
+
+    private func musicReturnMessage(session: MusicPlaybackSession?) -> ConversationMessage {
+        let title = session?.title ?? "Music"
+        let mood = session?.mood.title ?? "Playback"
+
+        return .assistant(
+            text: "Back in chat. Music kept the player alive below and returned the current playback summary.",
+            tags: ["Music", "Back in chat"],
+            toolResults: [
+                ConversationToolResult(
+                    id: "music-return",
+                    title: "Music wrote back to chat",
+                    summary: "\(title) is still active in the persistent player while the conversation remains the main surface.",
+                    state: .ready,
+                    metrics: [
+                        .init(key: "Track", value: title),
+                        .init(key: "Mode", value: mood),
+                        .init(key: "Thread", value: "Original thread kept")
+                    ],
+                    footer: "Leaving Music does not stop playback unless the user explicitly stops it."
+                )
+            ]
+        )
+    }
+
+    private func videoReturnMessage(session: VideoPlaybackSession?) -> ConversationMessage {
+        let title = session?.title ?? "Video"
+        let category = session?.category.title ?? "Visual response"
+
+        return .assistant(
+            text: "Back in chat. Video returned the compact summary below.",
+            tags: ["Video", "Back in chat"],
+            toolResults: [
+                ConversationToolResult(
+                    id: "video-return",
+                    title: "Video wrote back to chat",
+                    summary: "\(title) finished as a focused surface and returned control to the original thread.",
+                    state: .ready,
+                    metrics: [
+                        .init(key: "Title", value: title),
+                        .init(key: "Category", value: category),
+                        .init(key: "Thread", value: "Original thread kept")
+                    ],
+                    footer: "Video stays an invoked surface instead of becoming a second home."
+                )
+            ]
+        )
+    }
+
+    private func heartSignal(in dashboard: HealthDashboard) -> SignalSeries? {
+        dashboard.signals.first { signal in
+            let label = signal.label.lowercased()
+            return label.contains("heart") || signal.id.contains("heart")
+        }
     }
 
     private static func leadingInsight(in dashboard: HealthDashboard) -> InsightCard? {
@@ -664,24 +1459,24 @@ final class ChatStore {
         switch session.language {
         case .chinese:
             if dashboard != nil {
-                return "这是一个\(topic)状态查询。我会把它交给 Health 页面，用本地 Apple Health 证据和趋势来完成；你仍然留在同一个会话里。"
+                return "进入 Health 继续这个\(topic)查询。原线程保留，返回后只回写摘要。"
             }
 
             if supportsHealthData {
-                return "这是一个\(topic)状态查询。我先把它交给 Health 页面；如果这台设备还没授权，页面会先说明为什么需要 Apple Health 权限。"
+                return "进入 Health 处理这个\(topic)查询。若这台设备还没授权，页面会先说明所需权限。"
             }
 
-            return "这是一个\(topic)状态查询。我会打开 Health 页面，但这台设备当前不能提供本地 Apple Health 证据。"
+            return "进入 Health 查看这个\(topic)查询，但这台设备当前不能提供本地 Apple Health 数据。"
         case .english:
             if dashboard != nil {
-                return "This is a focused \(topic.lowercased()) check. I’m handing it to Health so the page can answer with local evidence and trends while keeping this thread intact."
+                return "Entering Health for this \(topic.lowercased()) check. The original thread stays here and only the summary writes back."
             }
 
             if supportsHealthData {
-                return "This is a focused \(topic.lowercased()) check. I’m handing it to Health now, and the page will explain Apple Health access first if this device has not been authorized yet."
+                return "Entering Health for this \(topic.lowercased()) check. The page will explain Apple Health access first if this device is not authorized yet."
             }
 
-            return "This is a focused \(topic.lowercased()) check. I can open Health, but this device cannot provide local Apple Health evidence right now."
+            return "Entering Health for this \(topic.lowercased()) check, but this device cannot provide local Apple Health data right now."
         }
     }
 
@@ -786,245 +1581,6 @@ final class ChatStore {
         case .english:
             return ["Health", session.topic.title(for: .english), "Focused surface"]
         }
-    }
-
-    private func handleMapsFlow(prompt: String) -> ConversationMessage? {
-        if let pendingMapsIntent {
-            guard let mode = travelMode(from: prompt) else {
-                return .assistant(
-                    text: followUpReminderText(for: pendingMapsIntent),
-                    tags: mapsTags(language: pendingMapsIntent.language, stage: "Clarify mode"),
-                    toolResults: [pendingMapsResult(for: pendingMapsIntent)]
-                )
-            }
-
-            let session = MapsRouteSession.mock(
-                destination: pendingMapsIntent.destination,
-                mode: mode,
-                language: pendingMapsIntent.language
-            )
-            resolvedMapsSession = session
-            self.pendingMapsIntent = nil
-
-            return .assistant(
-                text: resolvedMapsText(for: session),
-                tags: mapsTags(language: session.language, stage: session.mode.title),
-                toolResults: [
-                    resolvedMapsResult(for: session),
-                    plannerWindowResult(for: session)
-                ]
-            )
-        }
-
-        guard let intent = explicitMapsIntent(from: prompt) else {
-            return nil
-        }
-
-        pendingMapsIntent = intent
-        resolvedMapsSession = nil
-
-        return .assistant(
-            text: followUpQuestionText(for: intent),
-            tags: mapsTags(language: intent.language, stage: "Awaiting mode"),
-            toolResults: [pendingMapsResult(for: intent)]
-        )
-    }
-
-    private func followUpQuestionText(for intent: PendingMapsIntent) -> String {
-        switch intent.language {
-        case .chinese:
-            return "可以，我先把“\(intent.destination)”当作路线请求。你想开车去，还是走路去？"
-        case .english:
-            return "I can treat \(intent.destination) as a route request. Do you want to drive there or walk?"
-        }
-    }
-
-    private func followUpReminderText(for intent: PendingMapsIntent) -> String {
-        switch intent.language {
-        case .chinese:
-            return "我还需要先知道你想开车还是走路，这样我才能把两条候选路线推到 Maps 页面。"
-        case .english:
-            return "I still need the travel mode first. Tell me whether you want to drive or walk, then I can stage two route options for Maps."
-        }
-    }
-
-    private func resolvedMapsText(for session: MapsRouteSession) -> String {
-        switch session.language {
-        case .chinese:
-            return "明白，按\(session.mode.chineseTitle)模式处理。我已经准备好两条具体路径，并把结果交给 Maps 页面。当前这一步先用文字代替真实地图决策。"
-        case .english:
-            return "Understood. I staged two concrete \(session.mode.title.lowercased()) routes and handed the result into Maps. This pass still uses text in place of the real map runtime."
-        }
-    }
-
-    private func pendingMapsResult(for intent: PendingMapsIntent) -> ConversationToolResult {
-        switch intent.language {
-        case .chinese:
-            return ConversationToolResult(
-                id: "maps_route_pending",
-                title: "路线意图已锁定",
-                summary: "目的地已识别为“\(intent.destination)”。下一步只需要确认交通方式。",
-                state: .working,
-                metrics: [
-                    .init(key: "目的地", value: intent.destination),
-                    .init(key: "状态", value: "等待开车 / 走路"),
-                    .init(key: "输出", value: "Maps 页面")
-                ],
-                footer: "v0.1 先做文字链路，真实 LLM 和地图服务后接。"
-            )
-        case .english:
-            return ConversationToolResult(
-                id: "maps_route_pending",
-                title: "Route intent captured",
-                summary: "The destination is locked as \(intent.destination). The next step is confirming the travel mode.",
-                state: .working,
-                metrics: [
-                    .init(key: "Destination", value: intent.destination),
-                    .init(key: "Status", value: "Awaiting drive / walk"),
-                    .init(key: "Output", value: "Maps surface")
-                ],
-                footer: "v0.1 stages the text flow first, then swaps in the real LLM and map runtime later."
-            )
-        }
-    }
-
-    private func resolvedMapsResult(for session: MapsRouteSession) -> ConversationToolResult {
-        let primaryRoute = session.routeOptions.first
-
-        switch session.language {
-        case .chinese:
-            return ConversationToolResult(
-                id: "maps_route_ready",
-                title: "路线方案已生成",
-                summary: "已为“\(session.destination)”生成两条\(session.mode.chineseTitle)候选路线，并准备好交给 Maps 页面。",
-                state: .ready,
-                metrics: [
-                    .init(key: "模式", value: session.mode.chineseTitle),
-                    .init(key: "推荐", value: primaryRoute?.title ?? "候选路径"),
-                    .init(key: "预计", value: primaryRoute?.eta ?? "--")
-                ],
-                footer: "当前 ETA 和距离为占位值，后续改由本地模型和地图数据刷新。"
-            )
-        case .english:
-            return ConversationToolResult(
-                id: "maps_route_ready",
-                title: "Route plan staged",
-                summary: "Two \(session.mode.title.lowercased()) routes are ready for \(session.destination), and the result is prepared for the Maps surface.",
-                state: .ready,
-                metrics: [
-                    .init(key: "Mode", value: session.mode.title),
-                    .init(key: "Best", value: primaryRoute?.title ?? "Candidate"),
-                    .init(key: "ETA", value: primaryRoute?.eta ?? "--")
-                ],
-                footer: "ETA and distance are placeholders for now. The on-device model and map data will replace them later."
-            )
-        }
-    }
-
-    private func plannerWindowResult(for session: MapsRouteSession) -> ConversationToolResult {
-        switch session.language {
-        case .chinese:
-            return ConversationToolResult(
-                id: "maps_planner_window",
-                title: "本地模型窗口",
-                summary: session.plannerSummary,
-                state: .working,
-                metrics: [
-                    .init(key: "解析", value: "地点 + 模式"),
-                    .init(key: "排序", value: "两条候选路径"),
-                    .init(key: "执行", value: "稍后接 Maps")
-                ],
-                footer: "这里就是后续接大模型与真实路线规划的固定接口。"
-            )
-        case .english:
-            return ConversationToolResult(
-                id: "maps_planner_window",
-                title: "Local model window",
-                summary: session.plannerSummary,
-                state: .working,
-                metrics: [
-                    .init(key: "Parsing", value: "Place + mode"),
-                    .init(key: "Ranking", value: "Two route options"),
-                    .init(key: "Execution", value: "Maps later")
-                ],
-                footer: "This is the stable interface where the model and real route planner will plug in next."
-            )
-        }
-    }
-
-    private func mapsTags(language: MapsConversationLanguage, stage: String) -> [String] {
-        switch language {
-        case .chinese:
-            return ["Maps", "路线", stage]
-        case .english:
-            return ["Maps", "Route", stage]
-        }
-    }
-
-    private func explicitMapsIntent(from prompt: String) -> PendingMapsIntent? {
-        let trimmed = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.isEmpty == false else { return nil }
-
-        let language: MapsConversationLanguage = Self.containsChinese(in: trimmed) ? .chinese : .english
-
-        if selectedModeID == "route", travelMode(from: trimmed) == nil {
-            return PendingMapsIntent(
-                destination: sanitizedDestination(from: trimmed),
-                language: language,
-                originalPrompt: prompt
-            )
-        }
-
-        let chinesePrefixes = [
-            "我想去",
-            "我要去",
-            "带我去",
-            "导航到",
-            "带我到"
-        ]
-        for prefix in chinesePrefixes where trimmed.hasPrefix(prefix) {
-            let destination = sanitizedDestination(from: String(trimmed.dropFirst(prefix.count)))
-            guard destination.isEmpty == false else { return nil }
-            return PendingMapsIntent(
-                destination: destination,
-                language: .chinese,
-                originalPrompt: prompt
-            )
-        }
-
-        let normalized = trimmed.lowercased()
-        let englishPrefixes = [
-            "i want to go to ",
-            "i need to go to ",
-            "take me to ",
-            "navigate to ",
-            "go to "
-        ]
-        for prefix in englishPrefixes where normalized.hasPrefix(prefix) {
-            let destination = sanitizedDestination(from: String(trimmed.dropFirst(prefix.count)))
-            guard destination.isEmpty == false else { return nil }
-            return PendingMapsIntent(
-                destination: destination,
-                language: .english,
-                originalPrompt: prompt
-            )
-        }
-
-        return nil
-    }
-
-    private func travelMode(from prompt: String) -> MapsTravelMode? {
-        let normalized = prompt.lowercased()
-
-        if normalized.contains("走路") || normalized.contains("步行") || normalized.contains("walk") || normalized.contains("walking") {
-            return .walking
-        }
-
-        if normalized.contains("开车") || normalized.contains("驾车") || normalized.contains("drive") || normalized.contains("driving") || normalized.contains("car") {
-            return .driving
-        }
-
-        return nil
     }
 
     private func explicitHealthIntent(from prompt: String) -> HealthRouteSession? {
@@ -1283,6 +1839,18 @@ final class ChatStore {
         return englishCommands.contains(normalized) || chineseCommands.contains(prompt)
     }
 
+    private func isMusicCommand(_ normalized: String, prompt: String) -> Bool {
+        let englishCommands = ["music", "open music", "music player"]
+        let chineseCommands = ["音乐", "打开音乐", "音乐播放器"]
+        return englishCommands.contains(normalized) || chineseCommands.contains(prompt)
+    }
+
+    private func isVideoCommand(_ normalized: String, prompt: String) -> Bool {
+        let englishCommands = ["video", "open video", "video player"]
+        let chineseCommands = ["视频", "打开视频", "视频播放器"]
+        return englishCommands.contains(normalized) || chineseCommands.contains(prompt)
+    }
+
     private func isUserCommand(_ normalized: String, prompt: String) -> Bool {
         let englishCommands = ["user", "profile", "me", "open user"]
         let chineseCommands = ["用户", "个人资料", "设置", "我的"]
@@ -1297,17 +1865,579 @@ final class ChatStore {
         }
     }
 
+    private func recordEvent(
+        stage: MatchingBehaviorEvent.Stage,
+        subject: MatchingBehaviorEvent.Subject,
+        candidateID: String? = nil,
+        objectKind: MatchingObjectKind? = nil,
+        surface: AppSection? = nil,
+        rawText: String? = nil,
+        tags: Set<MatchingIntentTag>,
+        feedback: MatchingFeedbackKind? = nil,
+        outcome: MatchingOutcomeMetrics = MatchingOutcomeMetrics()
+    ) {
+        let event = MatchingBehaviorEvent(
+            stage: stage,
+            subject: subject,
+            candidateID: candidateID,
+            objectKind: objectKind,
+            surface: surface,
+            rawText: rawText,
+            tags: tags,
+            feedback: feedback,
+            outcome: outcome
+        )
+        
+        print("[ChatStore] Event: stage=\(stage.rawValue), subject=\(subject.rawValue), id=\(candidateID ?? "nil"), kind=\(objectKind?.rawValue ?? "nil"), feedback=\(feedback?.rawValue ?? "nil")")
+        
+        behaviorLog.append(event)
+        replayLab.recordOutcomeEvent(event)
+
+        if behaviorLog.count > 64 {
+            behaviorLog.removeFirst(behaviorLog.count - 64)
+        }
+    }
+
+    private func refreshRecommendedMatches(
+        seedPrompt: String? = nil,
+        replaceActiveLifecycle: Bool = false
+    ) {
+        if replaceActiveLifecycle {
+            _ = eventRecorder.abandonActiveLifecycleIfNeeded(surface: .chat)
+            syncClosedLifecycleArtifacts()
+        }
+
+        let snapshot = matchingSnapshot(
+            label: "Current thread",
+            recentPrompt: seedPrompt
+        )
+        replayFrames = [
+            replayLab.beginScenario(
+                snapshot: snapshot,
+                recentEventsWindow: Array(behaviorLog.suffix(8))
+            ),
+        ]
+        recommendedMatches = replayFrames.first?.recommendations ?? []
+        beginDecisionLifecycle(seedPrompt: seedPrompt)
+        recordRecommendationImpressions(for: recommendedMatches)
+    }
+
+    private func beginDecisionLifecycle(seedPrompt: String?) {
+        let returnContextState = pendingReturnContextState
+        let bundle = matchingEngine.decideWithSnapshot(
+            recentPrompt: seedPrompt,
+            session: session,
+            healthAvailability: healthAvailability,
+            locationState: locationState,
+            motionContext: motionContext,
+            behaviorLog: behaviorLog,
+            returnContextState: returnContextState,
+            activeSurface: .chat
+        )
+        eventRecorder.beginLifecycle(
+            context: bundle.contextSnapshot,
+            decision: bundle.decision
+        )
+        activeDecision = bundle.decision
+        pendingReturnContextState = nil
+    }
+
+    private func matchingTags(from text: String) -> Set<MatchingIntentTag> {
+        matchingEngine.intentTags(for: text)
+    }
+
+    var debugPendingReturnContextState: ExecutionReturnContextState? {
+        pendingReturnContextState
+    }
+
+    func debugApplyExecutionReturnPayload(_ payload: ExecutionReturnPayload) {
+        applyExecutionReturnPayload(payload)
+    }
+
+    func scenarioPrimeRecommendations(seedPrompt: String?) {
+        refreshRecommendedMatches(
+            seedPrompt: seedPrompt,
+            replaceActiveLifecycle: false
+        )
+    }
+
+    private func applyExecutionReturnPayload(_ payload: ExecutionReturnPayload) {
+        let foldback = ExecutionReturnContextState.from(payload: payload)
+        if let pendingReturnContextState {
+            self.pendingReturnContextState = pendingReturnContextState.merged(with: foldback)
+        } else {
+            pendingReturnContextState = foldback
+        }
+    }
+
+    private func syncClosedLifecycleArtifacts() {
+        if let export = eventRecorder.lastPersistedExport {
+            lastExportedSession = export
+        }
+        replayLab.finalizePendingScenario()
+    }
+
+    private func recordRecommendationImpressions(for recommendations: [UnifiedMatchRecommendation]) {
+        let visibleRecommendations = Array(recommendations.prefix(4))
+        let visibleIDs = visibleRecommendations.map(\.id)
+        guard visibleIDs != lastImpressedRecommendationIDs else { return }
+
+        lastImpressedRecommendationIDs = visibleIDs
+
+        for recommendation in visibleRecommendations {
+            recordEvent(
+                stage: .impression,
+                subject: .recommendation,
+                candidateID: recommendation.candidate.id,
+                objectKind: recommendation.candidate.objectKind,
+                surface: recommendation.candidate.preferredSection,
+                rawText: recommendation.candidate.activationPrompt,
+                tags: recommendation.candidate.tags
+            )
+        }
+    }
+
+    private func consumeAcceptedRecommendation(for prompt: String) -> UnifiedMatchRecommendation? {
+        guard let recommendation = pendingAcceptedRecommendation else { return nil }
+        pendingAcceptedRecommendation = nil
+
+        guard recommendation.candidate.activationPrompt == prompt else {
+            return nil
+        }
+
+        return recommendation
+    }
+
+    private func registerAcceptedRecommendation(
+        _ recommendation: UnifiedMatchRecommendation?,
+        for route: ConversationRoute?
+    ) {
+        guard let recommendation else { return }
+
+        let section: AppSection?
+        switch route?.destination {
+        case .surface(let destination):
+            activeRecommendationBySection[destination] = recommendation
+            section = destination
+        case .persistentPlayer:
+            activeRecommendationBySection[.music] = recommendation
+            section = .music
+        case .userProfile, .none:
+            section = nil
+        }
+
+        if let section {
+            executionStartDates[section] = .now
+            eventRecorder.recordExecutionOpen(
+                candidate: recommendation,
+                surface: section
+            )
+            preparePendingSurfaceEntryRequest(
+                for: section,
+                candidate: recommendation
+            )
+        }
+    }
+
+    private func preparePendingSurfaceEntryRequest(
+        for section: AppSection,
+        candidate: UnifiedMatchRecommendation
+    ) {
+        guard section != .chat else { return }
+        let intent = SurfaceEntryIntent(section: section)
+        var args: [String: String] = [:]
+        var objectType: String = candidate.candidate.objectKind.rawValue
+        var objectId: String? = candidate.candidate.id
+        var handoffSummary: String? = nil
+
+        switch section {
+        case .maps:
+            if let task = resolvedMapTask {
+                objectType = MatchingObjectKind.place.rawValue
+                objectId = task.id
+                args["query"] = task.query
+                args["task_type"] = task.taskType.rawValue
+                args["language"] = task.language.usesChineseCopy ? "zh" : "en"
+                args["entry_mode"] = task.entryMode.rawValue
+                if let mode = task.transportMode {
+                    args["transport_mode"] = mode.rawValue
+                }
+                handoffSummary = task.resultSummary.isEmpty ? nil : task.resultSummary
+            }
+        case .music:
+            if let musicSession = resolvedMusicSession {
+                objectType = MatchingObjectKind.song.rawValue
+                objectId = musicSession.id.uuidString
+                args["mood"] = musicSession.mood.rawValue
+                args["query"] = musicSession.query
+                args["title"] = musicSession.title
+                handoffSummary = musicSession.subtitle
+            }
+        case .video:
+            if let videoSession = resolvedVideoSession {
+                objectType = MatchingObjectKind.video.rawValue
+                objectId = videoSession.id.uuidString
+                args["category"] = videoSession.category.rawValue
+                args["query"] = videoSession.query
+                args["title"] = videoSession.title
+                handoffSummary = videoSession.summary
+            }
+        case .health:
+            if let healthSession = resolvedHealthSession {
+                objectType = MatchingObjectKind.answerCard.rawValue
+                args["topic"] = healthSession.topic.rawValue
+                args["language"] = healthSession.language == .chinese ? "zh" : "en"
+                args["original_prompt"] = healthSession.originalPrompt
+                handoffSummary = healthSession.originalPrompt
+            }
+        case .store, .ai:
+            break
+        case .chat:
+            return
+        }
+
+        let request = SurfaceEntryRequest(
+            surfaceType: section,
+            entryIntent: intent,
+            sourceCardId: candidate.candidate.id,
+            sourceRecommendationId: activeDecision?.recommendationId,
+            sourceThreadId: self.session.id.uuidString,
+            objectType: objectType,
+            objectId: objectId,
+            normalizedArgs: args,
+            handoffContext: SurfaceEntryHandoffContext(
+                sourceMessagePreview: candidate.candidate.activationPrompt,
+                returnThreadId: self.session.id.uuidString,
+                priorContextStateSummary: handoffSummary
+            )
+        )
+        pendingSurfaceEntryRequests[section] = request
+    }
+
+    func pendingSurfaceEntryRequest(for section: AppSection) -> SurfaceEntryRequest? {
+        pendingSurfaceEntryRequests[section]
+    }
+
+    func consumePendingSurfaceEntryRequest(for section: AppSection) -> SurfaceEntryRequest? {
+        let request = pendingSurfaceEntryRequests[section]
+        pendingSurfaceEntryRequests[section] = nil
+        return request
+    }
+
+    func handleSurfaceEntryEvent(
+        phase: SurfaceEntryEventPhase,
+        request: SurfaceEntryRequest
+    ) {
+        let candidate = activeRecommendationBySection[request.surfaceType]
+        switch phase {
+        case .requested:
+            eventRecorder.recordSurfaceEntryRequested(
+                request: request,
+                candidate: candidate
+            )
+            pendingSurfaceEntryRequests[request.surfaceType] = nil
+            activeSurfaceEntryRequests[request.surfaceType] = request
+        case .started:
+            eventRecorder.recordSurfaceEntryStarted(
+                request: request,
+                candidate: candidate
+            )
+            activeSurfaceEntryRequests[request.surfaceType] = request
+        case .returned:
+            eventRecorder.recordSurfaceEntryReturned(
+                request: request,
+                payload: nil,
+                candidate: candidate
+            )
+            activeSurfaceEntryRequests[request.surfaceType] = nil
+        }
+    }
+
+    private func routeSection(for destination: ConversationDestination?) -> AppSection? {
+        switch destination {
+        case .surface(let section):
+            return section
+        case .persistentPlayer:
+            return .music
+        case .userProfile, .none:
+            return nil
+        }
+    }
+
+    private func executionReturnPayload(
+        for section: AppSection,
+        candidate: UnifiedMatchRecommendation?,
+        stage: MatchingBehaviorEvent.Stage,
+        metrics: MatchingOutcomeMetrics
+    ) -> ExecutionReturnPayload {
+        let outcome: ExecutionOutcome = {
+            switch stage {
+            case .completion:
+                return metrics.wasSuccessful ? .completed : .partial
+            case .abandon:
+                return .abandoned
+            default:
+                return metrics.wasSuccessful ? .completed : .abandoned
+            }
+        }()
+        let duration: TimeInterval = {
+            if let metricDuration = metrics.dwellSeconds {
+                return metricDuration
+            }
+            if let started = executionStartDates[section] {
+                return max(0, Date.now.timeIntervalSince(started))
+            }
+            return 0
+        }()
+        let addedIntentTags = executionFoldbackTags(
+            for: section,
+            candidate: candidate,
+            stage: stage,
+            metrics: metrics
+        )
+        let resolvedObjectIds: [String]
+        let dismissedObjectIds: [String]
+
+        switch stage {
+        case .completion:
+            resolvedObjectIds = candidate.map { [$0.candidate.id] } ?? []
+            dismissedObjectIds = []
+        case .abandon:
+            resolvedObjectIds = []
+            dismissedObjectIds = []
+        case .accept, .click, .dismiss, .impression:
+            resolvedObjectIds = []
+            dismissedObjectIds = []
+        }
+
+        let delta = ExecutionReturnPayload.ReturnContextDelta(
+            downstreamValue: metrics.downstreamValue,
+            completionScore: metrics.completionScore,
+            addedIntentTags: addedIntentTags,
+            resolvedObjectIds: resolvedObjectIds,
+            dismissedObjectIds: dismissedObjectIds,
+            summary: candidate?.candidate.activationPrompt ?? section.title
+        )
+        let entryRequest = activeSurfaceEntryRequests[section]
+            ?? pendingSurfaceEntryRequests[section]
+        return ExecutionReturnPayload(
+            executedCandidateId: candidate?.candidate.id ?? section.rawValue,
+            executionSurfaceType: section,
+            outcome: outcome,
+            duration: duration,
+            returnContextDelta: delta,
+            sourceRequestId: entryRequest?.requestId,
+            sourceRecommendationId: entryRequest?.sourceRecommendationId
+                ?? activeDecision?.recommendationId
+        )
+    }
+
+    private func executionFoldbackTags(
+        for section: AppSection,
+        candidate: UnifiedMatchRecommendation?,
+        stage: MatchingBehaviorEvent.Stage,
+        metrics: MatchingOutcomeMetrics
+    ) -> [MatchingIntentTag] {
+        guard stage == .completion else {
+            return []
+        }
+
+        var tags = candidate?.candidate.tags ?? []
+        if metrics.wasSuccessful {
+            switch section {
+            case .maps:
+                tags.formUnion([.navigation, .planning])
+            case .music:
+                tags.formUnion([.focus, .entertainment])
+            case .video:
+                tags.formUnion([.entertainment, .search])
+            case .health:
+                tags.formUnion([.health])
+            case .ai:
+                tags.formUnion([.ai, .search])
+            case .store:
+                tags.formUnion([.shopping])
+            case .chat:
+                break
+            }
+        }
+        return tags.sorted { $0.rawValue < $1.rawValue }
+    }
+
+    private func surfaceReturnStage(for context: AppSurfaceReturnContext) -> MatchingBehaviorEvent.Stage {
+        switch context.section {
+        case .music:
+            return context.musicSession == nil ? .abandon : .completion
+        case .video:
+            return context.videoSession == nil ? .abandon : .completion
+        case .health, .ai, .store:
+            return .completion
+        case .chat, .maps:
+            return .abandon
+        }
+    }
+
+    private func outcomeMetrics(
+        for context: AppSurfaceReturnContext,
+        healthSession: HealthRouteSession?
+    ) -> MatchingOutcomeMetrics {
+        switch context.section {
+        case .health:
+            return MatchingOutcomeMetrics(
+                downstreamValue: healthSession == nil ? 0.18 : 0.72,
+                completionScore: healthSession == nil ? 0.22 : 0.74,
+                dwellSeconds: healthSession.map { Date.now.timeIntervalSince($0.generatedAt) },
+                wasSuccessful: healthSession != nil
+            )
+        case .ai:
+            return MatchingOutcomeMetrics(
+                downstreamValue: 0.5,
+                completionScore: 0.58,
+                wasSuccessful: true
+            )
+        case .music:
+            return MatchingOutcomeMetrics(
+                downstreamValue: context.musicSession == nil ? 0.12 : 0.7,
+                completionScore: context.musicSession == nil ? 0.16 : 0.68,
+                dwellSeconds: context.musicSession.map { Date.now.timeIntervalSince($0.startedAt) },
+                wasSuccessful: context.musicSession != nil
+            )
+        case .store:
+            return MatchingOutcomeMetrics(
+                downstreamValue: 0.42,
+                completionScore: 0.46,
+                wasSuccessful: true
+            )
+        case .video:
+            return MatchingOutcomeMetrics(
+                downstreamValue: context.videoSession == nil ? 0.2 : 0.6,
+                completionScore: context.videoSession == nil ? 0.22 : 0.64,
+                dwellSeconds: context.videoSession.map { Date.now.timeIntervalSince($0.startedAt) },
+                wasSuccessful: context.videoSession != nil
+            )
+        case .chat, .maps:
+            return .neutral
+        }
+    }
+
+    private func outcomeMetrics(for feedback: MatchingFeedbackKind) -> MatchingOutcomeMetrics {
+        switch feedback {
+        case .dismiss:
+            return MatchingOutcomeMetrics(
+                downstreamValue: -0.10,
+                completionScore: 0,
+                wasSuccessful: false
+            )
+        case .notInterested:
+            return MatchingOutcomeMetrics(
+                downstreamValue: -0.28,
+                completionScore: 0,
+                wasSuccessful: false
+            )
+        case .lessLikeThis:
+            return MatchingOutcomeMetrics(
+                downstreamValue: -0.18,
+                completionScore: 0,
+                wasSuccessful: false
+            )
+        case .notNow:
+            return MatchingOutcomeMetrics(
+                downstreamValue: -0.05,
+                completionScore: 0.08,
+                wasSuccessful: false
+            )
+        case .alreadyDone:
+            return MatchingOutcomeMetrics(
+                downstreamValue: 0.34,
+                completionScore: 0.62,
+                wasSuccessful: true
+            )
+        }
+    }
+
+    private func mapReturnStage(for task: MapTask) -> MatchingBehaviorEvent.Stage {
+        if task.hasResolvedDestination || task.hasUsableRoutes || task.nearbyResults.isEmpty == false {
+            return .completion
+        }
+
+        return .abandon
+    }
+
+    private func outcomeMetrics(for task: MapTask) -> MatchingOutcomeMetrics {
+        let success = task.hasResolvedDestination || task.hasUsableRoutes || task.nearbyResults.isEmpty == false
+        let downstreamValue: Double
+
+        switch task.taskType {
+        case .goToPlace:
+            downstreamValue = success ? 0.84 : 0.2
+        case .nearbySearch, .recommendation:
+            downstreamValue = success ? 0.66 : 0.18
+        case .routeComparison:
+            downstreamValue = success ? 0.88 : 0.24
+        }
+
+        return MatchingOutcomeMetrics(
+            downstreamValue: downstreamValue,
+            completionScore: success ? 0.78 : 0.22,
+            dwellSeconds: Date.now.timeIntervalSince(task.generatedAt),
+            wasSuccessful: success
+        )
+    }
+
+    private func mapObjectKind(for task: MapTask) -> MatchingObjectKind {
+        switch task.taskType {
+        case .goToPlace, .nearbySearch, .recommendation:
+            return .place
+        case .routeComparison:
+            return .route
+        }
+    }
+
+    private func syncSpatialContext(from task: MapTask) {
+        switch task.permissionState {
+        case .authorizedWhenInUse:
+            locationState = .precise
+        case .manualOnly:
+            locationState = .approximate
+        case .denied:
+            locationState = .unavailable
+        case .unknown, .notDetermined:
+            break
+        }
+
+        switch task.transportMode {
+        case .walking:
+            motionContext = .walking
+        case .driving:
+            motionContext = .driving
+        case .transit, .none:
+            motionContext = .stationary
+        }
+    }
+
+    private func matchingSnapshot(
+        label: String,
+        recentPrompt: String?
+    ) -> MatchingReplaySnapshot {
+        MatchingReplaySnapshot(
+            label: label,
+            recentPrompt: recentPrompt,
+            capturedAt: .now,
+            session: session,
+            healthAvailability: healthAvailability,
+            locationState: locationState,
+            motionContext: motionContext,
+            activeSurface: .chat,
+            returnContextState: pendingReturnContextState,
+            behaviorLog: behaviorLog
+        )
+    }
+
     private func persistIfNeeded() {
         guard isTemplateChat == false else {
             return
         }
         persistence.save(session)
-    }
-
-    private func sanitizedDestination(from raw: String) -> String {
-        raw
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .trimmingCharacters(in: CharacterSet(charactersIn: "。！？.!?,，"))
     }
 
     private static func isGenericMapsPrompt(_ normalized: String, prompt: String) -> Bool {
@@ -1329,6 +2459,62 @@ final class ChatStore {
             "诊所",
             "药店",
             "超市"
+        ]
+
+        if englishKeywords.contains(where: normalized.contains) {
+            return true
+        }
+
+        return chineseKeywords.contains(where: prompt.contains)
+    }
+
+    private static func isMusicPrompt(_ normalized: String, prompt: String) -> Bool {
+        let englishKeywords = [
+            "music",
+            "playlist",
+            "song",
+            "jazz",
+            "lofi",
+            "ambient",
+            "focus music",
+            "play",
+        ]
+        let chineseKeywords = [
+            "音乐",
+            "播放",
+            "歌",
+            "歌单",
+            "爵士",
+            "白噪音",
+            "专注",
+            "放松",
+        ]
+
+        let englishSignal = englishKeywords.contains(where: normalized.contains) &&
+            (normalized.contains("play") ||
+                normalized.contains("music") ||
+                normalized.contains("playlist"))
+
+        if englishSignal {
+            return true
+        }
+
+        return chineseKeywords.contains(where: prompt.contains)
+    }
+
+    private static func isVideoPrompt(_ normalized: String, prompt: String) -> Bool {
+        let englishKeywords = [
+            "video",
+            "tutorial",
+            "demo",
+            "walkthrough",
+            "watch",
+        ]
+        let chineseKeywords = [
+            "视频",
+            "教程",
+            "演示",
+            "示范",
         ]
 
         if englishKeywords.contains(where: normalized.contains) {

@@ -1,0 +1,204 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:53.863Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "how does this stay in one thread",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:53.822Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:53.822Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:53.822Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:53.822Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-answer-8",
+      "search-distractor-answer-8"
+    ],
+    "directSlotCandidateId" : "answer-target-8",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:53.863Z",
+    "objectType" : "answerCard",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "answer-target-8",
+      "music-distractor-answer-8",
+      "search-distractor-answer-8"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633713862-959639022668743816",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "answer-target-8",
+      "id" : "CEA59328-27E5-477F-89ED-F8526A4D9102",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633713862-959639022668743816",
+      "sessionId" : "scenario-answer-8",
+      "timestamp" : "2026-04-19T21:21:53.863Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-answer-8",
+      "executionSurfaceType" : "music",
+      "id" : "01208666-B9FF-46FB-938D-5FBED11F11C5",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633713862-959639022668743816",
+      "sessionId" : "scenario-answer-8",
+      "timestamp" : "2026-04-19T21:21:53.863Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-answer-8",
+      "id" : "E88B8DAA-0A21-4BD2-A1B9-37BD6E35502D",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633713862-959639022668743816",
+      "sessionId" : "scenario-answer-8",
+      "timestamp" : "2026-04-19T21:21:53.863Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-target-8",
+      "id" : "F43BB476-480A-49BF-A5A0-29A6D16E61B8",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633713862-959639022668743816",
+      "sessionId" : "scenario-answer-8",
+      "timestamp" : "2026-04-19T21:21:53.864Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "answer-target-8",
+      "executionSurfaceType" : "chat",
+      "id" : "3B332F2C-B747-45B7-9E60-6B065F4A24BD",
+      "objectType" : "answerCard",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633713862-959639022668743816",
+      "sessionId" : "scenario-answer-8",
+      "timestamp" : "2026-04-19T21:21:53.864Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "answer-target-8",
+      "executionSurfaceType" : "chat",
+      "id" : "173C9C94-6662-48B2-ACD0-2DA0B77D102C",
+      "objectType" : "answerCard",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633713862-959639022668743816",
+      "sessionId" : "scenario-answer-8",
+      "timestamp" : "2026-04-19T21:21:53.864Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "answer-target-8",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "ai",
+          "planning"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "answer-target-8"
+        ],
+        "summary" : "how does this stay in one thread"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:53.864Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-answer-8"
+}

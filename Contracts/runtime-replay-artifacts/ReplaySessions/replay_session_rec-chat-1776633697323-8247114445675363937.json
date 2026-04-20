@@ -1,0 +1,209 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:37.323Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+      "planning",
+      "search"
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "write back",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:37.186Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:37.186Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:37.186Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:37.186Z"
+      },
+      {
+        "stage" : "accept",
+        "subject" : "prompt",
+        "timestamp" : "2026-04-19T21:21:37.229Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 3
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "search-distractor-message-107",
+      "answer-distractor-message-107"
+    ],
+    "directSlotCandidateId" : "message-target-107",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:37.323Z",
+    "objectType" : "contact",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "message-target-107",
+      "search-distractor-message-107",
+      "answer-distractor-message-107"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633697323-8247114445675363937",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "message-target-107",
+      "id" : "F861C536-CFE2-4511-B55F-FBE11C0402FE",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697323-8247114445675363937",
+      "sessionId" : "scenario-message-107",
+      "timestamp" : "2026-04-19T21:21:37.324Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-message-107",
+      "id" : "E464B644-926B-4F31-BE36-BB94A2ADB198",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697323-8247114445675363937",
+      "sessionId" : "scenario-message-107",
+      "timestamp" : "2026-04-19T21:21:37.324Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-message-107",
+      "id" : "9F26B835-AB9F-4C1F-84B7-9C9C0FE93C20",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697323-8247114445675363937",
+      "sessionId" : "scenario-message-107",
+      "timestamp" : "2026-04-19T21:21:37.324Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "message-target-7",
+      "id" : "DC999A4A-C7A2-49CE-8172-DE041DC633B2",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697323-8247114445675363937",
+      "sessionId" : "scenario-message-107",
+      "timestamp" : "2026-04-19T21:21:37.324Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "message-target-7",
+      "executionSurfaceType" : "chat",
+      "id" : "BFCB8CEF-4D55-4A6E-B772-5B6B85865B32",
+      "objectType" : "contact",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697323-8247114445675363937",
+      "sessionId" : "scenario-message-107",
+      "timestamp" : "2026-04-19T21:21:37.324Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "message-target-7",
+      "executionSurfaceType" : "chat",
+      "id" : "A853E508-EE43-4A04-8CDE-CE622D07DD79",
+      "objectType" : "contact",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697323-8247114445675363937",
+      "sessionId" : "scenario-message-107",
+      "timestamp" : "2026-04-19T21:21:37.324Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "message-target-7",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "planning",
+          "social"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "message-target-7"
+        ],
+        "summary" : "text Ben that practice starts at 6"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:37.324Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-message-107"
+}
