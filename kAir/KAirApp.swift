@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct KAirApp: App {
+    @UIApplicationDelegateAdaptor(KAirAppDelegate.self) private var appDelegate
     @State private var store = HealthDashboardStore()
 
     var body: some Scene {

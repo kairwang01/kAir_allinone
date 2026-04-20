@@ -13,6 +13,8 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
     case ai
     case maps
     case store
+    case music
+    case video
 
     var id: String { rawValue }
 
@@ -28,6 +30,10 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
             return "Maps"
         case .store:
             return "Store"
+        case .music:
+            return "Music"
+        case .video:
+            return "Video"
         }
     }
 
@@ -43,6 +49,10 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
             return "map"
         case .store:
             return "bag"
+        case .music:
+            return "music.note"
+        case .video:
+            return "play.rectangle"
         }
     }
 }

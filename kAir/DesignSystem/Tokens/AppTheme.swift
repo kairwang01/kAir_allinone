@@ -55,6 +55,10 @@ enum AppTheme {
             return Palette.warning
         case .store:
             return Palette.accent
+        case .music:
+            return Palette.accent
+        case .video:
+            return Palette.sky
         }
     }
 

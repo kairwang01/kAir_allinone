@@ -256,6 +256,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "kAir reads your Apple Health data on this device to analyze trends in heart rate, sleep, oxygen, workouts, and recovery without exporting files.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "kAir uses your location only while you are using the app to find nearby places and compare routes. You can always switch to manual place input instead.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -302,6 +303,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "kAir reads your Apple Health data on this device to analyze trends in heart rate, sleep, oxygen, workouts, and recovery without exporting files.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "kAir uses your location only while you are using the app to find nearby places and compare routes. You can always switch to manual place input instead.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
