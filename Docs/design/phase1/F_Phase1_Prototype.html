@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 1 Flow Prototype</title>
+<style>
+  body { margin: 0; background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+  
+  /* Mock Device Constraints */
+  #device { width: 390px; height: 844px; background: #111; border-radius: 40px; border: 8px solid #333; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  
+  /* Layer 3: Feed */
+  #feed { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 150px; justify-content: flex-end;}
+  
+  /* Layer 2: Recommended Next */
+  #recommended-next { position: absolute; bottom: 85px; left: 0; right: 0; padding: 10px 20px; display: flex; gap: 10px; overflow-x: auto; background: linear-gradient(transparent, #111 40%); opacity: 0; transition: opacity 0.3s; scrollbar-width: none; z-index: 5;}
+  #recommended-next::-webkit-scrollbar { display: none; }
+  .chip { background: rgba(255,255,255,0.15); border-radius: 20px; padding: 8px 16px; font-size: 14px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; backdrop-filter: blur(10px); color: #e0e0e0; font-weight: 500;}
+  
+  /* Layer 1: Chat Input */
+  #chat-layer { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 20px 30px 20px; background: #111; z-index: 10; border-top: 1px solid rgba(255,255,255,0.05); }
+  .input-box { background: #1c1c1e; border-radius: 24px; padding: 16px 20px; font-size: 16px; color: #fff; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; transition: all 0.2s; }
+  .input-text { color: #888; flex: 1; }
+  
+  /* Layer 3: Action Cards */
+  .card { background: #1c1c1e; border-radius: 24px; padding: 20px; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); border: 1px solid #2c2c2e; position: relative; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .card-header { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #888; margin-bottom: 14px; font-weight: 600;}
+  .card-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px;}
+  .card-sub { font-size: 15px; color: #aaa; margin-bottom: 20px; }
+  .cta-primary { background: #fff; color: #000; padding: 14px; border-radius: 14px; text-align: center; font-weight: 600; cursor: pointer; transition: transform 0.1s; }
+  .cta-primary:active { transform: scale(0.97); }
+  .cta-primary.running { background: #34c759; color: #fff; }
+  
+  /* Layer 4: Execution Surface */
+  #sheet { position: absolute; bottom: 0; left: 0; right: 0; height: 85%; background: #1c1c1e; border-radius: 32px 32px 0 0; z-index: 20; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); padding: 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); }
+  #sheet.open { transform: translateY(0); }
+  .sheet-handle { width: 40px; height: 5px; background: #555; border-radius: 3px; margin: 0 auto 20px; }
+  #sheet-content { height: 100%; color: #fff; display: flex; flex-direction: column; }
+  
+  /* Mini Player Layer 4 */
+  #mini-player { position: absolute; bottom: 135px; left: 20px; right: 20px; background: #2c2c2e; border-radius: 16px; padding: 12px; display: flex; align-items: center; z-index: 15; transform: translateY(150%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 4px 20px rgba(0,0,0,0.4); border: 1px solid #3a3a3c; }
+  #mini-player.show { transform: translateY(0); }
+
+  /* Dev tools overlay */
+  #dev-controls { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 100; font-family: monospace; }
+  button { padding: 12px 16px; background: #222; color: #fff; border: 1px solid #444; border-radius: 8px; cursor: pointer; text-align: left; font-size: 14px;}
+  button:hover { background: #333; }
+</style>
+</head>
+<body>
+
+<div id="dev-controls">
+  <div style="color:#aaa; font-size:12px; margin-bottom: 4px;">Click to Trigger Flows:</div>
+  <button onclick="runFlow('dining')">▶ 1. 吃饭决策流</button>
+  <button onclick="runFlow('commute')">▶ 2. 通勤导航流</button>
+  <button onclick="runFlow('music')">▶ 3. 情境听歌流</button>
+  <button onclick="runFlow('search')">▶ 4. 深度检索流</button>
+  <button onclick="runFlow('tool')">▶ 5. 工具执行流</button>
+  <button onclick="reset()" style="background:#421; margin-top:20px; border-color:#632;">↺ Reset Prototpye</button>
+</div>
+
+<div id="device">
+  <div id="feed">
+    <div style="color:#666; text-align:center; font-size:12px; margin-bottom:auto">Phase 1 Design Spec Prototype</div>
+  </div>
+  
+  <div id="mini-player">
+    <div style="width:36px; height:36px; background:linear-gradient(45deg, #ff9a9e, #fecfef); border-radius:8px; margin-right:12px"></div>
+    <div style="flex:1; font-size:15px; font-weight:600">Deep Focus (Playing)</div>
+    <div style="font-size:20px; color:#aaa;">⏸</div>
+  </div>
+
+  <div id="recommended-next"></div>
+  
+  <div id="chat-layer">
+    <div class="input-box">
+      <div class="input-text" id="input-display">Ask me anything...</div>
+      <div style="font-size:20px;">⌘</div>
+    </div>
+  </div>
+
+  <div id="sheet">
+    <div class="sheet-handle" onclick="closeSheet()"></div>
+    <div id="sheet-content"></div>
+  </div>
+</div>
+
+<script>
+  const feed = document.getElementById('feed');
+  const inputDisplay = document.getElementById('input-display');
+  const recommendedNext = document.getElementById('recommended-next');
+  const sheet = document.getElementById('sheet');
+  const sheetContent = document.getElementById('sheet-content');
+  const miniPlayer = document.getElementById('mini-player');
+
+  function reset() {
+    feed.innerHTML = '<div style="color:#666; text-align:center; font-size:12px; margin-bottom:auto">Phase 1 Design Spec Prototype</div>';
+    inputDisplay.innerHTML = 'Ask me anything...';
+    inputDisplay.style.color = '#888';
+    recommendedNext.style.opacity = '0';
+    sheet.classList.remove('open');
+    miniPlayer.classList.remove('show');
+  }
+
+  function appendUserMessage(text) {
+    const msg = document.createElement('div');
+    msg.style.cssText = 'align-self: flex-end; background: #2c2c2e; padding: 14px 20px; border-radius: 20px 20px 4px 20px; max-width: 75%; font-size: 15px; border: 1px solid #3a3a3c; margin-top: 10px; line-height: 1.4;';
+    msg.innerText = text;
+    feed.appendChild(msg);
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function setChips(chips) {
+    recommendedNext.innerHTML = chips.map(c => `<div class="chip">${c}</div>`).join('');
+    recommendedNext.style.opacity = '1';
+  }
+
+  function hideChips() {
+    recommendedNext.style.opacity = '0';
+  }
+
+  function appendCard(html) {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+    feed.appendChild(wrapper.firstElementChild);
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function openSheet(contentHTML) {
+    sheetContent.innerHTML = contentHTML;
+    sheet.classList.add('open');
+    hideChips();
+  }
+
+  function closeSheet() {
+    sheet.classList.remove('open');
+    
+    // Demonstrate return-to-chat context update
+    if(currentFlow === 'dining') {
+      setChips(['🚕 打车去这里', '🔗 发给朋友']);
+    } else if (currentFlow === 'commute') {
+      setChips(['🏠 开启回家模式', '🎵 放松音乐']);
+    } else if (currentFlow === 'search') {
+      setChips(['追问：内存需求？', '生成摘要卡片']);
+    }
+  }
+
+  let currentFlow = '';
+
+  async function runFlow(type) {
+    reset();
+    currentFlow = type;
+    inputDisplay.innerText = 'Listening...';
+    inputDisplay.style.color = '#fff';
+    
+    if (type === 'dining') {
+      await sleep(400);
+      inputDisplay.innerText = '这附近有什么安静吃饭的地方？';
+      appendUserMessage('这附近有什么安静吃饭的地方？');
+      await sleep(600);
+      inputDisplay.innerText = 'Ask me anything...';
+      inputDisplay.style.color = '#888';
+      setChips(['距离优先', '人均 < 300']);
+      
+      appendCard(`
+        <div class="card">
+          <div class="card-header">📍 附近地点推荐</div>
+          <div class="card-title">Bistro 隐</div>
+          <div class="card-sub">4.8分 · 极其安静 · 距您 800m</div>
+          <div class="cta-primary" onclick="openSheet('<h2 style=\\'margin-top:0\\'>Bistro 隐</h2><div style=\\'background:#2c2c2e; height:220px; border-radius:16px; margin-bottom:20px;\\'></div><p style=\\'color:#aaa; line-height:1.5\\'>(Execution Surface: 半屏 Modal)<br>环境极佳，适合安静约会。查看完整菜单和座位情况。</p><div class=\\'cta-primary\\' onclick=\\'closeSheet()\\' style=\\'margin-top:auto\\'>完成浏览 (触发弱回流)</div>')">查看详情与菜单</div>
+        </div>
+      `);
+    } else if (type === 'commute') {
+      await sleep(400);
+      inputDisplay.innerText = '我现在回家最快怎么走？';
+      appendUserMessage('我现在回家最快怎么走？');
+      await sleep(600);
+      inputDisplay.innerText = 'Ask me anything...';
+      inputDisplay.style.color = '#888';
+      setChips(['⚠️ 主干道拥堵']);
+      
+      appendCard(`
+        <div class="card">
+          <div class="card-header">🚗 路线决策</div>
+          <div class="card-title">回家：地铁更优</div>
+          <div class="card-sub">地铁 35分钟 · 驾车 45分钟(拥堵)</div>
+          <div class="cta-primary" onclick="openSheet('<h2 style=\\'margin-top:0\\'>导航进行中</h2><div style=\\'flex:1; background:#111; border-radius:16px; border:1px solid #333; margin-bottom:20px; display:flex; align-items:center; justify-content:center\\'>全屏沉浸地图区域</div><div class=\\'cta-primary\\' onclick=\\'closeSheet()\\'>到达目的地 (触发强回流)</div>')">开始地铁导航</div>
+        </div>
+      `);
+    } else if (type === 'music') {
+      await sleep(400);
+      inputDisplay.innerText = '放点适合写代码听的歌';
+      appendUserMessage('放点适合写代码听的歌');
+      await sleep(600);
+      inputDisplay.innerText = 'Ask me anything...';
+      inputDisplay.style.color = '#888';
+      setChips(['纯音乐', '电子', '环境音']);
+      
+      appendCard(`
+        <div class="card">
+          <div class="card-header">🎵 情境音乐</div>
+          <div class="card-title">Deep Focus</div>
+          <div class="card-sub">播放列表 · 50首纯音乐</div>
+          <div class="cta-primary" onclick="miniPlayer.classList.add('show'); setChips(['⏱️ 开启番茄钟', '🌙 屏幕免打扰']); this.innerText='正在播放'; this.style.background='#333'; this.style.color='#fff';">立即播放 (后台接管)</div>
+        </div>
+      `);
+    } else if (type === 'search') {
+      await sleep(400);
+      inputDisplay.innerText = '解释最新的 AI 架构';
+      appendUserMessage('解释最新的 AI 架构');
+      await sleep(600);
+      inputDisplay.innerText = 'Ask me anything...';
+      inputDisplay.style.color = '#888';
+      setChips(['仅看官方文档', '科技媒体解析']);
+      
+      appendCard(`
+        <div class="card">
+          <div class="card-header">🔍 深度解答</div>
+          <div class="card-title">最新 AI 混合架构</div>
+          <div class="card-sub" style="line-height:1.5;">最新架构包含端云协同。本地小模型处理强隐私任务，云端大模型路由复杂推断。[1][2]</div>
+          <div class="cta-primary" onclick="openSheet('<h2 style=\\'margin-top:0\\'>沉浸式阅读器</h2><div style=\\'flex:1; overflow-y:auto; color:#ccc; line-height:1.6;\\'><p>这是通过 Layer 4 全屏展开的深度阅读体验，去除了所有网页广告干扰...</p></div><div class=\\'cta-primary\\' onclick=\\'closeSheet()\\' style=\\'margin-top:15px\\'>左滑返回 (弱回流)</div>')">阅读完整来源文章</div>
+        </div>
+      `);
+    } else if (type === 'tool') {
+      await sleep(400);
+      inputDisplay.innerText = '帮我倒计时 15 分钟';
+      appendUserMessage('帮我倒计时 15 分钟');
+      await sleep(600);
+      inputDisplay.innerText = 'Ask me anything...';
+      inputDisplay.style.color = '#888';
+      setChips(['重新计时', '设定为 30 分钟']);
+      
+      appendCard(`
+        <div class="card">
+          <div class="card-header">⏱️ 工具引擎</div>
+          <div class="card-title" style="font-size:42px; font-variant-numeric: tabular-nums; text-align:center; padding: 20px 0;">14:59</div>
+          <div class="card-sub" style="text-align:center;">倒计时进行中... (Live Card)</div>
+          <div class="cta-primary running" onclick="this.innerText='已暂停'; this.classList.remove('running'); this.style.background='#333';">暂停</div>
+        </div>
+      `);
+    }
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
