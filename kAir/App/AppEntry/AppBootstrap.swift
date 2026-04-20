@@ -106,6 +106,23 @@ final class AppBootstrap {
         let t12 = MixedRecommendationLayoutTests.runAll()
         print("[T12 Mixed Recommendation Layout Tests] passed=\(t12.passedCount) failed=\(t12.failedCount)")
         for result in t12.results { print(result.line) }
+
+        // T10b / T11b / T12b — shell-layer UI-behavior locks that drive
+        // ChatStore through observable transitions. Complements T10/T11/T12
+        // (which lock enum cardinality and fixture shape) by asserting
+        // the shell actually honors the spec when the matcher is driven.
+        // Citations follow spec filename + section on every failure.
+        let t10b = ChatHomePostReturnBehaviorTests.runAll()
+        print("[T10b Chat Home Post-Return Behavior Tests] passed=\(t10b.passedCount) failed=\(t10b.failedCount)")
+        for result in t10b.results { print(result.line) }
+
+        let t11b = ChatHomeNegativeFeedbackBehaviorTests.runAll()
+        print("[T11b Chat Home Negative Feedback Behavior Tests] passed=\(t11b.passedCount) failed=\(t11b.failedCount)")
+        for result in t11b.results { print(result.line) }
+
+        let t12b = ChatHomeMixedRecommendationBehaviorTests.runAll()
+        print("[T12b Chat Home Mixed Recommendation Behavior Tests] passed=\(t12b.passedCount) failed=\(t12b.failedCount)")
+        for result in t12b.results { print(result.line) }
     }
 
     func showProfile() {
