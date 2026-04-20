@@ -1,0 +1,153 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:42.031Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "directions to Billy Bishop Airport",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:41.988Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:41.988Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:41.988Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:41.988Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-route-6",
+      "answer-distractor-route-6"
+    ],
+    "directSlotCandidateId" : "route-target-6",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:42.031Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-6",
+      "music-distractor-route-6",
+      "answer-distractor-route-6"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633702030-11050902412972642750",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-6",
+      "executionSurfaceType" : "maps",
+      "id" : "D6590402-2CC3-42B4-AEC8-741B081C595D",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633702030-11050902412972642750",
+      "sessionId" : "scenario-route-6",
+      "timestamp" : "2026-04-19T21:21:42.031Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-route-6",
+      "executionSurfaceType" : "music",
+      "id" : "9286ACF3-F4D2-4D5E-9C7D-0A7BDDDD6CFD",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633702030-11050902412972642750",
+      "sessionId" : "scenario-route-6",
+      "timestamp" : "2026-04-19T21:21:42.031Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-6",
+      "id" : "EBF02C2D-3E76-466F-9A50-EECD485680F3",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633702030-11050902412972642750",
+      "sessionId" : "scenario-route-6",
+      "timestamp" : "2026-04-19T21:21:42.031Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-6",
+      "executionSurfaceType" : "maps",
+      "feedbackOption" : "not_interested",
+      "id" : "074EDB18-2014-4375-8A82-D42463F9A419",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633702030-11050902412972642750",
+      "sessionId" : "scenario-route-6",
+      "timestamp" : "2026-04-19T21:21:42.032Z",
+      "type" : "dismiss"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:42.032Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-6"
+}

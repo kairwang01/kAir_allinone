@@ -1,0 +1,217 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:43.008Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "navigate to Distillery District",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:42.969Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:42.969Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:42.969Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:42.969Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-route-8",
+      "answer-distractor-route-8"
+    ],
+    "directSlotCandidateId" : "route-target-8",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:43.008Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-8",
+      "music-distractor-route-8",
+      "answer-distractor-route-8"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633703008-17060274558303014402",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-8",
+      "executionSurfaceType" : "maps",
+      "id" : "6F05C5F6-3BE6-4400-B9AE-3611F86DCCB8",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633703008-17060274558303014402",
+      "sessionId" : "scenario-route-8",
+      "timestamp" : "2026-04-19T21:21:43.008Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-route-8",
+      "executionSurfaceType" : "music",
+      "id" : "69FB7FA6-9904-4043-9F6E-14B361A2F3F8",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633703008-17060274558303014402",
+      "sessionId" : "scenario-route-8",
+      "timestamp" : "2026-04-19T21:21:43.008Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-8",
+      "id" : "AD87229D-38E9-4B4C-9289-5E4F453866E7",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633703008-17060274558303014402",
+      "sessionId" : "scenario-route-8",
+      "timestamp" : "2026-04-19T21:21:43.008Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-8",
+      "executionSurfaceType" : "maps",
+      "id" : "A9A26F3B-E001-48F0-93D9-312D941BEC6D",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633703008-17060274558303014402",
+      "sessionId" : "scenario-route-8",
+      "timestamp" : "2026-04-19T21:21:43.009Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "route-target-8",
+      "executionSurfaceType" : "maps",
+      "id" : "6BFFBC56-C1F5-424B-9293-A6B7A3ECDBCC",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633703008-17060274558303014402",
+      "sessionId" : "scenario-route-8",
+      "timestamp" : "2026-04-19T21:21:43.009Z",
+      "type" : "click"
+    },
+    {
+      "candidateId" : "route-target-8",
+      "executionSurfaceType" : "maps",
+      "id" : "AF353DEB-8451-486E-BEEA-751662306B22",
+      "objectType" : "route",
+      "outcome" : {
+        "completionScore" : 0.78,
+        "downstreamValue" : 0.84,
+        "dwellSeconds" : 2.9087066650390625e-05,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633703008-17060274558303014402",
+      "sessionId" : "scenario-route-8",
+      "timestamp" : "2026-04-19T21:21:43.009Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "route-target-8",
+      "executionSurfaceType" : "maps",
+      "id" : "AA5CDD0E-B43A-4926-8ADC-A094ACFFADBC",
+      "objectType" : "route",
+      "outcome" : {
+        "completionScore" : 0.78,
+        "downstreamValue" : 0.84,
+        "dwellSeconds" : 2.9087066650390625e-05,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633703008-17060274558303014402",
+      "sessionId" : "scenario-route-8",
+      "timestamp" : "2026-04-19T21:21:43.009Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 2.9087066650390625e-05,
+      "executedCandidateId" : "route-target-8",
+      "executionSurfaceType" : "maps",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "navigation",
+          "planning"
+        ],
+        "completionScore" : 0.78,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.84,
+        "resolvedObjectIds" : [
+          "route-target-8"
+        ],
+        "summary" : "navigate to Distillery District"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:43.009Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-8"
+}

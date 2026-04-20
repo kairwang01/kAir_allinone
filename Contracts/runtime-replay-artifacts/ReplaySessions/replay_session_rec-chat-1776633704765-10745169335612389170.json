@@ -1,0 +1,216 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:44.765Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "search",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "search for Apple Store hours downtown",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.726Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.726Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.726Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:44.726Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-search-0",
+      "answer-distractor-search-0"
+    ],
+    "directSlotCandidateId" : "search-target-0",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:44.765Z",
+    "objectType" : "searchResult",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "search-target-0",
+      "music-distractor-search-0",
+      "answer-distractor-search-0"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633704765-10745169335612389170",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "search-target-0",
+      "id" : "2D0C0E3F-C1E2-4E40-BEB4-D6B9A13C2BE3",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704765-10745169335612389170",
+      "sessionId" : "scenario-search-0",
+      "timestamp" : "2026-04-19T21:21:44.765Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-search-0",
+      "executionSurfaceType" : "music",
+      "id" : "BC2784EE-E732-4E3C-B1A6-06EDE85FBFD0",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704765-10745169335612389170",
+      "sessionId" : "scenario-search-0",
+      "timestamp" : "2026-04-19T21:21:44.765Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-search-0",
+      "id" : "DD15EC41-1D67-4938-A731-B929625D913D",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704765-10745169335612389170",
+      "sessionId" : "scenario-search-0",
+      "timestamp" : "2026-04-19T21:21:44.765Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-target-0",
+      "id" : "882A692B-ADFE-437E-AF73-8B614A6FD2FC",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704765-10745169335612389170",
+      "sessionId" : "scenario-search-0",
+      "timestamp" : "2026-04-19T21:21:44.766Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "search-target-0",
+      "executionSurfaceType" : "maps",
+      "id" : "5085023C-1233-4850-B1B2-6682A36E303A",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704765-10745169335612389170",
+      "sessionId" : "scenario-search-0",
+      "timestamp" : "2026-04-19T21:21:44.766Z",
+      "type" : "click"
+    },
+    {
+      "candidateId" : "search-target-0",
+      "executionSurfaceType" : "chat",
+      "id" : "16A01AEC-464F-4352-8964-EA37BBD68C13",
+      "objectType" : "searchResult",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704765-10745169335612389170",
+      "sessionId" : "scenario-search-0",
+      "timestamp" : "2026-04-19T21:21:44.766Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "search-target-0",
+      "executionSurfaceType" : "chat",
+      "id" : "B7030B1B-2C72-4B57-97B0-16D6A5CF2D3C",
+      "objectType" : "searchResult",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704765-10745169335612389170",
+      "sessionId" : "scenario-search-0",
+      "timestamp" : "2026-04-19T21:21:44.766Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "search-target-0",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "learning",
+          "search"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "search-target-0"
+        ],
+        "summary" : "search for Apple Store hours downtown"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:44.766Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-search-0"
+}

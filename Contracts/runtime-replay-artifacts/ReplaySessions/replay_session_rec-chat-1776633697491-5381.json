@@ -1,0 +1,119 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:37.492Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "",
+    "recentBehavior" : [
+
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "answer-distractor-message-8",
+      "search-distractor-message-8"
+    ],
+    "directSlotCandidateId" : "message-target-8",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:37.492Z",
+    "objectType" : "contact",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "message-target-8",
+      "answer-distractor-message-8",
+      "search-distractor-message-8"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633697491-5381",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "message-target-8",
+      "id" : "8A6D3D40-5CC8-4663-9B9D-F218A1BC3F81",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697491-5381",
+      "sessionId" : "scenario-message-8",
+      "timestamp" : "2026-04-19T21:21:37.492Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-message-8",
+      "id" : "6B0B8EE8-F7BA-4E10-AC6F-A63179E29A15",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697491-5381",
+      "sessionId" : "scenario-message-8",
+      "timestamp" : "2026-04-19T21:21:37.492Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-message-8",
+      "id" : "0B1D85BD-42C0-4741-A040-BFE1AA61ABFE",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697491-5381",
+      "sessionId" : "scenario-message-8",
+      "timestamp" : "2026-04-19T21:21:37.492Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "message-target-8",
+      "executionSurfaceType" : "chat",
+      "id" : "8422B1A8-C469-45C4-89EE-01F9DE2C00EE",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697491-5381",
+      "sessionId" : "scenario-message-8",
+      "timestamp" : "2026-04-19T21:21:37.533Z",
+      "type" : "abandon"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:37.533Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-message-8"
+}

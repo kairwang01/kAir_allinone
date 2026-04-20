@@ -1,0 +1,205 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:46.585Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "search",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "search for a recipe for miso pasta",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:46.545Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:46.545Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:46.545Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:46.545Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-search-4",
+      "answer-distractor-search-4"
+    ],
+    "directSlotCandidateId" : "search-target-4",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:46.585Z",
+    "objectType" : "searchResult",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "search-target-4",
+      "music-distractor-search-4",
+      "answer-distractor-search-4"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633706584-1136944415583700659",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "search-target-4",
+      "id" : "8A6902D0-FA55-4CF8-A09E-2E230806AB36",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633706584-1136944415583700659",
+      "sessionId" : "scenario-search-4",
+      "timestamp" : "2026-04-19T21:21:46.585Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-search-4",
+      "executionSurfaceType" : "music",
+      "id" : "3FF94848-8E0A-47F5-9049-5D96E5294FEB",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633706584-1136944415583700659",
+      "sessionId" : "scenario-search-4",
+      "timestamp" : "2026-04-19T21:21:46.585Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-search-4",
+      "id" : "684E8254-AE6F-442F-8C06-204FD1C45918",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633706584-1136944415583700659",
+      "sessionId" : "scenario-search-4",
+      "timestamp" : "2026-04-19T21:21:46.585Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-target-4",
+      "id" : "56FAC329-A851-4644-B9B1-55DA6D9648A2",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633706584-1136944415583700659",
+      "sessionId" : "scenario-search-4",
+      "timestamp" : "2026-04-19T21:21:46.586Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "search-target-4",
+      "executionSurfaceType" : "chat",
+      "id" : "1F2D987C-01AB-42FF-AEE7-9F63FA950C4B",
+      "objectType" : "searchResult",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633706584-1136944415583700659",
+      "sessionId" : "scenario-search-4",
+      "timestamp" : "2026-04-19T21:21:46.586Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "search-target-4",
+      "executionSurfaceType" : "chat",
+      "id" : "B055B73C-9F52-4E5D-BCB1-3F4289D150FA",
+      "objectType" : "searchResult",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633706584-1136944415583700659",
+      "sessionId" : "scenario-search-4",
+      "timestamp" : "2026-04-19T21:21:46.586Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "search-target-4",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "learning",
+          "search"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "search-target-4"
+        ],
+        "summary" : "search for a recipe for miso pasta"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:46.586Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-search-4"
+}

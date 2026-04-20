@@ -1,0 +1,153 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:41.579Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "navigate to Toronto General Hospital",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:41.540Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:41.540Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:41.540Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:41.540Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-route-5",
+      "answer-distractor-route-5"
+    ],
+    "directSlotCandidateId" : "route-target-5",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:41.579Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-5",
+      "music-distractor-route-5",
+      "answer-distractor-route-5"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633701579-8787038272113072654",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-5",
+      "executionSurfaceType" : "maps",
+      "id" : "700112DA-656A-4E0E-AB85-F2DC2D1CB3CF",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633701579-8787038272113072654",
+      "sessionId" : "scenario-route-5",
+      "timestamp" : "2026-04-19T21:21:41.580Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-route-5",
+      "executionSurfaceType" : "music",
+      "id" : "B5B694F5-E297-432D-B208-63C5937823CB",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633701579-8787038272113072654",
+      "sessionId" : "scenario-route-5",
+      "timestamp" : "2026-04-19T21:21:41.580Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-5",
+      "id" : "BE20FE5E-7D0F-4248-92F8-B406B2DD8E06",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633701579-8787038272113072654",
+      "sessionId" : "scenario-route-5",
+      "timestamp" : "2026-04-19T21:21:41.580Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-5",
+      "executionSurfaceType" : "maps",
+      "feedbackOption" : "not_interested",
+      "id" : "8A730837-C7D3-4006-B913-DFF127FFA7EC",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633701579-8787038272113072654",
+      "sessionId" : "scenario-route-5",
+      "timestamp" : "2026-04-19T21:21:41.580Z",
+      "type" : "dismiss"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:41.580Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-5"
+}

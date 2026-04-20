@@ -1,0 +1,220 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:34.982Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+      "planning",
+      "search"
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "text her the update",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:34.842Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:34.842Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:34.842Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:34.842Z"
+      },
+      {
+        "stage" : "accept",
+        "subject" : "prompt",
+        "timestamp" : "2026-04-19T21:21:34.885Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 3
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "search-distractor-message-102",
+      "answer-distractor-message-102"
+    ],
+    "directSlotCandidateId" : "message-target-102",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:34.982Z",
+    "objectType" : "contact",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "message-target-102",
+      "search-distractor-message-102",
+      "answer-distractor-message-102"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633694982-16794237913114865325",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "message-target-102",
+      "id" : "316B80B4-C6CE-41A4-85C7-95A639525041",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633694982-16794237913114865325",
+      "sessionId" : "scenario-message-102",
+      "timestamp" : "2026-04-19T21:21:34.983Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-message-102",
+      "id" : "460A7F24-A988-4A4A-924F-070C870BBDDB",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633694982-16794237913114865325",
+      "sessionId" : "scenario-message-102",
+      "timestamp" : "2026-04-19T21:21:34.983Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-message-102",
+      "id" : "6B2E4D07-496D-4EB2-861F-97A3F9036DDD",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633694982-16794237913114865325",
+      "sessionId" : "scenario-message-102",
+      "timestamp" : "2026-04-19T21:21:34.983Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "message-target-2",
+      "id" : "BDB87F61-DC38-4153-8FFA-9EB7A6A2C357",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633694982-16794237913114865325",
+      "sessionId" : "scenario-message-102",
+      "timestamp" : "2026-04-19T21:21:34.983Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "message-target-2",
+      "executionSurfaceType" : "ai",
+      "id" : "ECEEDB77-09A3-4276-8878-74FD77E0C6EE",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633694982-16794237913114865325",
+      "sessionId" : "scenario-message-102",
+      "timestamp" : "2026-04-19T21:21:34.983Z",
+      "type" : "click"
+    },
+    {
+      "candidateId" : "message-target-2",
+      "executionSurfaceType" : "chat",
+      "id" : "25141F0A-369B-4511-88B5-8D3B6246504A",
+      "objectType" : "contact",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633694982-16794237913114865325",
+      "sessionId" : "scenario-message-102",
+      "timestamp" : "2026-04-19T21:21:34.983Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "message-target-2",
+      "executionSurfaceType" : "chat",
+      "id" : "E4D31A5F-E00B-48B2-8B3A-A8DCF73EAAB1",
+      "objectType" : "contact",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633694982-16794237913114865325",
+      "sessionId" : "scenario-message-102",
+      "timestamp" : "2026-04-19T21:21:34.983Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "message-target-2",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "planning",
+          "social"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "message-target-2"
+        ],
+        "summary" : "message Priya that I'm downstairs"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:34.983Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-message-102"
+}

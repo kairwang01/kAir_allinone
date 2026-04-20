@@ -1,0 +1,217 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:44.226Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "route to Harbourfront Centre",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.186Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.186Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.186Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:44.186Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-route-11",
+      "answer-distractor-route-11"
+    ],
+    "directSlotCandidateId" : "route-target-11",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:44.226Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-11",
+      "music-distractor-route-11",
+      "answer-distractor-route-11"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633704226-12474477837438976020",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-11",
+      "executionSurfaceType" : "maps",
+      "id" : "0D19459F-B9D1-4EB8-BA55-929CCF095B7A",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704226-12474477837438976020",
+      "sessionId" : "scenario-route-11",
+      "timestamp" : "2026-04-19T21:21:44.227Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-route-11",
+      "executionSurfaceType" : "music",
+      "id" : "938FCEE2-7FF7-4435-9455-D8FC0AC9F9B0",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704226-12474477837438976020",
+      "sessionId" : "scenario-route-11",
+      "timestamp" : "2026-04-19T21:21:44.227Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-11",
+      "id" : "AE0B7A15-D836-4522-B45F-D00677B1C977",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704226-12474477837438976020",
+      "sessionId" : "scenario-route-11",
+      "timestamp" : "2026-04-19T21:21:44.227Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-11",
+      "executionSurfaceType" : "maps",
+      "id" : "277831D0-92B2-402F-BD00-5301DA562DB7",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704226-12474477837438976020",
+      "sessionId" : "scenario-route-11",
+      "timestamp" : "2026-04-19T21:21:44.227Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "route-target-11",
+      "executionSurfaceType" : "maps",
+      "id" : "EEEE8D11-B806-4F33-A862-C8BF2E767DAA",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704226-12474477837438976020",
+      "sessionId" : "scenario-route-11",
+      "timestamp" : "2026-04-19T21:21:44.228Z",
+      "type" : "click"
+    },
+    {
+      "candidateId" : "route-target-11",
+      "executionSurfaceType" : "chat",
+      "id" : "24095438-934F-4D0F-A4EC-A63FCDCA0B87",
+      "objectType" : "route",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704226-12474477837438976020",
+      "sessionId" : "scenario-route-11",
+      "timestamp" : "2026-04-19T21:21:44.228Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "route-target-11",
+      "executionSurfaceType" : "chat",
+      "id" : "FB397BAC-8A10-443E-B6AB-6C52D1512D85",
+      "objectType" : "route",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704226-12474477837438976020",
+      "sessionId" : "scenario-route-11",
+      "timestamp" : "2026-04-19T21:21:44.228Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "route-target-11",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "navigation",
+          "planning"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "route-target-11"
+        ],
+        "summary" : "route to Harbourfront Centre"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:44.228Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-11"
+}

@@ -1,0 +1,16 @@
+{
+  "artifactVersion" : "phase1-closure-baseline-v1",
+  "closedHypothesisFlags" : {
+    "context_lexical_patch" : false,
+    "weak_trace_bonus" : false
+  },
+  "decisionSchemaVersion" : "recommendation-decision-v1",
+  "eventSchemaVersion" : "matching-event-v1",
+  "featureSchemaVersion" : "matching-features-v1",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "promptDirectnessWeight" : 0.3,
+  "providerBaselineID" : "retrieval-provider-v4-query-hardening",
+  "replayExportSchemaVersion" : "replay-export-v1",
+  "retrievalLiftWeight" : 0.24,
+  "scorerBaselineID" : "heuristic-scorer-v2.2-prompt-directness"
+}

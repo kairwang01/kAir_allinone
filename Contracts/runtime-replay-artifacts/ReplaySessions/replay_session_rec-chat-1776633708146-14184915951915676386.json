@@ -1,0 +1,210 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:48.147Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+      "planning",
+      "search"
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "check the web",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:48.007Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:48.007Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:48.007Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:48.007Z"
+      },
+      {
+        "stage" : "accept",
+        "subject" : "prompt",
+        "timestamp" : "2026-04-19T21:21:48.049Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 3
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "answer-distractor-search-107",
+      "music-distractor-search-107"
+    ],
+    "directSlotCandidateId" : "search-target-107",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:48.147Z",
+    "objectType" : "searchResult",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "search-target-107",
+      "answer-distractor-search-107",
+      "music-distractor-search-107"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633708146-14184915951915676386",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "search-target-107",
+      "id" : "54C054A3-674A-4810-B858-0B2FB492C12C",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633708146-14184915951915676386",
+      "sessionId" : "scenario-search-107",
+      "timestamp" : "2026-04-19T21:21:48.147Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-search-107",
+      "id" : "99A474BC-6CB7-4A0F-95DD-80EC0E4E1E9E",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633708146-14184915951915676386",
+      "sessionId" : "scenario-search-107",
+      "timestamp" : "2026-04-19T21:21:48.147Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-search-107",
+      "executionSurfaceType" : "music",
+      "id" : "ADE35CBF-F8E1-4CC0-A1FE-5787907A714C",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633708146-14184915951915676386",
+      "sessionId" : "scenario-search-107",
+      "timestamp" : "2026-04-19T21:21:48.147Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-target-7",
+      "id" : "B620927F-6CFD-4C36-9788-2F3EBE6681BF",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633708146-14184915951915676386",
+      "sessionId" : "scenario-search-107",
+      "timestamp" : "2026-04-19T21:21:48.147Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "search-target-7",
+      "executionSurfaceType" : "chat",
+      "id" : "98537691-4557-404B-8260-6911805B498F",
+      "objectType" : "searchResult",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633708146-14184915951915676386",
+      "sessionId" : "scenario-search-107",
+      "timestamp" : "2026-04-19T21:21:48.148Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "search-target-7",
+      "executionSurfaceType" : "chat",
+      "id" : "CC5B91E2-31BC-4D3F-96FA-61ABC180BE53",
+      "objectType" : "searchResult",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633708146-14184915951915676386",
+      "sessionId" : "scenario-search-107",
+      "timestamp" : "2026-04-19T21:21:48.148Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "search-target-7",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "learning",
+          "search"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "search-target-7"
+        ],
+        "summary" : "look up CN Tower ticket hours"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:48.148Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-search-107"
+}

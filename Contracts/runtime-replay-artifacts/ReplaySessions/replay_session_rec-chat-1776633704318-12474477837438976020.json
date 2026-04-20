@@ -1,0 +1,215 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:44.318Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+      {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "outcome" : "completed",
+        "section" : "chat"
+      }
+    ],
+    "foldedIntentTags" : [
+      "navigation",
+      "planning"
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "focus",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "planning",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+      "localDiscovery",
+      "navigation",
+      "planning"
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "route to Harbourfront Centre",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.186Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.186Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.186Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:44.186Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.227Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.227Z"
+      },
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.227Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:44.227Z"
+      },
+      {
+        "stage" : "accept",
+        "subject" : "prompt",
+        "timestamp" : "2026-04-19T21:21:44.227Z"
+      },
+      {
+        "candidateId" : "route-target-11",
+        "objectType" : "route",
+        "stage" : "accept",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.227Z"
+      },
+      {
+        "candidateId" : "route-target-11",
+        "objectType" : "route",
+        "stage" : "completion",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:44.228Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+      "route-target-11"
+    ],
+    "threadDepth" : 3
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "answer-distractor-route-11",
+      "search-distractor-route-11"
+    ],
+    "directSlotCandidateId" : "route-target-11",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:44.318Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-11",
+      "answer-distractor-route-11",
+      "search-distractor-route-11"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633704318-12474477837438976020",
+    "suppressionReasons" : [
+      "history_conflict",
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-11",
+      "executionSurfaceType" : "maps",
+      "id" : "A202EA22-EDA7-4420-9823-1B597AB7E9DA",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704318-12474477837438976020",
+      "sessionId" : "scenario-route-11",
+      "timestamp" : "2026-04-19T21:21:44.319Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-11",
+      "id" : "9381AC5D-B388-4454-BAA9-9818587CE839",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704318-12474477837438976020",
+      "sessionId" : "scenario-route-11",
+      "timestamp" : "2026-04-19T21:21:44.319Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-route-11",
+      "id" : "075E3700-07E7-4AF0-8C39-4F6329EFC330",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704318-12474477837438976020",
+      "sessionId" : "scenario-route-11",
+      "timestamp" : "2026-04-19T21:21:44.319Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-11",
+      "executionSurfaceType" : "maps",
+      "id" : "E6FB56BC-9F0E-4422-8920-29905D6ED0C8",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633704318-12474477837438976020",
+      "sessionId" : "scenario-route-11",
+      "timestamp" : "2026-04-19T21:21:44.319Z",
+      "type" : "abandon"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:44.319Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-11"
+}

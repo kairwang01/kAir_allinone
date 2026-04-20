@@ -1,0 +1,120 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:41.257Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "",
+    "recentBehavior" : [
+
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "answer-distractor-route-104",
+      "search-distractor-route-104"
+    ],
+    "directSlotCandidateId" : "route-target-104",
+    "executionSurfaceType" : "maps",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:41.257Z",
+    "objectType" : "route",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "route-target-104",
+      "answer-distractor-route-104",
+      "search-distractor-route-104"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633701257-5381",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "route-target-104",
+      "executionSurfaceType" : "maps",
+      "id" : "84ACF538-8269-4920-927A-5875549CD293",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633701257-5381",
+      "sessionId" : "scenario-route-104",
+      "timestamp" : "2026-04-19T21:21:41.258Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-route-104",
+      "id" : "328F4214-0BE9-4B25-BE42-9220B779DEB6",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633701257-5381",
+      "sessionId" : "scenario-route-104",
+      "timestamp" : "2026-04-19T21:21:41.258Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-route-104",
+      "id" : "333B7726-86B0-44EF-9B5E-B13CB8D470B0",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633701257-5381",
+      "sessionId" : "scenario-route-104",
+      "timestamp" : "2026-04-19T21:21:41.258Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "route-target-104",
+      "executionSurfaceType" : "maps",
+      "id" : "CDCADB3B-50A2-44AE-928E-316988D4FAB8",
+      "objectType" : "route",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633701257-5381",
+      "sessionId" : "scenario-route-104",
+      "timestamp" : "2026-04-19T21:21:41.296Z",
+      "type" : "abandon"
+    }
+  ],
+  "executionReturns" : [
+
+  ],
+  "exportedAt" : "2026-04-19T21:21:41.296Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-route-104"
+}

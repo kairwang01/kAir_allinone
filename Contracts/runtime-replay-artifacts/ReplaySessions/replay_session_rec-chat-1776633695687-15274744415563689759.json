@@ -1,0 +1,204 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:35.687Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "tell Mom I got home safely",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:35.646Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:35.646Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:35.646Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:35.646Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-message-4",
+      "answer-distractor-message-4"
+    ],
+    "directSlotCandidateId" : "message-target-4",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:35.687Z",
+    "objectType" : "contact",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "message-target-4",
+      "music-distractor-message-4",
+      "answer-distractor-message-4"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633695687-15274744415563689759",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "message-target-4",
+      "id" : "1D2D9AF7-435E-4C9D-8440-1C427C8C4EE0",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695687-15274744415563689759",
+      "sessionId" : "scenario-message-4",
+      "timestamp" : "2026-04-19T21:21:35.688Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-message-4",
+      "executionSurfaceType" : "music",
+      "id" : "92675A75-4EB1-414C-9AD8-2E1F2CE9696F",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695687-15274744415563689759",
+      "sessionId" : "scenario-message-4",
+      "timestamp" : "2026-04-19T21:21:35.688Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-message-4",
+      "id" : "50BABBE6-CB2B-4B4B-A445-8E9BE04A4EAF",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695687-15274744415563689759",
+      "sessionId" : "scenario-message-4",
+      "timestamp" : "2026-04-19T21:21:35.688Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "message-target-4",
+      "id" : "7F694C4D-DFA5-4BC5-A63B-56326D0B99B7",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695687-15274744415563689759",
+      "sessionId" : "scenario-message-4",
+      "timestamp" : "2026-04-19T21:21:35.688Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "message-target-4",
+      "executionSurfaceType" : "chat",
+      "id" : "CD86C37A-D7DF-4EDD-B14F-915EF682C9DC",
+      "objectType" : "contact",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695687-15274744415563689759",
+      "sessionId" : "scenario-message-4",
+      "timestamp" : "2026-04-19T21:21:35.689Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "message-target-4",
+      "executionSurfaceType" : "chat",
+      "id" : "74702146-ECC5-4019-8704-C1DF60011775",
+      "objectType" : "contact",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633695687-15274744415563689759",
+      "sessionId" : "scenario-message-4",
+      "timestamp" : "2026-04-19T21:21:35.689Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "message-target-4",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "planning",
+          "social"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "message-target-4"
+        ],
+        "summary" : "tell Mom I got home safely"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:35.689Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-message-4"
+}

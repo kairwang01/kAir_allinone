@@ -1,0 +1,216 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:52.036Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "search",
+      "shopping"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "explain how routing works here",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:51.996Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:51.997Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:51.997Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:51.997Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-answer-4",
+      "search-distractor-answer-4"
+    ],
+    "directSlotCandidateId" : "answer-target-4",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:52.036Z",
+    "objectType" : "answerCard",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "answer-target-4",
+      "music-distractor-answer-4",
+      "search-distractor-answer-4"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633712035-13154504696519983398",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "answer-target-4",
+      "id" : "F45D2E1B-DC36-4FF3-932B-2EF83227BF7C",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633712035-13154504696519983398",
+      "sessionId" : "scenario-answer-4",
+      "timestamp" : "2026-04-19T21:21:52.036Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-answer-4",
+      "executionSurfaceType" : "music",
+      "id" : "7EDAAF9C-5CB1-4E0A-9DA1-89FA805C4977",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633712035-13154504696519983398",
+      "sessionId" : "scenario-answer-4",
+      "timestamp" : "2026-04-19T21:21:52.036Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "search-distractor-answer-4",
+      "id" : "49830EAC-72A3-4CA1-A81B-FDF0A4F98848",
+      "objectType" : "searchResult",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633712035-13154504696519983398",
+      "sessionId" : "scenario-answer-4",
+      "timestamp" : "2026-04-19T21:21:52.036Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-target-4",
+      "id" : "F621A0F4-0AA1-45FF-A10B-6EA1DF143B75",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633712035-13154504696519983398",
+      "sessionId" : "scenario-answer-4",
+      "timestamp" : "2026-04-19T21:21:52.037Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "answer-target-4",
+      "executionSurfaceType" : "ai",
+      "id" : "EFE3F0E5-EE3D-44C1-9781-F145DF710C44",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633712035-13154504696519983398",
+      "sessionId" : "scenario-answer-4",
+      "timestamp" : "2026-04-19T21:21:52.037Z",
+      "type" : "click"
+    },
+    {
+      "candidateId" : "answer-target-4",
+      "executionSurfaceType" : "chat",
+      "id" : "85EC39A4-A9CD-44DD-B1BD-27A9DF239863",
+      "objectType" : "answerCard",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633712035-13154504696519983398",
+      "sessionId" : "scenario-answer-4",
+      "timestamp" : "2026-04-19T21:21:52.037Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "answer-target-4",
+      "executionSurfaceType" : "chat",
+      "id" : "D43EDF66-AD8D-416B-9B88-BF7FA0CD5653",
+      "objectType" : "answerCard",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633712035-13154504696519983398",
+      "sessionId" : "scenario-answer-4",
+      "timestamp" : "2026-04-19T21:21:52.037Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "answer-target-4",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "ai",
+          "planning"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "answer-target-4"
+        ],
+        "summary" : "explain how routing works here"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:52.037Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-answer-4"
+}

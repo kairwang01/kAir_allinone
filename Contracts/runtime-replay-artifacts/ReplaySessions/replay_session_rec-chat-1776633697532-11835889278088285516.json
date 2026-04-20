@@ -1,0 +1,205 @@
+{
+  "context" : {
+    "activeSurface" : "chat",
+    "capturedAt" : "2026-04-19T21:21:37.533Z",
+    "daypart" : "evening",
+    "dismissedObjectIds" : [
+
+    ],
+    "executionSurfaceStates" : [
+
+    ],
+    "foldedIntentTags" : [
+
+    ],
+    "healthAvailability" : "unavailable",
+    "intentTags" : [
+      "ai",
+      "entertainment",
+      "health",
+      "learning",
+      "localDiscovery",
+      "navigation",
+      "shopping",
+      "social"
+    ],
+    "locationState" : "unknown",
+    "longTermTags" : [
+
+    ],
+    "motionContext" : "stationary",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "prompt" : "message Maya that the deck is ready",
+    "recentBehavior" : [
+      {
+        "candidateId" : "maps-pharmacy",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:37.492Z"
+      },
+      {
+        "candidateId" : "maps-evening-cafe",
+        "objectType" : "place",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:37.492Z"
+      },
+      {
+        "candidateId" : "maps-route-compare",
+        "objectType" : "route",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "maps",
+        "timestamp" : "2026-04-19T21:21:37.492Z"
+      },
+      {
+        "candidateId" : "video-neighborhood",
+        "objectType" : "video",
+        "stage" : "impression",
+        "subject" : "recommendation",
+        "surface" : "video",
+        "timestamp" : "2026-04-19T21:21:37.492Z"
+      }
+    ],
+    "resolvedObjectIds" : [
+
+    ],
+    "threadDepth" : 1
+  },
+  "decision" : {
+    "alternativeCandidateIds" : [
+      "music-distractor-message-8",
+      "answer-distractor-message-8"
+    ],
+    "directSlotCandidateId" : "message-target-8",
+    "executionSurfaceType" : "chat",
+    "feedbackOptions" : [
+      "not_interested",
+      "show_less_like_this",
+      "not_now",
+      "already_done"
+    ],
+    "generatedAt" : "2026-04-19T21:21:37.533Z",
+    "objectType" : "contact",
+    "policyVersion" : "kernel-phase1-v1.0",
+    "rankedCandidateIds" : [
+      "message-target-8",
+      "music-distractor-message-8",
+      "answer-distractor-message-8"
+    ],
+    "reasonCodes" : [
+
+    ],
+    "recommendationId" : "rec-chat-1776633697532-11835889278088285516",
+    "suppressionReasons" : [
+      "low_trace_strength"
+    ]
+  },
+  "events" : [
+    {
+      "candidateId" : "message-target-8",
+      "id" : "919D5064-3AAA-4E12-A62D-38B392AEC179",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697532-11835889278088285516",
+      "sessionId" : "scenario-message-8",
+      "timestamp" : "2026-04-19T21:21:37.533Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "music-distractor-message-8",
+      "executionSurfaceType" : "music",
+      "id" : "F1C9E74E-DF14-4A6F-ACB2-3A89BB29A069",
+      "objectType" : "song",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697532-11835889278088285516",
+      "sessionId" : "scenario-message-8",
+      "timestamp" : "2026-04-19T21:21:37.533Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "answer-distractor-message-8",
+      "id" : "2E122D76-67B4-4AF6-AD4D-775F3FE3E8E1",
+      "objectType" : "answerCard",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697532-11835889278088285516",
+      "sessionId" : "scenario-message-8",
+      "timestamp" : "2026-04-19T21:21:37.533Z",
+      "type" : "impression"
+    },
+    {
+      "candidateId" : "message-target-8",
+      "id" : "C1CA9AFB-040E-45A8-B05C-34EEE86BDA1A",
+      "objectType" : "contact",
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697532-11835889278088285516",
+      "sessionId" : "scenario-message-8",
+      "timestamp" : "2026-04-19T21:21:37.534Z",
+      "type" : "accept"
+    },
+    {
+      "candidateId" : "message-target-8",
+      "executionSurfaceType" : "chat",
+      "id" : "A405F63F-3162-4E43-BBB8-2A04B9F7A058",
+      "objectType" : "contact",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697532-11835889278088285516",
+      "sessionId" : "scenario-message-8",
+      "timestamp" : "2026-04-19T21:21:37.534Z",
+      "type" : "completion"
+    },
+    {
+      "candidateId" : "message-target-8",
+      "executionSurfaceType" : "chat",
+      "id" : "7D19778E-6505-4CA9-9628-F9012A459FE5",
+      "objectType" : "contact",
+      "outcome" : {
+        "completionScore" : 0.58,
+        "downstreamValue" : 0.55,
+        "dwellSeconds" : 0,
+        "wasSuccessful" : true
+      },
+      "policyVersion" : "kernel-phase1-v1.0",
+      "recommendationId" : "rec-chat-1776633697532-11835889278088285516",
+      "sessionId" : "scenario-message-8",
+      "timestamp" : "2026-04-19T21:21:37.534Z",
+      "type" : "downstream_value"
+    }
+  ],
+  "executionReturns" : [
+    {
+      "duration" : 0,
+      "executedCandidateId" : "message-target-8",
+      "executionSurfaceType" : "chat",
+      "outcome" : "completed",
+      "returnContextDelta" : {
+        "addedIntentTags" : [
+          "planning",
+          "social"
+        ],
+        "completionScore" : 0.58,
+        "dismissedObjectIds" : [
+
+        ],
+        "downstreamValue" : 0.55,
+        "resolvedObjectIds" : [
+          "message-target-8"
+        ],
+        "summary" : "message Maya that the deck is ready"
+      }
+    }
+  ],
+  "exportedAt" : "2026-04-19T21:21:37.534Z",
+  "policyVersion" : "kernel-phase1-v1.0",
+  "schemaVersion" : "replay-export-v1",
+  "sessionId" : "scenario-message-8"
+}
