@@ -66,6 +66,11 @@ struct ConversationMessage: Identifiable, Hashable {
     let timestamp: Date
     let tags: [String]
     let toolResults: [ConversationToolResult]
+    /// Optional structured continuation payload. When non-nil, the
+    /// transcript render path (ConversationInboxRow) projects this
+    /// through `ContinuationBlockRenderer` per
+    /// Contracts/UX/continuation-runtime-v1.md §8.1 option (b).
+    let continuationEvent: ChatContinuationEvent?
 
     init(
         id: String = UUID().uuidString,
@@ -74,7 +79,8 @@ struct ConversationMessage: Identifiable, Hashable {
         text: String,
         timestamp: Date = .now,
         tags: [String] = [],
-        toolResults: [ConversationToolResult] = []
+        toolResults: [ConversationToolResult] = [],
+        continuationEvent: ChatContinuationEvent? = nil
     ) {
         self.id = id
         self.role = role
@@ -83,6 +89,7 @@ struct ConversationMessage: Identifiable, Hashable {
         self.timestamp = timestamp
         self.tags = tags
         self.toolResults = toolResults
+        self.continuationEvent = continuationEvent
     }
 }
 
@@ -91,7 +98,8 @@ extension ConversationMessage {
         text: String,
         timestamp: Date = .now,
         tags: [String] = [],
-        toolResults: [ConversationToolResult] = []
+        toolResults: [ConversationToolResult] = [],
+        continuationEvent: ChatContinuationEvent? = nil
     ) -> ConversationMessage {
         ConversationMessage(
             role: .assistant,
@@ -99,7 +107,8 @@ extension ConversationMessage {
             text: text,
             timestamp: timestamp,
             tags: tags,
-            toolResults: toolResults
+            toolResults: toolResults,
+            continuationEvent: continuationEvent
         )
     }
 
