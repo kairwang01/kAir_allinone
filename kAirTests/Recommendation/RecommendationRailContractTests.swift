@@ -37,19 +37,30 @@ final class RecommendationRailContractTests: XCTestCase {
         XCTAssertEqual(ActionCardState.allCases.count, 4)
     }
 
-    // MARK: - Feedback menu (inventory §1: ⋯ menu offers 4 kinds, ✕ binds .dismiss)
+    // MARK: - Feedback menu (behavior §2.2 + V3 §4.2: ⋯ menu offers 5
+    // kinds in fixed order, with .dismiss as the first entry; ✕ also
+    // binds .dismiss)
 
-    func test_feedbackMenu_excludesDismiss() throws {
-        XCTAssertFalse(ActionCardShell.feedbackMenuKinds.contains(.dismiss))
+    func test_feedbackMenu_containsAllFiveKinds() throws {
+        XCTAssertEqual(Set(ActionCardShell.feedbackMenuKinds), Set(MatchingFeedbackKind.allCases))
     }
 
-    func test_feedbackMenu_containsRemainingFourKinds() throws {
-        XCTAssertEqual(Set(ActionCardShell.feedbackMenuKinds), Set([
+    func test_feedbackMenu_orderIsDismissFirst() throws {
+        XCTAssertEqual(ActionCardShell.feedbackMenuKinds.first, .dismiss)
+    }
+
+    func test_feedbackMenu_orderMatchesContract() throws {
+        XCTAssertEqual(ActionCardShell.feedbackMenuKinds, [
+            .dismiss,
             .notInterested,
             .lessLikeThis,
             .notNow,
             .alreadyDone
-        ]))
+        ])
+    }
+
+    func test_feedbackMenu_hasExactlyFiveEntries() throws {
+        XCTAssertEqual(ActionCardShell.feedbackMenuKinds.count, 5)
     }
 
     // MARK: - V2 §3: empty rail is absent rail

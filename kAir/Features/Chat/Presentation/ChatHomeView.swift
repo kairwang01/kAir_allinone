@@ -64,11 +64,22 @@ struct ChatHomeView: View {
                         // Layer 4: Recommended Next rail.
                         // Renders nothing when the slate is empty per
                         // mixed-recommendation-rail-visual-v1 §3.
-                        // I2.5 wires the slate from the provider at
-                        // ChatStore init; refresh / accept / dismiss
-                        // wiring is deferred to a later PR.
-                        RecommendationRail(objects: store.recommendedMatches)
-                            .padding(.top, store.recommendedMatches.isEmpty ? 0 : 16)
+                        // I3 wires onDismiss (✕ button) and onFeedback
+                        // (⋯ menu) to ChatStore.dismissRecommendation;
+                        // both produce same-frame removal per
+                        // negative-feedback-affordance-visual-v1 §6.1.
+                        // Accept / refresh wiring stay deferred to a
+                        // later PR.
+                        RecommendationRail(
+                            objects: store.recommendedMatches,
+                            onDismiss: { object in
+                                store.dismissRecommendation(object, feedback: .dismiss)
+                            },
+                            onFeedback: { object, kind in
+                                store.dismissRecommendation(object, feedback: kind)
+                            }
+                        )
+                        .padding(.top, store.recommendedMatches.isEmpty ? 0 : 16)
 
                         Color.clear
                             .frame(height: 1)

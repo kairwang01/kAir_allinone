@@ -42,8 +42,16 @@ struct RecommendationRail: View {
                         onDismiss: { onDismiss(object) },
                         onFeedback: { kind in onFeedback(object, kind) }
                     )
+                    // No enter / exit transition: dismissed cards exit
+                    // on the same frame per negative-feedback-affordance-
+                    // visual-v1 §6.1.
+                    .transition(.identity)
                 }
             }
+            // Explicitly opt out of SwiftUI's implicit layout animation
+            // when `objects` changes. Adjacent cards collapse
+            // instantaneously (visual-v1 §7.2 + V3 §6.1).
+            .animation(nil, value: objects)
         }
     }
 }
