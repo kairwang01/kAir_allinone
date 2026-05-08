@@ -251,70 +251,98 @@ private struct ConversationInboxRow: View {
     }
 
     var body: some View {
-        Button(action: onTap) {
-            HStack(alignment: .top, spacing: 14) {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                Color(red: 0.74, green: 0.74, blue: 0.79),
-                                Color(red: 0.62, green: 0.62, blue: 0.67)
-                            ],
-                            center: .topLeading,
-                            startRadius: 2,
-                            endRadius: 34
-                        )
-                    )
-                    .frame(width: 50, height: 50)
-                    .overlay(
-                        Text(avatarLabel)
-                            .font(.title3.weight(.medium))
-                            .foregroundStyle(Color.white)
-                    )
-                    .padding(.top, 2)
+        if message.continuationEvent != nil {
+            continuationLayout
+        } else {
+            Button(action: onTap) {
+                standardLayout
+            }
+            .buttonStyle(.plain)
+        }
+    }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(title)
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(Color.black)
-                            .lineLimit(1)
+    private var avatar: some View {
+        Circle()
+            .fill(
+                RadialGradient(
+                    colors: [
+                        Color(red: 0.74, green: 0.74, blue: 0.79),
+                        Color(red: 0.62, green: 0.62, blue: 0.67)
+                    ],
+                    center: .topLeading,
+                    startRadius: 2,
+                    endRadius: 34
+                )
+            )
+            .frame(width: 50, height: 50)
+            .overlay(
+                Text(avatarLabel)
+                    .font(.title3.weight(.medium))
+                    .foregroundStyle(Color.white)
+            )
+            .padding(.top, 2)
+    }
 
-                        Spacer(minLength: 10)
+    private var headerRow: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .font(.title3.weight(.bold))
+                .foregroundStyle(Color.black)
+                .lineLimit(1)
 
-                        Text(timestamp)
-                            .font(.title3.weight(.regular))
-                            .foregroundStyle(Color.black.opacity(0.88))
-                            .lineLimit(1)
-                    }
+            Spacer(minLength: 10)
 
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Text(subtitle)
-                            .font(.title3.weight(.regular))
-                            .foregroundStyle(Color.black.opacity(0.92))
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(2)
+            Text(timestamp)
+                .font(.title3.weight(.regular))
+                .foregroundStyle(Color.black.opacity(0.88))
+                .lineLimit(1)
+        }
+    }
 
-                        Spacer(minLength: 8)
+    private var standardLayout: some View {
+        HStack(alignment: .top, spacing: 14) {
+            avatar
+            VStack(alignment: .leading, spacing: 4) {
+                headerRow
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Text(subtitle)
+                        .font(.title3.weight(.regular))
+                        .foregroundStyle(Color.black.opacity(0.92))
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(2)
 
-                        if let badgeCount, badgeCount > 0 {
-                            Text("\(badgeCount)")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(.white)
-                                .frame(minWidth: 22, minHeight: 22)
-                                .padding(.horizontal, 2)
-                                .background(
-                                    Circle()
-                                        .fill(Color(red: 0.90, green: 0.23, blue: 0.20))
-                                )
-                        }
+                    Spacer(minLength: 8)
+
+                    if let badgeCount, badgeCount > 0 {
+                        Text("\(badgeCount)")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.white)
+                            .frame(minWidth: 22, minHeight: 22)
+                            .padding(.horizontal, 2)
+                            .background(
+                                Circle()
+                                    .fill(Color(red: 0.90, green: 0.23, blue: 0.20))
+                            )
                     }
                 }
             }
-            .padding(.vertical, 14)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .padding(.vertical, 14)
+        .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private var continuationLayout: some View {
+        if let event = message.continuationEvent {
+            HStack(alignment: .top, spacing: 14) {
+                avatar
+                VStack(alignment: .leading, spacing: 8) {
+                    headerRow
+                    ContinuationBlockRenderer(event: event)
+                }
+            }
+            .padding(.vertical, 14)
+        }
     }
 }
 

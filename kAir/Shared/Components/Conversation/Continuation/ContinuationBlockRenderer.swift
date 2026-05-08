@@ -62,6 +62,18 @@ extension ContinuationBlockRenderer {
     }
 }
 
+extension ConversationMessage {
+    /// Block-kind sequence the transcript render path would produce for this
+    /// message. Returns empty for messages without a continuation event.
+    /// Used by the integration tests to assert the chain
+    /// `ConversationMessage → ContinuationBlockRenderer → blocks`
+    /// without requiring SwiftUI view introspection.
+    var continuationBlockKinds: [ContinuationBlockKind] {
+        guard let event = continuationEvent else { return [] }
+        return ContinuationBlockRenderer(event: event).blockKindSequence
+    }
+}
+
 #Preview("completion · all three blocks") {
     ContinuationBlockRenderer(event: ContinuationFixtures.completionFull)
         .padding(20)
