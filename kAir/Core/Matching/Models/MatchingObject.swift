@@ -8,13 +8,12 @@
 //  ActionCardShell per visual contract §5 and inventory §2. No scoring
 //  metadata, no provider hints, no per-vertical extension fields.
 //
-//  This struct lives in the domain layer; its `trustPills` field
-//  references `ActionCardTrustPillKind`, which is a UI-side enum
-//  declared in `kAir/DesignSystem/Components/ActionCardTrustPillKind.swift`.
-//  The cross-layer reference is acknowledged (UI vocabulary is shipped
-//  with the domain model so the matcher can pre-compute per-card
-//  pill arrays) and is consistent with action-card-component-inventory §5
-//  treating the pill set as a frozen part of the card contract.
+//  This struct is pure domain data and has NO dependency on the UI layer.
+//  Card-presentation concerns such as the trust-pill vocabulary
+//  (`ActionCardTrustPillKind`) live with the design system; the rail's
+//  shell consults a UI-side adapter (`ActionCardShell.trustPills(for:)`)
+//  to resolve a per-object pill array at render time. See
+//  `kAir/DesignSystem/Components/ActionCardTrustPillResolver.swift`.
 //
 
 import Foundation
@@ -31,7 +30,4 @@ struct MatchingObject: Identifiable, Hashable {
     let primaryCTA: String
     /// Optional secondary CTA. nil means the secondary slot is omitted.
     let secondaryCTA: String?
-    /// Trust pills rendered in the card's metadata row. Empty array
-    /// collapses the row to zero height per inventory §2.
-    let trustPills: [ActionCardTrustPillKind]
 }

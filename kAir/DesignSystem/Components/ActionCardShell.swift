@@ -134,12 +134,20 @@ struct ActionCardShell: View {
 
     // MARK: - Region (2) METADATA ROW + (7) PARTNER BADGE
 
+    /// Pill array for `object`. Resolved through the UI-side adapter so
+    /// `MatchingObject` (a domain type) does not need to know about the
+    /// trust-pill vocabulary. Empty array collapses the row to zero
+    /// height per inventory §2.
+    private var trustPills: [ActionCardTrustPillKind] {
+        ActionCardTrustPillResolver.pills(for: object)
+    }
+
     @ViewBuilder
     private var metadataRow: some View {
-        if object.trustPills.isEmpty == false {
+        if trustPills.isEmpty == false {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: Self.trustPillSpacing) {
-                    ForEach(object.trustPills, id: \.self) { pill in
+                    ForEach(trustPills, id: \.self) { pill in
                         ActionCardTrustPill(kind: pill)
                     }
                 }
