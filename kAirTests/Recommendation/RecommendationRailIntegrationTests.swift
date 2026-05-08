@@ -86,4 +86,102 @@ final class RecommendationRailIntegrationTests: XCTestCase {
         let allowed = Set(MatchingObjectKind.allCases)
         XCTAssertTrue(kinds.isSubset(of: allowed))
     }
+
+    // MARK: - I3 dismiss path (negative-feedback-affordance-visual-v1 §6)
+
+    func test_chatStore_dismiss_removesObjectFromMatches() throws {
+        let store = ChatStore()
+        let target = store.recommendedMatches[0]
+        XCTAssertEqual(store.recommendedMatches.count, 3)
+
+        store.dismissRecommendation(target, feedback: .dismiss)
+
+        XCTAssertEqual(store.recommendedMatches.count, 2)
+        XCTAssertFalse(store.recommendedMatches.contains(target))
+    }
+
+    func test_chatStore_dismiss_doesNotWriteToTranscript() throws {
+        let store = ChatStore()
+        let target = store.recommendedMatches[0]
+        let beforeCount = store.session.messages.count
+
+        store.dismissRecommendation(target, feedback: .lessLikeThis)
+
+        // V3 §6.3 + behavior §3.4: dismiss writes nothing to transcript.
+        XCTAssertEqual(store.session.messages.count, beforeCount)
+    }
+
+    func test_chatStore_dismiss_acceptsAllFiveFeedbackKinds() throws {
+        for kind in MatchingFeedbackKind.allCases {
+            let store = ChatStore()
+            let target = store.recommendedMatches[0]
+            store.dismissRecommendation(target, feedback: kind)
+            XCTAssertFalse(
+                store.recommendedMatches.contains(target),
+                "Dismiss should remove target for feedback kind \(kind)"
+            )
+        }
+    }
+
+    func test_chatStore_dismiss_unknownObject_isNoOp() throws {
+        let store = ChatStore()
+        let beforeCount = store.recommendedMatches.count
+        let alien = MatchingObject(
+            id: "not-in-slate",
+            kind: .toolEntry,
+            title: "Alien",
+            subtitleTokens: [],
+            reasonText: nil,
+            primaryCTA: "Open",
+            secondaryCTA: nil,
+            trustPills: []
+        )
+
+        store.dismissRecommendation(alien, feedback: .dismiss)
+
+        XCTAssertEqual(store.recommendedMatches.count, beforeCount)
+    }
+
+    func test_chatStore_dismiss_onlyTargetCardRemoved_siblingsPersist() throws {
+        // V3 §8 + behavior §5.3: dismissing one card leaves siblings on screen.
+        let store = ChatStore()
+        let target = store.recommendedMatches[1]   // middle card
+        let siblingA = store.recommendedMatches[0]
+        let siblingC = store.recommendedMatches[2]
+
+        store.dismissRecommendation(target, feedback: .notInterested)
+
+        XCTAssertTrue(store.recommendedMatches.contains(siblingA))
+        XCTAssertTrue(store.recommendedMatches.contains(siblingC))
+        XCTAssertFalse(store.recommendedMatches.contains(target))
+    }
+
+    func test_chatStore_dismissAllThree_railBecomesAbsent() throws {
+        let store = ChatStore()
+        let snapshot = store.recommendedMatches
+
+        for object in snapshot {
+            store.dismissRecommendation(object, feedback: .dismiss)
+        }
+
+        XCTAssertEqual(store.recommendedMatches.count, 0)
+        let rail = RecommendationRail(objects: store.recommendedMatches)
+        XCTAssertTrue(rail.isAbsent)
+        XCTAssertEqual(rail.layoutState, .absent)
+    }
+
+    func test_chatStore_dismiss_layoutStateTransitions() throws {
+        // Verify the rail's layoutState reflects the slate after each dismiss.
+        let store = ChatStore()
+        XCTAssertEqual(RecommendationRail(objects: store.recommendedMatches).layoutState, .triple)
+
+        store.dismissRecommendation(store.recommendedMatches[0], feedback: .dismiss)
+        XCTAssertEqual(RecommendationRail(objects: store.recommendedMatches).layoutState, .dual)
+
+        store.dismissRecommendation(store.recommendedMatches[0], feedback: .dismiss)
+        XCTAssertEqual(RecommendationRail(objects: store.recommendedMatches).layoutState, .single)
+
+        store.dismissRecommendation(store.recommendedMatches[0], feedback: .dismiss)
+        XCTAssertEqual(RecommendationRail(objects: store.recommendedMatches).layoutState, .absent)
+    }
 }

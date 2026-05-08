@@ -53,6 +53,29 @@ final class ChatStore {
         self.recommendedMatches = recommendationProvider.recommendedMatches()
     }
 
+    /// Removes the given recommendation from the rail. Same-frame
+    /// removal per negative-feedback-affordance-visual-v1 §6.1.
+    ///
+    /// Per behavior contract negative-feedback-ux-v1 §3.4, this writes
+    /// nothing to the chat transcript: dismiss is metadata, not a task.
+    ///
+    /// I3 deliberately does NOT call refresh after removal: the I2.5
+    /// stub provider returns a fixed slate and would re-introduce the
+    /// dismissed card. Refresh wiring activates when a real provider
+    /// (which respects the suppression log) is implemented in a later
+    /// PR.
+    ///
+    /// Behavior-side rerank semantics per the feedback kind
+    /// (negative-feedback-ux-v1 §4) are NOT yet implemented; the
+    /// `feedback` argument is captured at the API boundary but no
+    /// scoring side-effects are produced in I3.
+    func dismissRecommendation(
+        _ object: MatchingObject,
+        feedback: MatchingFeedbackKind
+    ) {
+        recommendedMatches.removeAll { $0.id == object.id }
+    }
+
     func bootstrap(with dashboard: HealthDashboard) {
         supportsHealthData = true
         contextSummary = "\(dashboard.hero.band) · Apple Health \(dashboard.generatedAt.formatted(.dateTime.hour().minute())) · local-first"

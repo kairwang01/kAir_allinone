@@ -222,9 +222,14 @@ struct ActionCardShell: View {
     // MARK: - State helpers (exposed at static scope so contract tests
     // can verify the visual mapping without instantiating the view)
 
-    /// Per inventory §1: the ⋯ menu offers all `MatchingFeedbackKind`
-    /// cases except `.dismiss` (which is bound to the ✕ button).
+    /// Per behavior contract `negative-feedback-ux-v1.md` §2.2 and visual
+    /// contract `negative-feedback-affordance-visual-v1.md` §4.2:
+    /// the ⋯ menu offers all five `MatchingFeedbackKind` cases in a
+    /// fixed order, with `.dismiss` as the first entry. (`.dismiss` also
+    /// fires from the ✕ button; surfacing it in the menu spares users
+    /// who already opened the menu from having to reach for ✕.)
     static let feedbackMenuKinds: [MatchingFeedbackKind] = [
+        .dismiss,
         .notInterested,
         .lessLikeThis,
         .notNow,
