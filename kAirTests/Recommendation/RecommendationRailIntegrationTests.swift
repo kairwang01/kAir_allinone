@@ -88,12 +88,30 @@ final class RecommendationRailIntegrationTests: XCTestCase {
     }
 
     // MARK: - I3 dismiss path (negative-feedback-affordance-visual-v1 §6)
+    //
+    // Note (Main A update): with Main A wiring, `dismissRecommendation`
+    // now calls `refreshRecommendedMatches()` once for the four negatives
+    // per `Contracts/UX/feedback-runtime-v1.md` §6.2. The
+    // `StubRecommendationProvider` returns a fixed slate and does NOT
+    // respect a suppression log, so the dismissed card would re-appear
+    // on refresh and break these "card stays removed" assertions. The
+    // tests below use `SuppressingRecommendationProvider` to simulate
+    // what a real scorer-backed provider would do (filter dismissed
+    // ids on subsequent calls). Production-side suppression is a
+    // separate work line per the feedback-runtime-v1.md §13
+    // implementation-gap note.
 
     func test_chatStore_dismiss_removesObjectFromMatches() throws {
-        let store = ChatStore()
+        let provider = SuppressingRecommendationProvider(
+            RecommendationFixtures.tripleSlate
+        )
+        let store = ChatStore(recommendationProvider: provider)
         let target = store.recommendedMatches[0]
         XCTAssertEqual(store.recommendedMatches.count, 3)
 
+        // Simulate the scorer-side suppression that production would
+        // perform in response to a FeedbackEvent.
+        provider.suppress(target.id)
         store.dismissRecommendation(target, feedback: .dismiss)
 
         XCTAssertEqual(store.recommendedMatches.count, 2)
@@ -113,8 +131,12 @@ final class RecommendationRailIntegrationTests: XCTestCase {
 
     func test_chatStore_dismiss_acceptsAllFiveFeedbackKinds() throws {
         for kind in MatchingFeedbackKind.allCases {
-            let store = ChatStore()
+            let provider = SuppressingRecommendationProvider(
+                RecommendationFixtures.tripleSlate
+            )
+            let store = ChatStore(recommendationProvider: provider)
             let target = store.recommendedMatches[0]
+            provider.suppress(target.id)
             store.dismissRecommendation(target, feedback: kind)
             XCTAssertFalse(
                 store.recommendedMatches.contains(target),
@@ -143,11 +165,15 @@ final class RecommendationRailIntegrationTests: XCTestCase {
 
     func test_chatStore_dismiss_onlyTargetCardRemoved_siblingsPersist() throws {
         // V3 §8 + behavior §5.3: dismissing one card leaves siblings on screen.
-        let store = ChatStore()
+        let provider = SuppressingRecommendationProvider(
+            RecommendationFixtures.tripleSlate
+        )
+        let store = ChatStore(recommendationProvider: provider)
         let target = store.recommendedMatches[1]   // middle card
         let siblingA = store.recommendedMatches[0]
         let siblingC = store.recommendedMatches[2]
 
+        provider.suppress(target.id)
         store.dismissRecommendation(target, feedback: .notInterested)
 
         XCTAssertTrue(store.recommendedMatches.contains(siblingA))
@@ -156,10 +182,14 @@ final class RecommendationRailIntegrationTests: XCTestCase {
     }
 
     func test_chatStore_dismissAllThree_railBecomesAbsent() throws {
-        let store = ChatStore()
+        let provider = SuppressingRecommendationProvider(
+            RecommendationFixtures.tripleSlate
+        )
+        let store = ChatStore(recommendationProvider: provider)
         let snapshot = store.recommendedMatches
 
         for object in snapshot {
+            provider.suppress(object.id)
             store.dismissRecommendation(object, feedback: .dismiss)
         }
 
@@ -171,16 +201,255 @@ final class RecommendationRailIntegrationTests: XCTestCase {
 
     func test_chatStore_dismiss_layoutStateTransitions() throws {
         // Verify the rail's layoutState reflects the slate after each dismiss.
-        let store = ChatStore()
+        let provider = SuppressingRecommendationProvider(
+            RecommendationFixtures.tripleSlate
+        )
+        let store = ChatStore(recommendationProvider: provider)
         XCTAssertEqual(RecommendationRail(objects: store.recommendedMatches).layoutState, .triple)
 
-        store.dismissRecommendation(store.recommendedMatches[0], feedback: .dismiss)
+        var current = store.recommendedMatches[0]
+        provider.suppress(current.id)
+        store.dismissRecommendation(current, feedback: .dismiss)
         XCTAssertEqual(RecommendationRail(objects: store.recommendedMatches).layoutState, .dual)
 
-        store.dismissRecommendation(store.recommendedMatches[0], feedback: .dismiss)
+        current = store.recommendedMatches[0]
+        provider.suppress(current.id)
+        store.dismissRecommendation(current, feedback: .dismiss)
         XCTAssertEqual(RecommendationRail(objects: store.recommendedMatches).layoutState, .single)
 
-        store.dismissRecommendation(store.recommendedMatches[0], feedback: .dismiss)
+        current = store.recommendedMatches[0]
+        provider.suppress(current.id)
+        store.dismissRecommendation(current, feedback: .dismiss)
         XCTAssertEqual(RecommendationRail(objects: store.recommendedMatches).layoutState, .absent)
+    }
+
+    // MARK: - Main A: Feedback runtime real wiring
+    // (Contracts/UX/feedback-runtime-v1.md §3 envelope, §6 write timing,
+    //  §4.1 .alreadyDone elevation, §7.1 transcript silence,
+    //  §9.2 projection option (a) — typed FeedbackEvent is sole source of truth)
+
+    func test_dismiss_emitsTypedFeedbackEvent() async throws {
+        let runtime = SpyFeedbackRuntime()
+        let store = ChatStore(feedbackRuntime: runtime)
+        let target = store.recommendedMatches[0]
+
+        store.dismissRecommendation(target, feedback: .dismiss)
+        await store.pendingFeedbackEmit?.value
+
+        XCTAssertEqual(runtime.emittedEvents.count, 1)
+        let emitted = runtime.emittedEvents[0]
+        XCTAssertEqual(emitted.recommendationId, target.id)
+        XCTAssertEqual(emitted.feedbackKind, .dismiss)
+        XCTAssertFalse(emitted.id.isEmpty)
+        XCTAssertTrue(FeedbackEventValidator.validate(emitted).isEmpty)
+    }
+
+    func test_dismiss_eachKindEmitsCorrectFeedbackKind() async throws {
+        for kind in MatchingFeedbackKind.allCases {
+            let runtime = SpyFeedbackRuntime()
+            let store = ChatStore(feedbackRuntime: runtime)
+            let target = store.recommendedMatches[0]
+
+            store.dismissRecommendation(target, feedback: kind)
+            await store.pendingFeedbackEmit?.value
+
+            XCTAssertEqual(runtime.emittedEvents.count, 1, "for \(kind)")
+            XCTAssertEqual(runtime.emittedEvents[0].feedbackKind, kind)
+        }
+    }
+
+    func test_dismiss_invalidEvent_doesNotEmitOrRemove() async throws {
+        // Empty recommendationId triggers FeedbackEventValidator §8.1
+        // (recommendationIdEmpty). The runtime MUST refuse to emit and
+        // MUST NOT remove the card per §6.3 step 2.
+        let runtime = SpyFeedbackRuntime()
+        let store = ChatStore(feedbackRuntime: runtime)
+        let beforeCount = store.recommendedMatches.count
+        let bad = MatchingObject(
+            id: "",
+            kind: .toolEntry,
+            title: "Bad",
+            subtitleTokens: [],
+            reasonText: nil,
+            primaryCTA: "x",
+            secondaryCTA: nil
+        )
+
+        store.dismissRecommendation(bad, feedback: .dismiss)
+        await store.pendingFeedbackEmit?.value
+
+        XCTAssertEqual(runtime.emittedEvents.count, 0)
+        XCTAssertEqual(store.recommendedMatches.count, beforeCount)
+    }
+
+    func test_fourNegatives_eachTriggersOneRefresh() async throws {
+        for kind in [
+            MatchingFeedbackKind.dismiss,
+            .notInterested,
+            .lessLikeThis,
+            .notNow
+        ] {
+            let provider = SpyRecommendationProvider(
+                matches: RecommendationFixtures.tripleSlate
+            )
+            let runtime = SpyFeedbackRuntime()
+            let store = ChatStore(
+                recommendationProvider: provider,
+                feedbackRuntime: runtime
+            )
+            XCTAssertEqual(provider.callCount, 1, "init call for \(kind)")
+
+            let target = store.recommendedMatches[0]
+            store.dismissRecommendation(target, feedback: kind)
+            await store.pendingFeedbackEmit?.value
+
+            XCTAssertEqual(
+                provider.callCount,
+                2,
+                "exactly one refresh after \(kind)"
+            )
+        }
+    }
+
+    func test_alreadyDone_doesNotTriggerRefresh() async throws {
+        let provider = SpyRecommendationProvider(
+            matches: RecommendationFixtures.tripleSlate
+        )
+        let store = ChatStore(recommendationProvider: provider)
+        XCTAssertEqual(provider.callCount, 1, "init call")
+
+        let target = store.recommendedMatches[0]
+        store.dismissRecommendation(target, feedback: .alreadyDone)
+        await store.pendingFeedbackEmit?.value
+
+        XCTAssertEqual(
+            provider.callCount,
+            1,
+            "no refresh on .alreadyDone (post-return owns refresh)"
+        )
+    }
+
+    func test_alreadyDone_recordsCompletionHandoff() async throws {
+        let store = ChatStore()
+        let target = store.recommendedMatches[0]
+        XCTAssertTrue(store.completedRecommendations.isEmpty)
+
+        store.dismissRecommendation(target, feedback: .alreadyDone)
+        await store.pendingFeedbackEmit?.value
+
+        XCTAssertEqual(store.completedRecommendations, [target.id])
+        XCTAssertFalse(store.recommendedMatches.contains(target))
+    }
+
+    func test_fourNegatives_doNotRecordCompletionHandoff() async throws {
+        for kind in [
+            MatchingFeedbackKind.dismiss,
+            .notInterested,
+            .lessLikeThis,
+            .notNow
+        ] {
+            let store = ChatStore()
+            let target = store.recommendedMatches[0]
+            store.dismissRecommendation(target, feedback: kind)
+            await store.pendingFeedbackEmit?.value
+
+            XCTAssertTrue(
+                store.completedRecommendations.isEmpty,
+                "completed log should be empty for \(kind)"
+            )
+        }
+    }
+
+    func test_allFiveKinds_writeNothingToTranscript() async throws {
+        // V3 §6.3 + behavior §3.4 + feedback-runtime §7.1: feedback
+        // submissions write zero records to session.messages, regardless
+        // of kind.
+        for kind in MatchingFeedbackKind.allCases {
+            let store = ChatStore()
+            let target = store.recommendedMatches[0]
+            let beforeCount = store.session.messages.count
+
+            store.dismissRecommendation(target, feedback: kind)
+            await store.pendingFeedbackEmit?.value
+
+            XCTAssertEqual(
+                store.session.messages.count,
+                beforeCount,
+                "transcript stays silent for \(kind)"
+            )
+        }
+    }
+
+    func test_invalidEvent_writesNothingToTranscript() async throws {
+        let store = ChatStore()
+        let beforeCount = store.session.messages.count
+        let bad = MatchingObject(
+            id: "",
+            kind: .toolEntry,
+            title: "Bad",
+            subtitleTokens: [],
+            reasonText: nil,
+            primaryCTA: "x",
+            secondaryCTA: nil
+        )
+
+        store.dismissRecommendation(bad, feedback: .dismiss)
+        await store.pendingFeedbackEmit?.value
+
+        XCTAssertEqual(store.session.messages.count, beforeCount)
+    }
+}
+
+// MARK: - Test doubles for Main A wiring
+
+/// Recommendation provider that records each call to
+/// `recommendedMatches()`. Used to verify §6.2's
+/// "exactly one refresh per dismissal" behavior.
+@MainActor
+private final class SpyRecommendationProvider: RecommendationProvider {
+    var matches: [MatchingObject]
+    var callCount = 0
+
+    init(matches: [MatchingObject]) {
+        self.matches = matches
+    }
+
+    func recommendedMatches() -> [MatchingObject] {
+        callCount += 1
+        return matches
+    }
+}
+
+/// `FeedbackRuntime` spy that captures every `emit(_:)` call. Used to
+/// verify the typed envelope is constructed and forwarded.
+@MainActor
+private final class SpyFeedbackRuntime: FeedbackRuntime {
+    var emittedEvents: [FeedbackEvent] = []
+
+    func emit(_ event: FeedbackEvent) async throws {
+        emittedEvents.append(event)
+    }
+}
+
+/// Recommendation provider that simulates the scorer-side suppression
+/// log a real provider would maintain. Tests call `suppress(_:)`
+/// before `dismissRecommendation` so the subsequent
+/// `refreshRecommendedMatches` returns a slate excluding the
+/// dismissed card, mirroring the production semantics that
+/// `feedback-runtime-v1.md` §6.2 + §13 (implementation gap) describe.
+@MainActor
+private final class SuppressingRecommendationProvider: RecommendationProvider {
+    private var matches: [MatchingObject]
+
+    init(_ matches: [MatchingObject]) {
+        self.matches = matches
+    }
+
+    func suppress(_ id: String) {
+        matches.removeAll { $0.id == id }
+    }
+
+    func recommendedMatches() -> [MatchingObject] {
+        matches
     }
 }

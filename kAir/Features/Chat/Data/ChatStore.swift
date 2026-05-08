@@ -42,38 +42,131 @@ final class ChatStore {
     /// mixed-recommendation-rail-visual-v1 §3.
     var recommendedMatches: [MatchingObject] = []
 
+    /// Recommendations the user marked `.alreadyDone`.
+    ///
+    /// `.alreadyDone` elevates to `.completion` per
+    /// `Docs/design/post-return-and-continuation-ux-v1.md` §1.1 row C
+    /// and `Contracts/UX/feedback-runtime-v1.md` §4.1 — it exits the
+    /// negative-feedback flow and enters the post-return / completion
+    /// flow. This log is the minimum hand-off in Main A: the
+    /// recommendation id is recorded here so the (future) post-return
+    /// continuation runtime can consume the elevation. It is NOT a
+    /// typed `ChatContinuationEvent` emit; that lives in
+    /// continuation-runtime wiring (separate work line).
+    private(set) var completedRecommendations: [String] = []
+
+    /// Last `feedbackRuntime.emit(_:)` task. Tests `await` it to wait
+    /// for the fire-and-forget emission to complete before asserting
+    /// on the runtime spy. Production code does NOT consume this.
+    private(set) var pendingFeedbackEmit: Task<Void, Never>?
+
     private let recommendationProvider: RecommendationProvider
+    private let feedbackRuntime: FeedbackRuntime
     private var lastRefreshDate: Date?
     private var supportsHealthData = true
     private var pendingMapsIntent: PendingMapsIntent?
     private var resolvedMapsSession: MapsRouteSession?
 
-    init(recommendationProvider: RecommendationProvider = StubRecommendationProvider()) {
+    init(
+        recommendationProvider: RecommendationProvider = StubRecommendationProvider(),
+        feedbackRuntime: FeedbackRuntime = NoOpFeedbackRuntime()
+    ) {
         self.recommendationProvider = recommendationProvider
+        self.feedbackRuntime = feedbackRuntime
         self.recommendedMatches = recommendationProvider.recommendedMatches()
     }
 
-    /// Removes the given recommendation from the rail. Same-frame
-    /// removal per negative-feedback-affordance-visual-v1 §6.1.
+    /// Re-fetches the slate from the recommendation provider.
     ///
-    /// Per behavior contract negative-feedback-ux-v1 §3.4, this writes
-    /// nothing to the chat transcript: dismiss is metadata, not a task.
+    /// Per `Contracts/UX/feedback-runtime-v1.md` §6.2, this fires
+    /// exactly once per dismissal for each of the four negatives.
+    /// For `.alreadyDone`, the elevation hands off to post-return,
+    /// which owns refresh; this contract's runtime MUST NOT call
+    /// refresh from that path.
     ///
-    /// I3 deliberately does NOT call refresh after removal: the I2.5
-    /// stub provider returns a fixed slate and would re-introduce the
-    /// dismissed card. Refresh wiring activates when a real provider
-    /// (which respects the suppression log) is implemented in a later
-    /// PR.
+    /// Note: the current `StubRecommendationProvider` returns a fixed
+    /// slate and does NOT respect a suppression log. After a dismiss,
+    /// calling refresh will re-introduce the dismissed card. Closing
+    /// this gap requires a real provider — separate work line, per
+    /// the feedback-runtime-v1.md §13 implementation gap. Main A's
+    /// scope is to wire the refresh CALL; provider-side suppression
+    /// is out of scope.
+    func refreshRecommendedMatches() {
+        self.recommendedMatches = recommendationProvider.recommendedMatches()
+    }
+
+    /// Removes the given recommendation from the rail (same-frame per
+    /// V3 §6.1) and emits a typed `FeedbackEvent` via the injected
+    /// `FeedbackRuntime`.
     ///
-    /// Behavior-side rerank semantics per the feedback kind
-    /// (negative-feedback-ux-v1 §4) are NOT yet implemented; the
-    /// `feedback` argument is captured at the API boundary but no
-    /// scoring side-effects are produced in I3.
+    /// Behavior per `Contracts/UX/feedback-runtime-v1.md`:
+    ///   - All 5 feedback kinds: construct + validate + emit a
+    ///     `FeedbackEvent` (§3, §6.3 step 1–3); remove the card from
+    ///     the slate (§6.3 step 4).
+    ///   - Four negatives (`.dismiss`, `.notInterested`,
+    ///     `.lessLikeThis`, `.notNow`): call
+    ///     `refreshRecommendedMatches()` exactly once after removal
+    ///     (§6.2).
+    ///   - `.alreadyDone`: do NOT call refresh (§4.1, §6.2). Append
+    ///     the recommendation id to `completedRecommendations` so the
+    ///     (future) post-return continuation runtime can consume the
+    ///     elevation per `post-return-and-continuation-ux-v1.md` §1.1
+    ///     row C.
+    ///   - All 5 kinds: write nothing to `session.messages`
+    ///     (§7.1 + behavior §3.4).
+    ///
+    /// Validation: if the constructed envelope fails
+    /// `FeedbackEventValidator` (per §8), this method is a silent
+    /// no-op — the card is NOT removed and no event is emitted.
+    /// Validation failure is a programming error, not a user-visible
+    /// branch.
+    ///
+    /// Projection choice (§9.2): option (a) — the typed
+    /// `FeedbackEvent` is the sole source of truth. No
+    /// `MatchingBehaviorEvent`-shaped record is constructed from this
+    /// path.
     func dismissRecommendation(
         _ object: MatchingObject,
         feedback: MatchingFeedbackKind
     ) {
+        let event = FeedbackEvent(
+            id: "feedback-\(object.id)-\(UUID().uuidString)",
+            recommendationId: object.id,
+            feedbackKind: feedback,
+            surface: nil,
+            createdAt: Date()
+        )
+
+        guard FeedbackEventValidator.validate(event).isEmpty else {
+            // Programming error per §8; abort silently. Card stays
+            // on screen; emit does not fire.
+            return
+        }
+
+        // Same-frame removal per V3 §6.1 / §6.3 step 4. Applies to
+        // all 5 kinds.
         recommendedMatches.removeAll { $0.id == object.id }
+
+        // Fire-and-forget emit. NoOp by default; production runtimes
+        // record to scorer / telemetry sinks. The Task is exposed
+        // via `pendingFeedbackEmit` so tests can await it before
+        // asserting on a spy.
+        let runtime = feedbackRuntime
+        pendingFeedbackEmit = Task { @MainActor in
+            try? await runtime.emit(event)
+        }
+
+        switch feedback {
+        case .alreadyDone:
+            // Completion / post-return handoff per §4.1 + post-return
+            // §1.1 row C. Do NOT call refresh; record the elevation
+            // for the (future) post-return runtime.
+            completedRecommendations.append(object.id)
+
+        case .dismiss, .notInterested, .lessLikeThis, .notNow:
+            // Four negatives: refresh once after removal per §6.2.
+            refreshRecommendedMatches()
+        }
     }
 
     func bootstrap(with dashboard: HealthDashboard) {
