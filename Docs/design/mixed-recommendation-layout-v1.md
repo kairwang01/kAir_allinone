@@ -8,7 +8,7 @@ This doc sits below:
 - `super-app-visual-system-v1.md` — visual source of truth.
 - `chat-home-and-recommended-next-spec-v1.md` — Recommended Next container (Layer 4).
 - `action-card-component-inventory.md` — card primitive inventory.
-- `post-return-and-continuation-ux-v1.md` — refresh timing, count, retention rules.
+- `../../Contracts/UX/post-return-and-continuation-ux-v1.md` — refresh timing, count, retention rules.
 
 If anything here disagrees with the specs above, **the shell specs win**. Mixed layout cannot invent a grid, a carousel, a per-kind section header, or a per-vertical size variant.
 
@@ -66,7 +66,7 @@ Slates do **not** render "From Maps" / "From Music" / "From Search" group divide
 
 ## 3. Layout states — single / dual / triple
 
-Every slate renders in one of exactly three states. The provider's cap (§3 of `post-return-and-continuation-ux-v1.md`) keeps slates at ≤ 3 cards, so no other state is reachable. T12 locks this.
+Every slate renders in one of exactly three states. The provider's cap (§3 of `../../Contracts/UX/post-return-and-continuation-ux-v1.md`) keeps slates at ≤ 3 cards, so no other state is reachable. T12 locks this.
 
 ### 3.1 Single (1 card)
 
@@ -159,7 +159,7 @@ The option set does **not** vary by object kind. A song card and a place card of
 
 When the user taps `Accept` on one card in a mixed slate, **only that card** changes state. The other cards in the slate are **untouched**:
 
-- The accepted card is stored in `activeRecommendationBySection[section]` and removed from the visible rail on the next refresh (§3 of `post-return-and-continuation-ux-v1.md`).
+- The accepted card is stored in `activeRecommendationBySection[section]` and removed from the visible rail on the next refresh (§3 of `../../Contracts/UX/post-return-and-continuation-ux-v1.md`).
 - Siblings in the same slate stay visible until the refresh hits.
 - There is **no** "You picked X, dismissing Y and Z" sweep. Siblings are not auto-dismissed by siblings.
 
@@ -185,7 +185,7 @@ The provider caps at 3 per `objectKind`, so a slate can have 0–3 cards of the 
 - **No counter / pagination.** The slate is whatever fits in ≤ 3; no "1 of 5."
 - **No inline preview** (map thumbnail, album art, video still, favicon). v1 is text-and-glyph.
 - **No tier-3 "deep cuts" section** or "more like this" drill-down.
-- **No per-kind animation** on enter/exit. Refreshes are instantaneous state swaps per `post-return-and-continuation-ux-v1.md` §3.4.
+- **No per-kind animation** on enter/exit. Refreshes are instantaneous state swaps per `../../Contracts/UX/post-return-and-continuation-ux-v1.md` §3.4.
 - **No per-kind typography change.** The shell's typography applies uniformly (`super-app-visual-system-v1.md` §2).
 
 ---

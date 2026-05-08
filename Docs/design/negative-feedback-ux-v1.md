@@ -9,7 +9,7 @@ This doc sits below:
 - `chat-home-and-recommended-next-spec-v1.md` — Recommended Next container (Layer 4).
 - `action-card-component-inventory.md` — `ActionCardShell` affordances (⋯ menu + ✕ dismiss).
 - `mixed-recommendation-layout-v1.md` — per-card feedback rule (§5.1).
-- `post-return-and-continuation-ux-v1.md` — suppression after return (§6).
+- `../../Contracts/UX/post-return-and-continuation-ux-v1.md` — suppression after return (§6).
 
 If anything here disagrees with the specs above, **the shell specs win**. Negative feedback UX cannot invent a new affordance, a new dialog, a new toast, a new "why" modal, or a new enum case.
 
@@ -26,7 +26,7 @@ If anything here disagrees with the specs above, **the shell specs win**. Negati
 | 3 | `.lessLikeThis`        | `⋯` → menu item  | `以后少推这类` / `Less like this`    | Structural negative. Down-ranks the `objectKind` for a rolling window.                  |
 | 4 | `.notNow`              | `⋯` → menu item  | `现在不需要` / `Not now`             | Timing negative. De-prioritizes this timing only; the category itself stays live.       |
 
-The fifth case, `.alreadyDone`, is treated as a *completion* path in `ChatStore.dismissRecommendation` (stage elevates to `.completion`) and is therefore covered by `post-return-and-continuation-ux-v1.md`, not here. Listing it alongside the four negatives is intentional — the card menu still offers all five in one panel, because offering four "no" answers and forcing the user to re-open the menu for "actually, done" would feel adversarial.
+The fifth case, `.alreadyDone`, is treated as a *completion* path in `ChatStore.dismissRecommendation` (stage elevates to `.completion`) and is therefore covered by `../../Contracts/UX/post-return-and-continuation-ux-v1.md`, not here. Listing it alongside the four negatives is intentional — the card menu still offers all five in one panel, because offering four "no" answers and forcing the user to re-open the menu for "actually, done" would feel adversarial.
 
 **Hard rule**: no new `MatchingFeedbackKind` case is allowed in v1. If a new signal is needed, it maps to one of the existing four (or five) or waits.
 
@@ -61,7 +61,7 @@ Every Recommended Next card has **exactly two** entry points for negative feedba
 - **Swipe gesture on the card**. A horizontal swipe is not wired and must not be wired — it would duplicate `✕` and invite per-platform divergence (iOS swipe-to-delete semantics).
 - **Long-press on the card**. Also not wired; would conflict with accessibility long-press hints.
 - **Shake-to-undo**. Explicitly not used. Undo is not part of v1 (see §3.3).
-- **Pull-to-refresh**. Refresh is policy-driven (§3 of `post-return-and-continuation-ux-v1.md`), not user-initiated.
+- **Pull-to-refresh**. Refresh is policy-driven (§3 of `../../Contracts/UX/post-return-and-continuation-ux-v1.md`), not user-initiated.
 - **A "Feedback" button outside the card** (e.g., in chat home, on the rail). No such button exists.
 
 The two entries above are the only negative-feedback vectors in v1.
@@ -107,7 +107,7 @@ Feedback submissions do **not** write anything to the chat transcript. No assist
 
 > The transcript is the durable record of *tasks*. Dismissing a card is not a task; it is metadata. Metadata never writes to the transcript.
 
-This is identical to the post-return spec's rule that dismiss and accept-no-entry write nothing to chat (`post-return-and-continuation-ux-v1.md` §2.4).
+This is identical to the post-return spec's rule that dismiss and accept-no-entry write nothing to chat (`../../Contracts/UX/post-return-and-continuation-ux-v1.md` §2.4).
 
 ---
 
@@ -139,11 +139,11 @@ The user cannot see "this candidate is currently down-weighted." There is no "mu
 
 ## 5. Post-return suppression rules
 
-When the user returns from an execution surface (`recordSurfaceReturn` / `recordMapReturn`), the refresh that follows (§3.1 of `post-return-and-continuation-ux-v1.md`) must honor the suppression state accumulated during the prior lifecycle:
+When the user returns from an execution surface (`recordSurfaceReturn` / `recordMapReturn`), the refresh that follows (§3.1 of `../../Contracts/UX/post-return-and-continuation-ux-v1.md`) must honor the suppression state accumulated during the prior lifecycle:
 
 - **`.dismiss` / `.notInterested` / `.lessLikeThis` / `.notNow`** events from the prior in-chat session are still suppressing their targets when the post-return refresh runs. The user does not get "a fresh start" just because they opened a surface.
 - **Exception: `.alreadyDone` on a card whose `objectKind` matches the returned surface**. If the user said "already done" on a place card then opened Maps and completed a real task, the already-done signal is *consumed* by the completion — it is not double-counted as future suppression.
-- **Exception: a new-task pivot** (§4 of `post-return-and-continuation-ux-v1.md`). If `beginDecisionLifecycle` opens with `replaceActiveLifecycle: true` — i.e., the caller explicitly signals a hard pivot — the prior suppression rolls off on the next refresh. This is rare; in normal use, the suppression persists.
+- **Exception: a new-task pivot** (§4 of `../../Contracts/UX/post-return-and-continuation-ux-v1.md`). If `beginDecisionLifecycle` opens with `replaceActiveLifecycle: true` — i.e., the caller explicitly signals a hard pivot — the prior suppression rolls off on the next refresh. This is rare; in normal use, the suppression persists.
 
 ### 5.1 What this means visually after return
 

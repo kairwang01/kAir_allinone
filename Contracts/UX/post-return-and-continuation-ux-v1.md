@@ -5,10 +5,10 @@
 
 This doc sits below:
 
-- `super-app-visual-system-v1.md` — visual source of truth.
-- `chat-home-and-recommended-next-spec-v1.md` — Layer 1 (chat) + Layer 4 (Recommended Next) container.
-- `execution-surface-framework-v1.md` — the 7-region surface contract.
-- `action-card-component-inventory.md` — card primitive inventory.
+- [`../../Docs/design/super-app-visual-system-v1.md`](../../Docs/design/super-app-visual-system-v1.md) — visual source of truth.
+- [`../../Docs/design/chat-home-and-recommended-next-spec-v1.md`](../../Docs/design/chat-home-and-recommended-next-spec-v1.md) — Layer 1 (chat) + Layer 4 (Recommended Next) container.
+- [`../../Docs/design/execution-surface-framework-v1.md`](../../Docs/design/execution-surface-framework-v1.md) — the 7-region surface contract.
+- [`../../Docs/design/action-card-component-inventory.md`](../../Docs/design/action-card-component-inventory.md) — card primitive inventory.
 
 If anything here disagrees with those, **the shell specs win**. Post-return UX cannot invent a new chat message style, a new toast, a new "results" panel, a new card kind, or a new refresh rule per vertical. It can only select from what the shell already exposes.
 
