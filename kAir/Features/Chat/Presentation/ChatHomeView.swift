@@ -61,6 +61,15 @@ struct ChatHomeView: View {
                             }
                         }
 
+                        // Layer 4: Recommended Next rail.
+                        // Renders nothing when the slate is empty per
+                        // mixed-recommendation-rail-visual-v1 §3.
+                        // I2.5 wires the slate from the provider at
+                        // ChatStore init; refresh / accept / dismiss
+                        // wiring is deferred to a later PR.
+                        RecommendationRail(objects: store.recommendedMatches)
+                            .padding(.top, store.recommendedMatches.isEmpty ? 0 : 16)
+
                         Color.clear
                             .frame(height: 1)
                             .id(Self.bottomAnchorID)

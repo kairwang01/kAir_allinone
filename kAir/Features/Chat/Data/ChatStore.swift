@@ -36,10 +36,22 @@ final class ChatStore {
         "What can kAir do for me?"
     ]
 
+    /// Current Recommended Next slate. Populated from the
+    /// `RecommendationProvider` at init. The chat home reads this
+    /// directly; an empty array means the rail is absent per
+    /// mixed-recommendation-rail-visual-v1 §3.
+    var recommendedMatches: [MatchingObject] = []
+
+    private let recommendationProvider: RecommendationProvider
     private var lastRefreshDate: Date?
     private var supportsHealthData = true
     private var pendingMapsIntent: PendingMapsIntent?
     private var resolvedMapsSession: MapsRouteSession?
+
+    init(recommendationProvider: RecommendationProvider = StubRecommendationProvider()) {
+        self.recommendationProvider = recommendationProvider
+        self.recommendedMatches = recommendationProvider.recommendedMatches()
+    }
 
     func bootstrap(with dashboard: HealthDashboard) {
         supportsHealthData = true
