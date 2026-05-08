@@ -125,12 +125,12 @@ final class TelemetryTests: XCTestCase {
         XCTAssertEqual(TelemetryEvent.surfaceReturnName(for: .search), "surface.search.return")
     }
 
-    func testTelemetrySurfaceKindHasAllEightCases() {
+    func testSurfaceKindHasAllEightCases() {
         // Per §4: the `<kind>` placeholder is filled with one of the
         // eight `SurfaceKind` values from continuation-runtime-v1.md
         // §2.1 (chat / health / ai / maps / store / music / video /
-        // search). The temporary local mirror MUST mirror that set.
-        XCTAssertEqual(TelemetrySurfaceKind.allCases.count, 8)
+        // search). The canonical type MUST host that set.
+        XCTAssertEqual(SurfaceKind.allCases.count, 8)
     }
 
     // MARK: - §5.2: propagation matrix happy path
