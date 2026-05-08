@@ -2,54 +2,61 @@
 //  SystemEvidenceBlock.swift
 //  kAir
 //
-//  Interface draft for the systemEvidence transcript block.
+//  systemEvidence transcript block.
 //  Visual contract: Contracts/UX/continuation-transcript-visual-v1.md §5.2.
-//
-//  I1-prep level.
 //
 
 import SwiftUI
 
 struct SystemEvidenceBlock: View {
+    static let containerPadding: CGFloat = 12
+    static let interRowSpacing: CGFloat = 8
+    static let maxContentWidth: CGFloat = 560
+    static let labelColumnWidth: CGFloat = 120
+    static let pairValueMaxLineCount: Int = 3
+    static let borderWidth: CGFloat = 0.8
+    static let eyebrowTracking: CGFloat = 1.2
+
     let payload: SystemEvidencePayload
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let eyebrow = (payload.eyebrowLocalized ?? payload.eyebrow), eyebrow.isEmpty == false {
-                Text(eyebrow.uppercased())
+        VStack(alignment: .leading, spacing: Self.interRowSpacing) {
+            if let eyebrowText = (payload.eyebrowLocalized ?? payload.eyebrow),
+               eyebrowText.isEmpty == false {
+                Text(verbatim: eyebrowText.uppercased())
                     .font(.caption.weight(.bold))
-                    .tracking(1.2)
+                    .tracking(Self.eyebrowTracking)
                     .foregroundStyle(AppTheme.Palette.textMuted)
             }
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Self.interRowSpacing) {
                 ForEach(Array(payload.pairs.enumerated()), id: \.offset) { _, pair in
                     pairRow(pair)
                 }
             }
         }
-        .padding(12)
-        .frame(maxWidth: 560, alignment: .leading)
+        .padding(Self.containerPadding)
+        .frame(maxWidth: Self.maxContentWidth, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: AppTheme.Metrics.compactRadius, style: .continuous)
                 .fill(AppTheme.Palette.backgroundInset)
         )
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.Metrics.compactRadius, style: .continuous)
-                .strokeBorder(AppTheme.Palette.line, lineWidth: 0.8)
+                .strokeBorder(AppTheme.Palette.line, lineWidth: Self.borderWidth)
         )
     }
 
     private func pairRow(_ pair: EvidencePair) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(pair.labelLocalized ?? pair.label)
+            Text(verbatim: pair.labelLocalized ?? pair.label)
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(AppTheme.Palette.textMuted)
-                .frame(width: 120, alignment: .leading)
+                .frame(width: Self.labelColumnWidth, alignment: .leading)
                 .lineLimit(1)
-            Text(pair.valueLocalized ?? pair.value)
+            Text(verbatim: pair.valueLocalized ?? pair.value)
                 .font(.body)
                 .foregroundStyle(AppTheme.Palette.textPrimary)
-                .lineLimit(3)
+                .lineLimit(Self.pairValueMaxLineCount)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
