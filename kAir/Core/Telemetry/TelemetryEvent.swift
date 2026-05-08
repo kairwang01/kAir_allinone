@@ -90,14 +90,14 @@ enum TelemetryEvent: String, Hashable, CaseIterable {
     /// Produces the fully-formed `surface.<kind>.enter` dotted name
     /// per Contracts/telemetry-contract-v1.md §4 (the `<kind>`
     /// placeholder is filled with the surface's raw value).
-    static func surfaceEnterName(for kind: TelemetrySurfaceKind) -> String {
+    static func surfaceEnterName(for kind: SurfaceKind) -> String {
         "surface.\(kind.rawValue).enter"
     }
 
     /// Produces the fully-formed `surface.<kind>.return` dotted name
     /// per Contracts/telemetry-contract-v1.md §4 (the `<kind>`
     /// placeholder is filled with the surface's raw value).
-    static func surfaceReturnName(for kind: TelemetrySurfaceKind) -> String {
+    static func surfaceReturnName(for kind: SurfaceKind) -> String {
         "surface.\(kind.rawValue).return"
     }
 }

@@ -41,11 +41,11 @@ final class CapabilityKindTests: XCTestCase {
     // MARK: - Surface family mapping (§3 table)
 
     func test_surfaceFamily_returnsValueInAllCases() throws {
-        let allSurfaces = Set(CapabilitySurfaceKind.allCases)
+        let allSurfaces = Set(SurfaceKind.allCases)
         for kind in CapabilityKind.allCases {
             XCTAssertTrue(
                 allSurfaces.contains(kind.surfaceFamily),
-                "\(kind).surfaceFamily must be a member of CapabilitySurfaceKind.allCases"
+                "\(kind).surfaceFamily must be a member of SurfaceKind.allCases"
             )
         }
     }

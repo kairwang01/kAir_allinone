@@ -9,7 +9,7 @@
 //  .localStoreLookup); §3.2 reserves 7 identifiers without an adapter
 //  commitment. Adding an eleventh case is a v2 change per §3.3.
 //
-//  Each capability maps to exactly one CapabilitySurfaceKind family and
+//  Each capability maps to exactly one SurfaceKind family and
 //  declares one primary MatchingObjectKind per the §3 tables.
 //
 
@@ -45,7 +45,7 @@ enum CapabilityKind: String, Hashable, CaseIterable {
 
     /// Per the §3 surface-family column. Each kind maps to exactly one
     /// surface family (§3.3).
-    var surfaceFamily: CapabilitySurfaceKind {
+    var surfaceFamily: SurfaceKind {
         switch self {
         case .aiCompletion:     return .ai
         case .threadLookup:     return .chat

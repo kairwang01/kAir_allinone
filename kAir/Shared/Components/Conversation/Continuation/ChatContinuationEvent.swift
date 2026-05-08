@@ -26,17 +26,6 @@ struct ChatContinuationEvent: Hashable {
 
 // MARK: - Vocabularies
 
-enum SurfaceKind: String, Hashable, CaseIterable {
-    case chat
-    case health
-    case ai
-    case maps
-    case store
-    case music
-    case video
-    case search
-}
-
 enum TerminalOutcome: String, Hashable, CaseIterable {
     case completion
     case abandon
