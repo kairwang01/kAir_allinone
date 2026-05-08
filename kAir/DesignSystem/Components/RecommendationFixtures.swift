@@ -7,6 +7,10 @@
 //  dual / triple) per Contracts/UX/mixed-recommendation-rail-visual-v1.md
 //  §4.
 //
+//  Trust-pill assignments for these fixtures live in the UI-side
+//  adapter `ActionCardTrustPillResolver.fixturePills`; the domain
+//  `MatchingObject` does not carry pill data.
+//
 
 import Foundation
 
@@ -20,8 +24,7 @@ enum RecommendationFixtures {
         subtitleTokens: ["1.4 mi", "Café"],
         reasonText: "Matches your morning pattern",
         primaryCTA: "Open in Maps",
-        secondaryCTA: "Save for later",
-        trustPills: []
+        secondaryCTA: "Save for later"
     )
 
     static let placeWithTrustPills = MatchingObject(
@@ -31,8 +34,7 @@ enum RecommendationFixtures {
         subtitleTokens: ["1.4 mi", "Café"],
         reasonText: "Matches your morning pattern",
         primaryCTA: "Open in Maps",
-        secondaryCTA: "Save for later",
-        trustPills: [.placeResolutionLive, .etaConfidenceEstimate]
+        secondaryCTA: "Save for later"
     )
 
     static let routeBay = MatchingObject(
@@ -42,8 +44,7 @@ enum RecommendationFixtures {
         subtitleTokens: ["12 min", "Walking"],
         reasonText: "Calmer than the direct route",
         primaryCTA: "Start route",
-        secondaryCTA: nil,
-        trustPills: [.distanceConfidenceEstimate]
+        secondaryCTA: nil
     )
 
     static let songSunset = MatchingObject(
@@ -53,8 +54,7 @@ enum RecommendationFixtures {
         subtitleTokens: ["Aurora Skies", "3:42"],
         reasonText: "From your focus mix",
         primaryCTA: "Play",
-        secondaryCTA: "Queue",
-        trustPills: []
+        secondaryCTA: "Queue"
     )
 
     static let videoTutorial = MatchingObject(
@@ -64,8 +64,7 @@ enum RecommendationFixtures {
         subtitleTokens: ["7 min", "Tutorial"],
         reasonText: "Picks up where you left off",
         primaryCTA: "Watch",
-        secondaryCTA: nil,
-        trustPills: []
+        secondaryCTA: nil
     )
 
     static let answerCard = MatchingObject(
@@ -75,8 +74,7 @@ enum RecommendationFixtures {
         subtitleTokens: ["AI-synthesized", "1-paragraph"],
         reasonText: "Based on the last 7 days of data",
         primaryCTA: "Read",
-        secondaryCTA: "Open Health",
-        trustPills: []
+        secondaryCTA: "Open Health"
     )
 
     static let searchResult = MatchingObject(
@@ -86,8 +84,7 @@ enum RecommendationFixtures {
         subtitleTokens: ["apple.com", "2 days ago"],
         reasonText: nil,
         primaryCTA: "Open",
-        secondaryCTA: nil,
-        trustPills: []
+        secondaryCTA: nil
     )
 
     static let toolEntryHealth = MatchingObject(
@@ -97,8 +94,7 @@ enum RecommendationFixtures {
         subtitleTokens: ["Health", "Used this morning"],
         reasonText: nil,
         primaryCTA: "Open",
-        secondaryCTA: nil,
-        trustPills: []
+        secondaryCTA: nil
     )
 
     static let threadPriorChat = MatchingObject(
@@ -108,8 +104,7 @@ enum RecommendationFixtures {
         subtitleTokens: ["Last msg Tue"],
         reasonText: nil,
         primaryCTA: "Continue",
-        secondaryCTA: nil,
-        trustPills: []
+        secondaryCTA: nil
     )
 
     static let contactCoworker = MatchingObject(
@@ -119,8 +114,7 @@ enum RecommendationFixtures {
         subtitleTokens: ["Coworker", "Last msg Mon"],
         reasonText: nil,
         primaryCTA: "Message",
-        secondaryCTA: nil,
-        trustPills: []
+        secondaryCTA: nil
     )
 
     // MARK: - Slates (V2 §4.2)
@@ -139,8 +133,9 @@ enum RecommendationFixtures {
     /// Triple with the direct slot carrying trust pills and the
     /// alternatives without — exercises V2 §5.2 rule (3) "alternatives
     /// may not reduce information density." Both render through the
-    /// same shell; the alternatives simply have empty `trustPills`
-    /// arrays from the data side, not by view-tree downgrade.
+    /// same shell; the alternatives simply have no pills registered in
+    /// `ActionCardTrustPillResolver.fixturePills`, not by view-tree
+    /// downgrade.
     static let trustPillTripleSlate: [MatchingObject] = [
         placeWithTrustPills,
         songSunset,

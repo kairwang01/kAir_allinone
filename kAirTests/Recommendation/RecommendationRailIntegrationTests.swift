@@ -133,8 +133,7 @@ final class RecommendationRailIntegrationTests: XCTestCase {
             subtitleTokens: [],
             reasonText: nil,
             primaryCTA: "Open",
-            secondaryCTA: nil,
-            trustPills: []
+            secondaryCTA: nil
         )
 
         store.dismissRecommendation(alien, feedback: .dismiss)

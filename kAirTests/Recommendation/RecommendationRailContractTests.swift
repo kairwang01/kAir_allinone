@@ -100,8 +100,7 @@ final class RecommendationRailContractTests: XCTestCase {
             subtitleTokens: [],
             reasonText: nil,
             primaryCTA: "Open",
-            secondaryCTA: nil,
-            trustPills: []
+            secondaryCTA: nil
         )
         let rail = RecommendationRail(objects: RecommendationFixtures.tripleSlate + [extra])
         // The rail's layoutState reports overflow; the visual contract
@@ -292,6 +291,43 @@ final class RecommendationRailContractTests: XCTestCase {
         XCTAssertEqual(
             ActionCardTrustPill.foregroundColor(for: .neutral),
             AppTheme.Palette.textSecondary
+        )
+    }
+
+    // MARK: - Trust-pill resolver (UI-side adapter that decouples the
+    // pill vocabulary from MatchingObject — see
+    // ActionCardTrustPillResolver.swift). Pins that the same fixtures
+    // still produce the same pill arrays the rail would render.
+
+    func test_trustPillResolver_placeWithTrustPills_yieldsTwoPills() throws {
+        let pills = ActionCardTrustPillResolver.pills(
+            for: RecommendationFixtures.placeWithTrustPills
+        )
+        XCTAssertEqual(pills, [.placeResolutionLive, .etaConfidenceEstimate])
+    }
+
+    func test_trustPillResolver_routeBay_yieldsDistanceEstimate() throws {
+        let pills = ActionCardTrustPillResolver.pills(
+            for: RecommendationFixtures.routeBay
+        )
+        XCTAssertEqual(pills, [.distanceConfidenceEstimate])
+    }
+
+    func test_trustPillResolver_unmappedObject_yieldsEmptyArray() throws {
+        // Fixtures that previously declared `trustPills: []` should
+        // resolve to an empty array — the metadata row collapses to
+        // zero height per inventory §2.
+        XCTAssertEqual(
+            ActionCardTrustPillResolver.pills(for: RecommendationFixtures.placeRoute),
+            []
+        )
+        XCTAssertEqual(
+            ActionCardTrustPillResolver.pills(for: RecommendationFixtures.songSunset),
+            []
+        )
+        XCTAssertEqual(
+            ActionCardTrustPillResolver.pills(for: RecommendationFixtures.answerCard),
+            []
         )
     }
 }
