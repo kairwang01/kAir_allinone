@@ -164,7 +164,7 @@ The six states are mutually exclusive; a card is in exactly one at any time. Two
 |---|---|---|---|
 | `default` | Card is at rest in the rail | (baseline) | design-system-v1 §4.4 default; card inventory §1 |
 | `accepted` | User taps `Accept` on the card | Container fill briefly receives a `Palette.success @ 0.10` overlay AND the border briefly tints to `Palette.success @ 0.18`, both for one `motion.emphasized` cycle (~`0.42s`). The primary CTA's label glyph swaps to a checkmark for the same window. After the flash, the card visibly returns to `default` and remains in the rail until the next refresh (per behavior §3.3). The user perceives a one-shot "yes, got it" pulse, then a calm card. | design-system-v1 §4.4 accepted |
-| `dismissed` | User taps `✕` or selects a `MatchingFeedbackKind` from `⋯` | Card opacity animates from `1.0` to `0` via `motion.emphasized` (~`0.42s`), then the card is removed from the view tree. No halo, no slide, no horizontal drift. Adjacent cards collapse instantaneously into the freed vertical space (per §7.2). The user perceives a single fade-out and a hard re-layout. | design-system-v1 §4.4 dismissed |
+| `dismissed` | User taps `✕` or selects a `MatchingFeedbackKind` from `⋯` | Card disappears on the same frame as the tap. **No opacity transition, no scale, no slide.** Adjacent cards collapse instantaneously into the freed vertical space (per §7.2). The user perceives a single hard state swap. | `negative-feedback-ux-v1.md` §3.1; `negative-feedback-affordance-visual-v1.md` §2.1 (override) + §6.1 |
 | `loading` | Card is mid-resolution (e.g., place lookup in flight). v1 uses this only when the primitive itself surfaces a loading affordance — the rail does NOT manage this state. | Spinner glyph at the resolved tint, body content `0.6` opacity, persistent labels at full opacity, `motion.standard` rotation on the spinner. The user perceives the card as "still resolving" without losing the persistent label. | design-system-v1 §4.4 loading; card inventory §2 |
 | `suppressed` | Card was filtered out by the provider before this render, OR was removed by a prior dismiss / accept and has not been re-surfaced | **Zero presence in the view tree.** No skeleton, no placeholder, no greyed-out shell, no reserved slot. The card never reaches `body`. The user perceives no visible artifact — the card is simply not part of the slate. | post-return-and-continuation-ux-v1 §3.3 retention; behavior §3.4 |
 | `refreshed` | Card was produced by `refreshRecommendedMatches` AND occupies a rail slot that was previously empty or held a different card | The card renders as `default`. The user perceives the rail content as having changed — possibly different cards in the same slot indices — but **no individual card carries a "just-arrived" marker, badge, or animation**. The slate-level transition is owned by §7 `refresh`; this state is the per-card outcome of that transition (instantaneous, no entry motion). | post-return-and-continuation-ux-v1 §3.4; behavior §3.4 |
@@ -172,7 +172,7 @@ The six states are mutually exclusive; a card is in exactly one at any time. Two
 ### 6.1 Disambiguating overlapping pairs
 
 - **`default` vs `accepted`** — `accepted` is a one-shot pulse with a measurable `motion.emphasized` duration AND a glyph swap on the primary CTA. After the pulse the card returns to `default` chrome but is still in the rail. The two are distinct: during the pulse, the card has a colored overlay and tinted border; in `default`, it does not.
-- **`dismissed` vs `suppressed`** — `dismissed` is **user-initiated and animated** (the card fades out as the user's confirmation receipt). `suppressed` is **non-user-initiated and instantaneous** (the card never appears, or disappears without animation when the provider drops it). A card that the user dismissed and that is then re-evaluated by the provider stays in `suppressed` for subsequent renders — but the perceptible difference (`dismissed` has a fade, `suppressed` does not) belongs to a single render frame.
+- **`dismissed` vs `suppressed`** — `dismissed` is **user-initiated** (the user tapped `✕` or a `⋯` menu item) and removes the card on the same frame. `suppressed` is **non-user-initiated** (the card never appears, or the provider drops it during refresh) and also removes the card instantaneously. The perceptible difference is causal, not visual: a `dismissed` card was on screen one frame ago and is gone now because of the user's tap; a `suppressed` card was never on screen or fell out via refresh. Both states involve zero motion.
 - **`refreshed` vs `default`** — `refreshed` is a labeled state for documentation purposes only; visually it IS `default`. It is named explicitly so a future "show new cards specially" proposal MUST go through §11 change process rather than slipping in as a tweak to `default`.
 
 **`error` state is not part of v1.** A card cannot fail in a way the rail must visualize. Provider failures upstream of the rail produce zero candidates → `recommendedMatches` shrinks → the rail enters Single / Dual or absent. The card primitive's per-kind error strip (e.g., Maps trust-pill `partnerFallback`, `locationPermissionDenied`) is the closest equivalent and is owned by the primitive, not the rail.
@@ -188,7 +188,7 @@ Three transitions are named. The behavior contracts (`mixed-recommendation-layou
 | Transition | When | Visual semantics | Motion |
 |---|---|---|---|
 | `preserve` | Slate rebuild produces the same card at the same slot index | Card is unchanged across renders. SwiftUI MUST identify the card by stable `id` (the `MatchingObject` id) so the view tree treats it as the same instance. No fade-out / fade-in of the unchanged card. | none |
-| `suppress` | Card was present and is no longer present after a render — either (a) user dismissed it, or (b) refresh removed it because the candidate fell out of the slate | Two paths: (a) **user-dismissed**: card runs the §6 `dismissed` fade (`motion.emphasized` to `0`), then is removed; (b) **refresh-removed without prior user action**: card is removed instantaneously, no fade (matches behavior §3.4 "no per-card entry/exit animation"). Adjacent cards collapse to fill the vacated slot **instantaneously** in either path; the only animated piece is the dismissed card itself in path (a). | (a) `motion.emphasized` on the leaving card only / (b) none |
+| `suppress` | Card was present and is no longer present after a render — either (a) user dismissed it, or (b) refresh removed it because the candidate fell out of the slate | Both paths are **instantaneous, no fade**. (a) **user-dismissed**: card is removed on the same frame as the tap (per `negative-feedback-ux-v1.md` §3.1 and `negative-feedback-affordance-visual-v1.md` §2.1). (b) **refresh-removed without prior user action**: card is removed instantaneously per behavior §3.4. Adjacent cards collapse to fill the vacated slot **instantaneously** in either path. | none |
 | `refresh` | `refreshRecommendedMatches` fires (timing per post-return §3.1) and produces a new slate | Entire rail content swaps. **Instantaneous.** No per-card stagger, no skeleton placeholder, no slate-level fade, no haptic, no sound. Cards that were preserved keep their position; cards that are new render as `default` (no `refreshed` badge); cards that fell out follow `suppress` path (b). | none for the rail; preserve/suppress per-card semantics apply |
 
 ### 7.1 Why no entry animation on refresh
@@ -203,7 +203,7 @@ Adding a fade-in for new cards would (a) imply a per-card "freshness" signal —
 
 When a card disappears mid-slate (e.g., a 2-card → 1-card transition after a refresh), the remaining card's vertical position changes. Animating that position change with `motion.standard` would create a "settling" feel. v1 forbids it: the position change is instantaneous so the user perceives a hard state swap, not a soft re-layout. This is consistent with the "instantaneous state swaps" rule in both upstream contracts.
 
-The single permitted animation in this transition family is the **leaving card's own fade** when the user dismissed it (§6 `dismissed` state). That fade is the user's confirmation feedback; everything else is instant.
+There is no permitted animation in this transition family. Both refresh-removed and user-dismissed cards exit instantaneously. The user-dismissed path is normatively governed by [`negative-feedback-affordance-visual-v1.md`](negative-feedback-affordance-visual-v1.md) §2.1 + §6.1; the refresh-removed path is governed by `mixed-recommendation-layout-v1.md` §3.4 and `post-return-and-continuation-ux-v1.md` §3.4.
 
 ### 7.3 Consistency claim
 
@@ -214,7 +214,7 @@ This section adds **zero** new animation rules, motion curves, or delay schedule
 - `mixed-recommendation-layout-v1.md` §3.4 (no per-kind animation on enter/exit)
 - `post-return-and-continuation-ux-v1.md` §3.4 (refresh does not animate)
 
-The principle is unchanged: **state changes are expressed by chrome differences (overlay, border tint, glyph swap, opacity)**, not by animation choreography. Animation is permitted only where §6 imports it from `design-system-v1.md` §4.4 (the user-initiated `accepted` flash and `dismissed` fade), and forbidden everywhere else in this contract.
+The principle is unchanged: **state changes are expressed by chrome differences (overlay, border tint, glyph swap, opacity)**, not by animation choreography. Animation is permitted only for the user-initiated `accepted` flash that §6 imports from `design-system-v1.md` §4.4. The `dismissed` state has no animation; the user-dismissed path is governed by [`negative-feedback-affordance-visual-v1.md`](negative-feedback-affordance-visual-v1.md) §2.1 + §6.1. Everything else in this contract is forbidden.
 
 ---
 
@@ -231,7 +231,7 @@ Cataloged for explicit prohibition. All are forbidden in v1 regardless of `objec
 - **No group header / section divider** in mixed slates ("From Maps", "Music picks", etc.).
 - **No tabs / chips above the rail** to filter by `objectKind`.
 - **No carousel, horizontal scroller, accordion, or grid** for multi-card layouts.
-- **No animation on slate enter / exit / transition** beyond the user-initiated `dismissed` fade.
+- **No animation on slate enter / exit / transition.**
 - **No per-vertical haptic, sound, or accent color tied to slate refresh.**
 - **No per-card "selected" or "focused" tier-marker** (cards do not communicate selection mid-slate; selection IS acceptance, which goes through the §6 `accepted` state).
 - **No counter / pagination indicator** ("1 of 3", dots, progress bar).
@@ -261,8 +261,6 @@ Every visual axis traces to a `design-system-v1.md` token. If a value below does
 | Primary CTA typography | `actionLabel` (`subheadline .semibold` per primitive) | §3.2 |
 | Accepted-state overlay color | `Palette.success @ 0.10 alpha` | §3.1 (derived alpha permitted in §4.4 state mappings) |
 | Accepted-state border tint | `Palette.success @ 0.18 alpha` | §3.1 (derived alpha permitted in §4.4) |
-| Dismissed-state fade target opacity | `0` | §3.5 / §4.4 |
-| Dismissed-state motion | `motion.emphasized` (`spring response 0.42, damping 0.82`) | §3.6 |
 | Accepted-state flash motion | `motion.emphasized` for entry; `motion.standard` for revert | §3.6 |
 | Loading-state motion | `motion.standard` (`easeInOut 0.24s`) on the spinner | §3.6 |
 | Refresh / preserve / suppress (refresh-removed) transition motion | none | §3.6 (no token used; this is the absence of motion as a contract decision) |
@@ -306,7 +304,7 @@ v1 is ratified when ALL of the following are true:
 - [ ] At least one production consumer renders a dual-state rail.
 - [ ] At least one production consumer renders a triple-state rail.
 - [ ] At least one production consumer triggers the `accepted` state and the §6 flash is observed.
-- [ ] At least one production consumer triggers the `dismissed` state and the §6 fade is observed.
+- [ ] At least one production consumer triggers the `dismissed` state and the §6 instantaneous removal is observed (per [`negative-feedback-affordance-visual-v1.md`](negative-feedback-affordance-visual-v1.md) §2.1 override).
 - [ ] At least one production consumer triggers a `refresh` and §7's instantaneous swap is verified (no animation).
 - [ ] An automated test asserts that a rail with `recommendedMatches.isEmpty` produces zero view-tree presence (matches §3 "rail is absent").
 - [ ] An automated test asserts that the rail's view tree contains zero `sectionHeader`-style children regardless of slate composition (matches §8 "no group headers").
