@@ -256,6 +256,88 @@ final class AppBootstrapTests: XCTestCase {
         // No assertion on emit visibility: NoOp swallows everything.
         // We just want to prove the path completes silently.
     }
+
+    // MARK: - Composition root: capability registry (Main C)
+
+    func test_defaultInit_exposesRegistryWithThreeShippedKinds() async throws {
+        // Per Main C contract, the registry is always composed and
+        // pre-populated with the §3.1 shipped stubs.
+        let bootstrap = AppBootstrap()
+        let snapshot = await bootstrap.capabilityRegistry.availabilitySnapshot()
+
+        XCTAssertEqual(snapshot.count, 3)
+        XCTAssertEqual(snapshot[.aiCompletion], true)
+        XCTAssertEqual(snapshot[.threadLookup], true)
+        XCTAssertEqual(snapshot[.localStoreLookup], true)
+    }
+
+    func test_previewBootstrap_exposesRegistryWithThreeShippedKinds() async throws {
+        let bootstrap = AppBootstrap.preview
+        let snapshot = await bootstrap.capabilityRegistry.availabilitySnapshot()
+
+        XCTAssertEqual(snapshot.count, 3)
+    }
+
+    func test_customRegistry_isStoredOnBootstrap() throws {
+        let custom = CapabilityRegistry()
+        let bootstrap = AppBootstrap(capabilityRegistry: custom)
+
+        // Identity check: AppBootstrap stores the exact registry
+        // instance the composition root passed in.
+        XCTAssertTrue(bootstrap.capabilityRegistry === custom)
+    }
+
+    func test_defaultBootstrapRegistry_isReusableAcrossBootstrapInstances() async throws {
+        // Two `AppBootstrap()` calls each construct their OWN
+        // registry (single seam = the factory; the factory itself
+        // produces independent registries per call). This avoids
+        // accidental singleton-style cross-contamination between
+        // app instances in tests.
+        let b1 = AppBootstrap()
+        let b2 = AppBootstrap()
+        XCTAssertFalse(b1.capabilityRegistry === b2.capabilityRegistry)
+    }
+
+    // MARK: - End-to-end: bootstrap-composed registry reaches ChatStore
+
+    func test_compositionRoot_chatStoreReadsFromBootstrapRegistry() async throws {
+        // Mirror what `ChatHomeView.init(bootstrap:)` does: thread
+        // the bootstrap-composed registry into a fresh `ChatStore`.
+        // The store's capability availability must reflect the
+        // bootstrap-composed registry, not a fresh-default one.
+        let custom = CapabilityRegistry()
+        custom.register(StubAICompletionAdapter()) // only ONE shipped kind
+        let bootstrap = AppBootstrap(capabilityRegistry: custom)
+
+        let store = ChatStore(
+            feedbackRuntime: bootstrap.feedbackRuntime,
+            completedRecommendationHandoff: bootstrap.completedRecommendationHandoff,
+            telemetryEmitter: bootstrap.telemetryEmitter,
+            capabilityRegistry: bootstrap.capabilityRegistry
+        )
+        await store.pendingCapabilityRefresh?.value
+
+        // The store sees ONLY the kind registered on the custom
+        // registry — proving the bootstrap-composed registry, not
+        // the default factory, was the consumer's source.
+        XCTAssertEqual(store.capabilityAvailability, [.aiCompletion: true])
+    }
+
+    func test_defaultBootstrapRegistry_doesNotCrashOnInit() async throws {
+        // Sanity: the default registry path completes without
+        // throwing. Mirrors the runtime / emitter "doesNotCrash"
+        // tests.
+        let bootstrap = AppBootstrap()
+        let store = ChatStore(
+            feedbackRuntime: bootstrap.feedbackRuntime,
+            completedRecommendationHandoff: bootstrap.completedRecommendationHandoff,
+            telemetryEmitter: bootstrap.telemetryEmitter,
+            capabilityRegistry: bootstrap.capabilityRegistry
+        )
+        await store.pendingCapabilityRefresh?.value
+
+        XCTAssertFalse(store.capabilityAvailability.isEmpty)
+    }
 }
 
 // MARK: - Test double

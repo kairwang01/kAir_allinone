@@ -59,11 +59,31 @@ final class ChatStore {
     /// wire up.
     private(set) var pendingTelemetryEmit: Task<Void, Never>?
 
+    /// Last `capabilityRegistry.availabilitySnapshot()` task. Tests
+    /// `await` it to wait for the fire-and-forget snapshot to land
+    /// in `capabilityAvailability` before asserting. Production code
+    /// does NOT consume this.
+    private(set) var pendingCapabilityRefresh: Task<Void, Never>?
+
+    /// Latest `availabilitySnapshot()` from the capability registry.
+    /// Empty until the first refresh resolves; afterwards maps each
+    /// registered `CapabilityKind` to its current `isAvailable()`
+    /// value per `Contracts/capability-registry-and-adapter-contract-v1.md`
+    /// §7.3.
+    ///
+    /// Main C scope: this property is populated by a real call into
+    /// the registry but is NOT yet consumed by any view. The chat UI
+    /// keeps its current behavior. Downstream consumers (suggested
+    /// prompt filtering, intent routing) are out of Main C scope and
+    /// will land via separate work lines.
+    private(set) var capabilityAvailability: [CapabilityKind: Bool] = [:]
+
     private let recommendationProvider: RecommendationProvider
     private let feedbackRuntime: FeedbackRuntime
     private let completedRecommendationHandoff: CompletedRecommendationHandoff
     private let telemetryEmitter: TelemetryEmitter
     private let identifierFactory: TelemetryIdentifierFactory
+    private let capabilityRegistry: CapabilityRegistry
 
     /// Stable `thread_id` for this chat session. Issued exactly once
     /// at construction via `identifierFactory.makeThreadID()` per
@@ -82,15 +102,49 @@ final class ChatStore {
         feedbackRuntime: FeedbackRuntime = NoOpFeedbackRuntime(),
         completedRecommendationHandoff: CompletedRecommendationHandoff = NoOpCompletedRecommendationHandoff(),
         telemetryEmitter: TelemetryEmitter = NoOpTelemetryEmitter(),
-        identifierFactory: TelemetryIdentifierFactory = UUIDTelemetryIdentifierFactory()
+        identifierFactory: TelemetryIdentifierFactory = UUIDTelemetryIdentifierFactory(),
+        capabilityRegistry: CapabilityRegistry? = nil
     ) {
         self.recommendationProvider = recommendationProvider
         self.feedbackRuntime = feedbackRuntime
         self.completedRecommendationHandoff = completedRecommendationHandoff
         self.telemetryEmitter = telemetryEmitter
         self.identifierFactory = identifierFactory
+        self.capabilityRegistry = capabilityRegistry
+            ?? DefaultCapabilityRegistry.makeWithShippedStubs()
         self.threadID = identifierFactory.makeThreadID()
         self.recommendedMatches = recommendationProvider.recommendedMatches()
+
+        // Main C: real consumer of the capability registry. Fire a
+        // one-shot availability snapshot at construction so
+        // `capabilityAvailability` reflects the registered §3.1
+        // shipped kinds (or whatever the injected registry exposes).
+        // Result lands when the task completes; tests `await` it via
+        // `pendingCapabilityRefresh`.
+        refreshCapabilityAvailability()
+    }
+
+    /// Re-fetches `capabilityRegistry.availabilitySnapshot()` and
+    /// stores the result on `capabilityAvailability`.
+    ///
+    /// Per `Contracts/capability-registry-and-adapter-contract-v1.md`
+    /// §7.3, the snapshot is a point-in-time map from each
+    /// registered kind to its current `isAvailable()` value. v1
+    /// adapters MUST keep `isAvailable()` cheap (§6) so this refresh
+    /// is safe to call at construction and on demand.
+    ///
+    /// Main C scope: callable from production code (it runs at init)
+    /// AND from tests (which call it explicitly to verify the wiring
+    /// is real). Downstream auto-refresh hooks (e.g. on app
+    /// foreground, on permission change) are NOT wired here — those
+    /// belong to the runtime that owns the underlying availability
+    /// signal, not to chat home.
+    func refreshCapabilityAvailability() {
+        let registry = capabilityRegistry
+        pendingCapabilityRefresh = Task { @MainActor [weak self] in
+            let snapshot = await registry.availabilitySnapshot()
+            self?.capabilityAvailability = snapshot
+        }
     }
 
     /// Re-fetches the slate from the recommendation provider.

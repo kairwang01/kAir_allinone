@@ -18,21 +18,23 @@ struct ChatHomeView: View {
     ///
     /// Per `Contracts/UX/feedback-runtime-v1.md` §5 + Main A.1 / A.2
     /// wiring, the feedback runtime, the completed-recommendation
-    /// handoff, AND the telemetry emitter are owned by the
-    /// composition root (`AppBootstrap`), not by `ChatStore`. The
-    /// view threads them through at construction time.
+    /// handoff, the telemetry emitter, AND the capability registry
+    /// are owned by the composition root (`AppBootstrap`), not by
+    /// `ChatStore`. The view threads them through at construction
+    /// time.
     ///
     /// This `init` is the single composition seam between the
-    /// `AppBootstrap` and `ChatStore`. Per Main B scope, the only
-    /// addition here is the `telemetryEmitter:` argument; no view
-    /// logic, no rendering, no new emit sites in this view.
+    /// `AppBootstrap` and `ChatStore`. Per Main C scope, the only
+    /// addition here is the `capabilityRegistry:` argument; no view
+    /// logic, no rendering, no new behavior in this view.
     init(bootstrap: AppBootstrap) {
         self.bootstrap = bootstrap
         self._store = State(
             wrappedValue: ChatStore(
                 feedbackRuntime: bootstrap.feedbackRuntime,
                 completedRecommendationHandoff: bootstrap.completedRecommendationHandoff,
-                telemetryEmitter: bootstrap.telemetryEmitter
+                telemetryEmitter: bootstrap.telemetryEmitter,
+                capabilityRegistry: bootstrap.capabilityRegistry
             )
         )
     }
