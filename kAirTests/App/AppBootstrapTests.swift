@@ -185,6 +185,77 @@ final class AppBootstrapTests: XCTestCase {
 
         XCTAssertTrue(spy.recordedRecommendations.isEmpty)
     }
+
+    // MARK: - Composition root: telemetry emitter (Main B)
+
+    func test_defaultInit_exposesNoOpTelemetryEmitter() throws {
+        // Per Main B contract, the telemetry emitter is non-optional
+        // (always composed) and defaults to NoOp. Production builds
+        // will swap this default once a real emitter ships.
+        let bootstrap = AppBootstrap()
+        XCTAssertTrue(bootstrap.telemetryEmitter is NoOpTelemetryEmitter)
+    }
+
+    func test_previewBootstrap_exposesTelemetryEmitter() throws {
+        let bootstrap = AppBootstrap.preview
+        XCTAssertTrue(bootstrap.telemetryEmitter is NoOpTelemetryEmitter)
+    }
+
+    func test_customTelemetryEmitter_isStoredOnBootstrap() throws {
+        let inMemory = InMemoryTelemetryEmitter()
+        let bootstrap = AppBootstrap(telemetryEmitter: inMemory)
+
+        // Identity check: AppBootstrap stores the exact emitter
+        // instance the composition root passed in.
+        XCTAssertTrue(bootstrap.telemetryEmitter as? InMemoryTelemetryEmitter === inMemory)
+    }
+
+    // MARK: - End-to-end: bootstrap-composed emitter receives chat.prompt.submit
+    //
+    // Pins the Main B architectural promise: the composition root
+    // owns the emitter; `ChatStore` is a consumer; one prompt submit
+    // through the bootstrap-composed `ChatStore` reaches the
+    // bootstrap-composed emitter exactly once with the contract-shaped
+    // payload.
+
+    func test_compositionRoot_promptSubmitReachesBootstrapEmitterOnce() async throws {
+        let inMemory = InMemoryTelemetryEmitter()
+        let bootstrap = AppBootstrap(telemetryEmitter: inMemory)
+
+        // Mirror what `ChatHomeView.init(bootstrap:)` does.
+        let store = ChatStore(
+            feedbackRuntime: bootstrap.feedbackRuntime,
+            completedRecommendationHandoff: bootstrap.completedRecommendationHandoff,
+            telemetryEmitter: bootstrap.telemetryEmitter
+        )
+
+        store.submitPrompt("hello", using: nil)
+        await store.pendingTelemetryEmit?.value
+
+        XCTAssertEqual(inMemory.records(of: .chatPromptSubmit).count, 1)
+        // The payload satisfies §5.2 end-to-end through the
+        // composition seam.
+        let record = inMemory.records[0]
+        XCTAssertNotNil(record.payload.traceID)
+        XCTAssertNotNil(record.payload.threadID)
+    }
+
+    func test_defaultBootstrapEmitter_doesNotCrashOnSubmit() async throws {
+        // Sanity: the default NoOp emitter completes without
+        // throwing. Mirrors `test_defaultBootstrapRuntime_doesNotCrashOnDismiss`.
+        let bootstrap = AppBootstrap()
+        let store = ChatStore(
+            feedbackRuntime: bootstrap.feedbackRuntime,
+            completedRecommendationHandoff: bootstrap.completedRecommendationHandoff,
+            telemetryEmitter: bootstrap.telemetryEmitter
+        )
+
+        store.submitPrompt("hello", using: nil)
+        await store.pendingTelemetryEmit?.value
+
+        // No assertion on emit visibility: NoOp swallows everything.
+        // We just want to prove the path completes silently.
+    }
 }
 
 // MARK: - Test double

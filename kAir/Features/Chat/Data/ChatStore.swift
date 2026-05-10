@@ -47,9 +47,31 @@ final class ChatStore {
     /// on the runtime spy. Production code does NOT consume this.
     private(set) var pendingFeedbackEmit: Task<Void, Never>?
 
+    /// Last `telemetryEmitter.emit(_:_:)` task fired from the prompt
+    /// commit path. Mirrors the `pendingFeedbackEmit` pattern: tests
+    /// `await` this to wait for the fire-and-forget telemetry emit
+    /// to complete before asserting on a sink. Production code does
+    /// NOT consume this.
+    ///
+    /// Per Main B scope, this handle is populated only by
+    /// `chat.prompt.submit`. Future emit sites (rail, surface,
+    /// continuation, feedback) will land their own handles when they
+    /// wire up.
+    private(set) var pendingTelemetryEmit: Task<Void, Never>?
+
     private let recommendationProvider: RecommendationProvider
     private let feedbackRuntime: FeedbackRuntime
     private let completedRecommendationHandoff: CompletedRecommendationHandoff
+    private let telemetryEmitter: TelemetryEmitter
+    private let identifierFactory: TelemetryIdentifierFactory
+
+    /// Stable `thread_id` for this chat session. Issued exactly once
+    /// at construction via `identifierFactory.makeThreadID()` per
+    /// `Contracts/telemetry-contract-v1.md` §3 (issuer = the chat
+    /// session manager). Reused on every emission for the lifetime
+    /// of this `ChatStore` instance.
+    private let threadID: ThreadID
+
     private var lastRefreshDate: Date?
     private var supportsHealthData = true
     private var pendingMapsIntent: PendingMapsIntent?
@@ -58,11 +80,16 @@ final class ChatStore {
     init(
         recommendationProvider: RecommendationProvider = StubRecommendationProvider(),
         feedbackRuntime: FeedbackRuntime = NoOpFeedbackRuntime(),
-        completedRecommendationHandoff: CompletedRecommendationHandoff = NoOpCompletedRecommendationHandoff()
+        completedRecommendationHandoff: CompletedRecommendationHandoff = NoOpCompletedRecommendationHandoff(),
+        telemetryEmitter: TelemetryEmitter = NoOpTelemetryEmitter(),
+        identifierFactory: TelemetryIdentifierFactory = UUIDTelemetryIdentifierFactory()
     ) {
         self.recommendationProvider = recommendationProvider
         self.feedbackRuntime = feedbackRuntime
         self.completedRecommendationHandoff = completedRecommendationHandoff
+        self.telemetryEmitter = telemetryEmitter
+        self.identifierFactory = identifierFactory
+        self.threadID = identifierFactory.makeThreadID()
         self.recommendedMatches = recommendationProvider.recommendedMatches()
     }
 
@@ -294,6 +321,26 @@ final class ChatStore {
     }
 
     private func submit(prompt: String, using dashboard: HealthDashboard?) {
+        // Main B: telemetry minimum real emission.
+        //
+        // Per `Contracts/telemetry-contract-v1.md` §4.1, the composer
+        // fires `chat.prompt.submit` exactly once per committed
+        // prompt. This is the FIRST real telemetry emit in kAir; the
+        // §5.2 propagation matrix requires `trace_id` and `thread_id`
+        // and forbids the other five identifier kinds.
+        //
+        // Identifier issuance is single-sourced through
+        // `TelemetryIdentifierFactory` (Main B reviewer invariant
+        // #1): `thread_id` was captured once at init; `trace_id` is
+        // freshly issued here per §3 (one trace = one user request
+        // lifecycle).
+        //
+        // Validation parallels the FeedbackRuntime path: a propagation
+        // matrix violation is a programming error, NOT a user-visible
+        // branch. On violation, the emit is silently skipped; the
+        // user prompt still commits.
+        emitChatPromptSubmit()
+
         session.messages.append(
             .user(
                 text: prompt,
@@ -334,6 +381,49 @@ final class ChatStore {
 
     private var selectedMode: ComposerMode {
         modes.first(where: { $0.id == selectedModeID }) ?? modes[0]
+    }
+
+    /// Emits exactly one `TelemetryEvent.chatPromptSubmit` per call
+    /// per `Contracts/telemetry-contract-v1.md` §4.1.
+    ///
+    /// Payload satisfies the §5.2 propagation matrix:
+    ///   - REQUIRED: `trace_id`, `thread_id` (set).
+    ///   - FORBIDDEN: `recommendation_id`, `source_request_id`,
+    ///     `source_recommendation_id`, `surface_session_id`,
+    ///     `feedback_chain_id` (all unset).
+    ///
+    /// `trace_id` is freshly issued; `thread_id` is the stable id
+    /// captured at init. The matrix is validated locally; a
+    /// violation is a programming error and silently aborts the
+    /// emit (the user prompt still commits — telemetry MUST NOT
+    /// break user-visible flow per the contract's silent-emission
+    /// principle and `TelemetryEmitter.emit(_:_:)` non-throwing
+    /// signature).
+    ///
+    /// The actual emit fires as a fire-and-forget `Task`; the handle
+    /// is exposed via `pendingTelemetryEmit` so tests can `await` it
+    /// before asserting on a sink. This mirrors the
+    /// `pendingFeedbackEmit` pattern from Main A.
+    private func emitChatPromptSubmit() {
+        let traceID = identifierFactory.makeTraceID()
+        let payload = TelemetryEventPayload(
+            traceID: traceID,
+            threadID: threadID
+        )
+
+        // Matrix check per §5.2. Empty violations means well-formed.
+        guard TelemetryPropagationMatrix
+            .violations(.chatPromptSubmit, payload)
+            .isEmpty
+        else {
+            // Programming error: skip emit, let the prompt commit.
+            return
+        }
+
+        let emitter = telemetryEmitter
+        pendingTelemetryEmit = Task { @MainActor in
+            await emitter.emit(.chatPromptSubmit, payload)
+        }
     }
 
     private static func suggestedPrompts(for dashboard: HealthDashboard) -> [String] {
