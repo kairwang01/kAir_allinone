@@ -10,8 +10,21 @@ import SwiftUI
 struct ChatHomeView: View {
     let bootstrap: AppBootstrap
 
-    @State private var store = ChatStore()
+    @State private var store: ChatStore
     @State private var isReferencePickerPresented = false
+
+    /// Composes `ChatStore` with the runtime wired by `AppBootstrap`.
+    ///
+    /// Per `Contracts/UX/feedback-runtime-v1.md` §5 + Main A.1 wiring,
+    /// the feedback runtime instance is owned by the composition root
+    /// (`AppBootstrap`), not by `ChatStore`. The view threads it
+    /// through at construction time.
+    init(bootstrap: AppBootstrap) {
+        self.bootstrap = bootstrap
+        self._store = State(
+            wrappedValue: ChatStore(feedbackRuntime: bootstrap.feedbackRuntime)
+        )
+    }
 
     private static let bottomAnchorID = "kair-chat-bottom"
 
