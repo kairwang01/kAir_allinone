@@ -330,32 +330,43 @@ final class RecommendationRailIntegrationTests: XCTestCase {
     }
 
     func test_alreadyDone_recordsCompletionHandoff() async throws {
-        let store = ChatStore()
+        // Main A.2: `.alreadyDone` MUST flow through the injected
+        // `CompletedRecommendationHandoff` once, with the same
+        // `MatchingObject` the user dismissed. Verified against a
+        // local spy injected at construction.
+        let handoff = SpyCompletedRecommendationHandoff()
+        let store = ChatStore(completedRecommendationHandoff: handoff)
         let target = store.recommendedMatches[0]
-        XCTAssertTrue(store.completedRecommendations.isEmpty)
+        XCTAssertTrue(handoff.recordedRecommendations.isEmpty)
 
         store.dismissRecommendation(target, feedback: .alreadyDone)
         await store.pendingFeedbackEmit?.value
 
-        XCTAssertEqual(store.completedRecommendations, [target.id])
+        XCTAssertEqual(handoff.recordedRecommendations.count, 1)
+        XCTAssertEqual(handoff.recordedRecommendations[0].id, target.id)
         XCTAssertFalse(store.recommendedMatches.contains(target))
     }
 
     func test_fourNegatives_doNotRecordCompletionHandoff() async throws {
+        // The four negatives share the affordance surface with
+        // `.alreadyDone` but MUST NOT reach the completion handoff
+        // (feedback-runtime §4.1 last bullet + §6.2). The handoff is
+        // strictly the elevation path.
         for kind in [
             MatchingFeedbackKind.dismiss,
             .notInterested,
             .lessLikeThis,
             .notNow
         ] {
-            let store = ChatStore()
+            let handoff = SpyCompletedRecommendationHandoff()
+            let store = ChatStore(completedRecommendationHandoff: handoff)
             let target = store.recommendedMatches[0]
             store.dismissRecommendation(target, feedback: kind)
             await store.pendingFeedbackEmit?.value
 
             XCTAssertTrue(
-                store.completedRecommendations.isEmpty,
-                "completed log should be empty for \(kind)"
+                handoff.recordedRecommendations.isEmpty,
+                "completion handoff should not fire for \(kind)"
             )
         }
     }
@@ -451,5 +462,17 @@ private final class SuppressingRecommendationProvider: RecommendationProvider {
 
     func recommendedMatches() -> [MatchingObject] {
         matches
+    }
+}
+
+/// Spy for `CompletedRecommendationHandoff`. Captures each `record(_:)`
+/// call so tests can assert the elevation-only contract: `.alreadyDone`
+/// records exactly once; the four negatives never record.
+@MainActor
+private final class SpyCompletedRecommendationHandoff: CompletedRecommendationHandoff {
+    var recordedRecommendations: [MatchingObject] = []
+
+    func record(_ recommendation: MatchingObject) {
+        recordedRecommendations.append(recommendation)
     }
 }

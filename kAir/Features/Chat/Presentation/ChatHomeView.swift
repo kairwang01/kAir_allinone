@@ -13,16 +13,21 @@ struct ChatHomeView: View {
     @State private var store: ChatStore
     @State private var isReferencePickerPresented = false
 
-    /// Composes `ChatStore` with the runtime wired by `AppBootstrap`.
+    /// Composes `ChatStore` with the runtime + handoff wired by
+    /// `AppBootstrap`.
     ///
-    /// Per `Contracts/UX/feedback-runtime-v1.md` §5 + Main A.1 wiring,
-    /// the feedback runtime instance is owned by the composition root
-    /// (`AppBootstrap`), not by `ChatStore`. The view threads it
-    /// through at construction time.
+    /// Per `Contracts/UX/feedback-runtime-v1.md` §5 + Main A.1 / A.2
+    /// wiring, both the feedback runtime AND the completed-
+    /// recommendation handoff instances are owned by the composition
+    /// root (`AppBootstrap`), not by `ChatStore`. The view threads
+    /// them through at construction time.
     init(bootstrap: AppBootstrap) {
         self.bootstrap = bootstrap
         self._store = State(
-            wrappedValue: ChatStore(feedbackRuntime: bootstrap.feedbackRuntime)
+            wrappedValue: ChatStore(
+                feedbackRuntime: bootstrap.feedbackRuntime,
+                completedRecommendationHandoff: bootstrap.completedRecommendationHandoff
+            )
         )
     }
 

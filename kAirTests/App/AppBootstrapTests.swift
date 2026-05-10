@@ -94,7 +94,10 @@ final class AppBootstrapTests: XCTestCase {
         // (the stub does not respect a suppression log; that gap is
         // tracked in `feedback-runtime-v1.md` §13).
         let bootstrap = AppBootstrap()
-        let store = ChatStore(feedbackRuntime: bootstrap.feedbackRuntime)
+        let store = ChatStore(
+            feedbackRuntime: bootstrap.feedbackRuntime,
+            completedRecommendationHandoff: bootstrap.completedRecommendationHandoff
+        )
         let target = store.recommendedMatches[0]
 
         store.dismissRecommendation(target, feedback: .alreadyDone)
@@ -102,10 +105,85 @@ final class AppBootstrapTests: XCTestCase {
 
         // .alreadyDone exits the negative-feedback flow and does NOT
         // call refresh per feedback-runtime §4.1. The card is removed
-        // from the slate AND the recommendation id is logged in
-        // completedRecommendations.
+        // from the slate; the elevation is handed off to the
+        // bootstrap-composed `CompletedRecommendationHandoff` (NoOp
+        // by default — the assertion here is only that nothing throws
+        // and the slate updates).
         XCTAssertFalse(store.recommendedMatches.contains(target))
-        XCTAssertEqual(store.completedRecommendations, [target.id])
+    }
+
+    // MARK: - Composition root: completion handoff
+
+    func test_defaultInit_exposesNoOpCompletionHandoff() throws {
+        // The handoff is non-optional (always composed) and defaults
+        // to NoOp per Main A.2 contract.
+        let bootstrap = AppBootstrap()
+        XCTAssertTrue(
+            bootstrap.completedRecommendationHandoff is NoOpCompletedRecommendationHandoff
+        )
+    }
+
+    func test_previewBootstrap_exposesCompletionHandoff() throws {
+        let bootstrap = AppBootstrap.preview
+        XCTAssertTrue(
+            bootstrap.completedRecommendationHandoff is NoOpCompletedRecommendationHandoff
+        )
+    }
+
+    func test_customCompletionHandoff_isStoredOnBootstrap() throws {
+        let spy = SpyCompletedRecommendationHandoffForBootstrap()
+        let bootstrap = AppBootstrap(completedRecommendationHandoff: spy)
+
+        // Identity check: AppBootstrap stores the exact handoff
+        // instance the composition root passed in.
+        XCTAssertTrue(
+            bootstrap.completedRecommendationHandoff
+                as? SpyCompletedRecommendationHandoffForBootstrap === spy
+        )
+    }
+
+    // MARK: - End-to-end composition smoke test (handoff)
+    //
+    // Verifies the handoff flows from `AppBootstrap` through the same
+    // construction path `ChatHomeView.init(bootstrap:)` uses, and that
+    // an `.alreadyDone` dismiss reaches the bootstrap-composed handoff
+    // exactly once. This is the architectural pin for Main A.2: the
+    // composition root owns the handoff; `ChatStore` is a consumer.
+
+    func test_compositionRoot_alreadyDoneCallsBootstrapHandoffOnce() async throws {
+        let spy = SpyCompletedRecommendationHandoffForBootstrap()
+        let bootstrap = AppBootstrap(completedRecommendationHandoff: spy)
+
+        // Mirror what `ChatHomeView.init(bootstrap:)` does.
+        let store = ChatStore(
+            feedbackRuntime: bootstrap.feedbackRuntime,
+            completedRecommendationHandoff: bootstrap.completedRecommendationHandoff
+        )
+        let target = store.recommendedMatches[0]
+
+        store.dismissRecommendation(target, feedback: .alreadyDone)
+        await store.pendingFeedbackEmit?.value
+
+        XCTAssertEqual(spy.recordedRecommendations.count, 1)
+        XCTAssertEqual(spy.recordedRecommendations[0].id, target.id)
+    }
+
+    func test_compositionRoot_negativesDoNotReachBootstrapHandoff() async throws {
+        // The four negatives share the affordance surface but MUST NOT
+        // reach the completion handoff (feedback-runtime §4.1 last
+        // bullet). The bootstrap-composed handoff stays untouched.
+        let spy = SpyCompletedRecommendationHandoffForBootstrap()
+        let bootstrap = AppBootstrap(completedRecommendationHandoff: spy)
+        let store = ChatStore(
+            feedbackRuntime: bootstrap.feedbackRuntime,
+            completedRecommendationHandoff: bootstrap.completedRecommendationHandoff
+        )
+        let target = store.recommendedMatches[0]
+
+        store.dismissRecommendation(target, feedback: .dismiss)
+        await store.pendingFeedbackEmit?.value
+
+        XCTAssertTrue(spy.recordedRecommendations.isEmpty)
     }
 }
 
@@ -122,5 +200,20 @@ private final class SpyFeedbackRuntimeForBootstrap: FeedbackRuntime {
 
     func emit(_ event: FeedbackEvent) async throws {
         emittedEvents.append(event)
+    }
+}
+
+/// Local spy for the `CompletedRecommendationHandoff` composition tests.
+/// Same reasoning as `SpyFeedbackRuntimeForBootstrap`: a separate spy
+/// lives in `RecommendationRailIntegrationTests` (fileprivate), so this
+/// file declares its own to keep test files independent.
+@MainActor
+private final class SpyCompletedRecommendationHandoffForBootstrap:
+    CompletedRecommendationHandoff
+{
+    var recordedRecommendations: [MatchingObject] = []
+
+    func record(_ recommendation: MatchingObject) {
+        recordedRecommendations.append(recommendation)
     }
 }
