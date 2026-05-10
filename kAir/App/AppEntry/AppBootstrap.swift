@@ -17,8 +17,24 @@ final class AppBootstrap {
     var activeMapsSession: MapsRouteSession?
     let healthStore: HealthDashboardStore
 
-    init(healthStore: HealthDashboardStore? = nil) {
+    /// Feedback runtime composed at the app's composition root.
+    ///
+    /// `ChatStore` does NOT decide its own runtime instance; consumers
+    /// (e.g. `ChatHomeView`) read this property and thread it into
+    /// `ChatStore` at construction time.
+    ///
+    /// Defaults to `NoOpFeedbackRuntime()` per
+    /// `Contracts/UX/feedback-runtime-v1.md` §5 (UI / runtime boundary)
+    /// — production builds will replace this default with a real runtime
+    /// once telemetry / scorer sinks are wired (Main B onward).
+    let feedbackRuntime: FeedbackRuntime
+
+    init(
+        healthStore: HealthDashboardStore? = nil,
+        feedbackRuntime: FeedbackRuntime = NoOpFeedbackRuntime()
+    ) {
         self.healthStore = healthStore ?? HealthDashboardStore()
+        self.feedbackRuntime = feedbackRuntime
     }
 
     func showProfile() {
