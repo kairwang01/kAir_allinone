@@ -40,14 +40,30 @@ final class AppBootstrap {
     /// will swap this default once wired.
     let completedRecommendationHandoff: CompletedRecommendationHandoff
 
+    /// Telemetry emitter composed at the app's composition root.
+    ///
+    /// Per `Contracts/telemetry-contract-v1.md` §1 + §10, this is the
+    /// seam through which kAir emits telemetry events. Defaults to
+    /// `NoOpTelemetryEmitter()` so previews / tests / first-run
+    /// production builds emit nothing observable.
+    ///
+    /// Main B wires the FIRST real emitter consumer:
+    /// `ChatStore.submit(prompt:using:)` fires
+    /// `TelemetryEvent.chatPromptSubmit` per §4.1. Downstream emit
+    /// sites (rail, surface, continuation, feedback) are explicitly
+    /// out of Main B scope and will land via separate work lines.
+    let telemetryEmitter: TelemetryEmitter
+
     init(
         healthStore: HealthDashboardStore? = nil,
         feedbackRuntime: FeedbackRuntime = NoOpFeedbackRuntime(),
-        completedRecommendationHandoff: CompletedRecommendationHandoff = NoOpCompletedRecommendationHandoff()
+        completedRecommendationHandoff: CompletedRecommendationHandoff = NoOpCompletedRecommendationHandoff(),
+        telemetryEmitter: TelemetryEmitter = NoOpTelemetryEmitter()
     ) {
         self.healthStore = healthStore ?? HealthDashboardStore()
         self.feedbackRuntime = feedbackRuntime
         self.completedRecommendationHandoff = completedRecommendationHandoff
+        self.telemetryEmitter = telemetryEmitter
     }
 
     func showProfile() {
