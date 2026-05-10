@@ -29,12 +29,25 @@ final class AppBootstrap {
     /// once telemetry / scorer sinks are wired (Main B onward).
     let feedbackRuntime: FeedbackRuntime
 
+    /// Hand-off surface for recommendations the user marked
+    /// `.alreadyDone`. Composed at the app's composition root for the
+    /// same reason as `feedbackRuntime` — `ChatStore` does NOT decide
+    /// its own handoff instance.
+    ///
+    /// Defaults to `NoOpCompletedRecommendationHandoff()`. Replaces
+    /// the Main A stopgap (`ChatStore.completedRecommendations`)
+    /// per Main A.2; the future post-return continuation runtime
+    /// will swap this default once wired.
+    let completedRecommendationHandoff: CompletedRecommendationHandoff
+
     init(
         healthStore: HealthDashboardStore? = nil,
-        feedbackRuntime: FeedbackRuntime = NoOpFeedbackRuntime()
+        feedbackRuntime: FeedbackRuntime = NoOpFeedbackRuntime(),
+        completedRecommendationHandoff: CompletedRecommendationHandoff = NoOpCompletedRecommendationHandoff()
     ) {
         self.healthStore = healthStore ?? HealthDashboardStore()
         self.feedbackRuntime = feedbackRuntime
+        self.completedRecommendationHandoff = completedRecommendationHandoff
     }
 
     func showProfile() {

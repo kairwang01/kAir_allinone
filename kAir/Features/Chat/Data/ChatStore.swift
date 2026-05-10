@@ -42,19 +42,6 @@ final class ChatStore {
     /// mixed-recommendation-rail-visual-v1 §3.
     var recommendedMatches: [MatchingObject] = []
 
-    /// Recommendations the user marked `.alreadyDone`.
-    ///
-    /// `.alreadyDone` elevates to `.completion` per
-    /// `Docs/design/post-return-and-continuation-ux-v1.md` §1.1 row C
-    /// and `Contracts/UX/feedback-runtime-v1.md` §4.1 — it exits the
-    /// negative-feedback flow and enters the post-return / completion
-    /// flow. This log is the minimum hand-off in Main A: the
-    /// recommendation id is recorded here so the (future) post-return
-    /// continuation runtime can consume the elevation. It is NOT a
-    /// typed `ChatContinuationEvent` emit; that lives in
-    /// continuation-runtime wiring (separate work line).
-    private(set) var completedRecommendations: [String] = []
-
     /// Last `feedbackRuntime.emit(_:)` task. Tests `await` it to wait
     /// for the fire-and-forget emission to complete before asserting
     /// on the runtime spy. Production code does NOT consume this.
@@ -62,6 +49,7 @@ final class ChatStore {
 
     private let recommendationProvider: RecommendationProvider
     private let feedbackRuntime: FeedbackRuntime
+    private let completedRecommendationHandoff: CompletedRecommendationHandoff
     private var lastRefreshDate: Date?
     private var supportsHealthData = true
     private var pendingMapsIntent: PendingMapsIntent?
@@ -69,10 +57,12 @@ final class ChatStore {
 
     init(
         recommendationProvider: RecommendationProvider = StubRecommendationProvider(),
-        feedbackRuntime: FeedbackRuntime = NoOpFeedbackRuntime()
+        feedbackRuntime: FeedbackRuntime = NoOpFeedbackRuntime(),
+        completedRecommendationHandoff: CompletedRecommendationHandoff = NoOpCompletedRecommendationHandoff()
     ) {
         self.recommendationProvider = recommendationProvider
         self.feedbackRuntime = feedbackRuntime
+        self.completedRecommendationHandoff = completedRecommendationHandoff
         self.recommendedMatches = recommendationProvider.recommendedMatches()
     }
 
@@ -107,11 +97,14 @@ final class ChatStore {
     ///     `.lessLikeThis`, `.notNow`): call
     ///     `refreshRecommendedMatches()` exactly once after removal
     ///     (§6.2).
-    ///   - `.alreadyDone`: do NOT call refresh (§4.1, §6.2). Append
-    ///     the recommendation id to `completedRecommendations` so the
-    ///     (future) post-return continuation runtime can consume the
-    ///     elevation per `post-return-and-continuation-ux-v1.md` §1.1
-    ///     row C.
+    ///   - `.alreadyDone`: do NOT call refresh (§4.1, §6.2). Hand the
+    ///     recommendation off to the injected
+    ///     `CompletedRecommendationHandoff` so the (future) post-return
+    ///     continuation runtime can consume the elevation per
+    ///     `post-return-and-continuation-ux-v1.md` §1.1 row C. The
+    ///     handoff MUST NOT cause a transcript receipt or telemetry
+    ///     emit — see `CompletedRecommendationHandoff.swift` for the
+    ///     boundary.
     ///   - All 5 kinds: write nothing to `session.messages`
     ///     (§7.1 + behavior §3.4).
     ///
@@ -159,9 +152,12 @@ final class ChatStore {
         switch feedback {
         case .alreadyDone:
             // Completion / post-return handoff per §4.1 + post-return
-            // §1.1 row C. Do NOT call refresh; record the elevation
-            // for the (future) post-return runtime.
-            completedRecommendations.append(object.id)
+            // §1.1 row C. Do NOT call refresh; hand off the elevation
+            // to the injected handoff so the (future) post-return
+            // runtime can consume it. The handoff is composed at the
+            // app's composition root (`AppBootstrap`); `ChatStore`
+            // does NOT decide its concrete type.
+            completedRecommendationHandoff.record(object)
 
         case .dismiss, .notInterested, .lessLikeThis, .notNow:
             // Four negatives: refresh once after removal per §6.2.
