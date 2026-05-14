@@ -551,6 +551,25 @@ struct HealthAccessIntroScreen: View {
 }
 
 struct LoadingStateScreen: View {
+    // MARK: - Box-4 color tokens (Tier 3.7 migration)
+    //
+    // Tier 3.7 migration (audit §8.1 box 4): `LoadingStateScreen`'s
+    // 2 §6-alias occurrences are migrated to the `AppTheme.Palette`
+    // contract tokens those aliases resolve to. These `static let`s
+    // are wiring pins referencing EXISTING contract tokens — NOT new
+    // color tokens — and dedup the inline references for the
+    // token-wiring test.
+    //
+    //   HealthPalette.ink      = AppTheme.Palette.textPrimary
+    //   HealthPalette.mutedInk = AppTheme.Palette.textSecondary
+    //
+    // This slice is fully clean: `LoadingStateScreen` has zero
+    // `HealthPalette.color(for:)` / `statusColor(for:)` calls and
+    // zero §7-out-of-scope references — every `HealthPalette.*` site
+    // is a clean box-4 migration, no exceptions.
+    static let inkColor = AppTheme.Palette.textPrimary
+    static let mutedInkColor = AppTheme.Palette.textSecondary
+
     let title: String
     let message: String
 
@@ -564,11 +583,11 @@ struct LoadingStateScreen: View {
                         .controlSize(.large)
                     Text(title)
                         .font(.system(.title2, design: .rounded).weight(.bold))
-                        .foregroundStyle(HealthPalette.ink)
+                        .foregroundStyle(Self.inkColor)
                     Text(message)
                         .multilineTextAlignment(.center)
                         .font(.body)
-                        .foregroundStyle(HealthPalette.mutedInk)
+                        .foregroundStyle(Self.mutedInkColor)
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -920,6 +939,24 @@ private struct SignalChart: View {
 }
 
 private struct EmptyStateRow: View {
+    // Tier 3.7 migration (audit §8.1 box 4): `EmptyStateRow`'s 2
+    // §6-alias occurrences (`ink`, `mutedInk`) are migrated to the
+    // `AppTheme.Palette` contract tokens those aliases resolve to:
+    //
+    //   HealthPalette.ink      → AppTheme.Palette.textPrimary
+    //   HealthPalette.mutedInk → AppTheme.Palette.textSecondary
+    //
+    // `EmptyStateRow` is a `private` struct, so — like `HeroCard`
+    // (PR #40) and `RiskOrb` (PR #44) — the wiring is build-proven
+    // (no test-reachable `static`); the tokens are referenced inline.
+    // The migration's visual safety is proven by the box-4
+    // alias-equivalence tests, which assert each `HealthPalette`
+    // alias is `==` to its `AppTheme.Palette` target.
+    //
+    // `EmptyStateRow` has zero `HealthPalette.color(for:)` /
+    // `statusColor(for:)` calls — this slice is resolver-free. The 1
+    // §7-out-of-scope reference (`HealthPalette.sky` on the
+    // background fill) is NOT migrated; see the inline exception note.
     let title: String
     let detail: String
 
@@ -927,15 +964,20 @@ private struct EmptyStateRow: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.headline)
-                .foregroundStyle(HealthPalette.ink)
+                .foregroundStyle(AppTheme.Palette.textPrimary)
             Text(detail)
                 .font(.subheadline)
-                .foregroundStyle(HealthPalette.mutedInk)
+                .foregroundStyle(AppTheme.Palette.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
+                // Intentional Tier-3.7 exception: `HealthPalette.sky`
+                // is the §7-out-of-scope local `Color(0.54,0.60,0.68)`
+                // variant — NOT a §6 box-4 alias, no `AppTheme.Palette`
+                // counterpart. DISTINCT from the box-4 alias `cyan`
+                // (which maps to the frozen `Palette.sky` role). Left as-is.
                 .fill(HealthPalette.sky.opacity(0.10))
         )
     }
