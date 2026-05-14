@@ -80,6 +80,15 @@ struct GlassCard<Content: View>: View {
     /// generic types). Exposed (internal) for the token-wiring test.
     static var elevation: AppTheme.Elevation.Token { AppTheme.Elevation.raised }
 
+    /// Card stroke color per `design-system-v1.md` §3.1.
+    ///
+    /// Tier 3 migration (audit §8.1 box 4): the previous
+    /// `HealthPalette.cardStroke` reference is a §6 alias of
+    /// `AppTheme.Palette.line`. This is a wiring pin referencing the
+    /// existing contract token — NOT a new color token. `GlassCard`
+    /// is generic, so this is a static *computed* property.
+    static var strokeColor: Color { AppTheme.Palette.line }
+
     private let content: Content
 
     init(@ViewBuilder content: () -> Content) {
@@ -96,7 +105,7 @@ struct GlassCard<Content: View>: View {
                 .fill(Color.white.opacity(0.78))
                 .overlay(
                     RoundedRectangle(cornerRadius: 30, style: .continuous)
-                        .strokeBorder(HealthPalette.cardStroke, lineWidth: 1)
+                        .strokeBorder(Self.strokeColor, lineWidth: 1)
                 )
                 .modifier(LiquidGlassSurface())
         }
@@ -105,13 +114,35 @@ struct GlassCard<Content: View>: View {
 }
 
 struct CapsuleChip: View {
+    /// Chip ink color per `design-system-v1.md` §3.1.
+    ///
+    /// Tier 3 migration (audit §8.1 box 4): the previous
+    /// `HealthPalette.ink` reference is a §6 alias of
+    /// `AppTheme.Palette.textPrimary`. Wiring pin referencing the
+    /// existing contract token — NOT a new color token.
+    static let inkColor = AppTheme.Palette.textPrimary
+
     let title: String
+
+    /// Default chip accent color.
+    ///
+    /// Intentional Tier-3 exception: `HealthPalette.sky` is the
+    /// local `Color(0.54, 0.60, 0.68)` variant, which
+    /// `design-system-v1.md` §7 lists as out-of-scope (naming
+    /// collision with the frozen `Palette.sky` role; distinct
+    /// value). It is NOT a §6 box-4 alias — it has no
+    /// `AppTheme.Palette` counterpart. Migrating it would require
+    /// either a contract change (a new color token — forbidden in
+    /// Tier 3) or substituting `Palette.sky`, a different color
+    /// (a visual change — forbidden). It is therefore left as-is,
+    /// outside box-4 scope. Most call sites pass an explicit
+    /// `color:`, so this default is rarely hit.
     var color: Color = HealthPalette.sky
 
     var body: some View {
         Text(title)
             .font(.footnote.weight(.semibold))
-            .foregroundStyle(HealthPalette.ink)
+            .foregroundStyle(Self.inkColor)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background {
@@ -124,18 +155,43 @@ struct CapsuleChip: View {
 }
 
 struct MetricTile: View {
+    /// Tile title color per `design-system-v1.md` §3.1.
+    ///
+    /// Tier 3 migration (audit §8.1 box 4): the previous
+    /// `HealthPalette.mutedInk` reference is a §6 alias of
+    /// `AppTheme.Palette.textSecondary`. Wiring pin referencing the
+    /// existing contract token — NOT a new color token.
+    static let titleColor = AppTheme.Palette.textSecondary
+
+    /// Tile value color per `design-system-v1.md` §3.1.
+    ///
+    /// Tier 3 migration (audit §8.1 box 4): the previous
+    /// `HealthPalette.ink` reference is a §6 alias of
+    /// `AppTheme.Palette.textPrimary`. Wiring pin referencing the
+    /// existing contract token — NOT a new color token.
+    static let valueColor = AppTheme.Palette.textPrimary
+
     let title: String
     let value: String
+
+    /// Default tile accent color.
+    ///
+    /// Intentional Tier-3 exception: `HealthPalette.sky` is the
+    /// local `Color(0.54, 0.60, 0.68)` variant — `design-system-v1.md`
+    /// §7 out-of-scope, NOT a §6 box-4 alias (see the matching note
+    /// on `CapsuleChip.color`). Left as-is, outside box-4 scope.
+    /// Most call sites pass an explicit `accent:`, so this default
+    /// is rarely hit.
     var accent: Color = HealthPalette.sky
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.footnote.weight(.medium))
-                .foregroundStyle(HealthPalette.mutedInk)
+                .foregroundStyle(Self.titleColor)
             Text(value)
                 .font(.system(.title3, design: .rounded).weight(.semibold))
-                .foregroundStyle(HealthPalette.ink)
+                .foregroundStyle(Self.valueColor)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
@@ -147,18 +203,39 @@ struct MetricTile: View {
 }
 
 struct SectionEyebrow: View {
+    /// Eyebrow title color per `design-system-v1.md` §3.1.
+    ///
+    /// Tier 3 migration (audit §8.1 box 4): the previous
+    /// `HealthPalette.mutedInk` reference is a §6 alias of
+    /// `AppTheme.Palette.textSecondary`. Wiring pin referencing the
+    /// existing contract token — NOT a new color token.
+    static let titleColor = AppTheme.Palette.textSecondary
+
+    /// Eyebrow subtitle color per `design-system-v1.md` §3.1.
+    ///
+    /// Tier 3 migration (audit §8.1 box 4): the previous
+    /// `HealthPalette.ink` reference is a §6 alias of
+    /// `AppTheme.Palette.textPrimary`. Wiring pin referencing the
+    /// existing contract token — NOT a new color token.
+    static let subtitleColor = AppTheme.Palette.textPrimary
+
     let title: String
     let subtitle: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
+            // Note: the title's `.font(.caption.weight(.bold))` +
+            // `.tracking(1.2)` is on-spec (the eyebrow token's
+            // tracking is 1.2). Typography-token migration of this
+            // raw font pair is a separate concern from Tier 3's
+            // box-4 color work and is intentionally NOT done here.
             Text(title.uppercased())
                 .font(.caption.weight(.bold))
-                .foregroundStyle(HealthPalette.mutedInk)
+                .foregroundStyle(Self.titleColor)
                 .tracking(1.2)
             Text(subtitle)
                 .font(.system(.title3, design: .rounded).weight(.semibold))
-                .foregroundStyle(HealthPalette.ink)
+                .foregroundStyle(Self.subtitleColor)
         }
     }
 }
