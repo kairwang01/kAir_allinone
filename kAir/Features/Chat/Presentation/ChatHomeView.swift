@@ -125,6 +125,23 @@ struct ChatHomeView: View {
                         )
                     }
                 }
+                .onAppear {
+                    // Main D: install the transcript projection sink.
+                    // `AppBootstrap.recordSurfaceReturn(_:)` calls this
+                    // handler with the built `ChatContinuationEvent` when
+                    // `renderEligible == true`. The chat store then
+                    // appends the assistant message per
+                    // `continuation-runtime-v1.md` §8.1 (option b).
+                    //
+                    // Installed in `onAppear` rather than `init` because
+                    // `@State` initialization happens before SwiftUI has
+                    // wired the view's identity; reinstalling on each
+                    // appearance is idempotent (same closure, same store
+                    // reference).
+                    bootstrap.continuationHandler = { [weak store] event in
+                        store?.recordContinuation(event)
+                    }
+                }
                 .onChange(of: store.session.messages.count) { _, newCount in
                     guard newCount > 1 else { return }
                     scrollToBottom(proxy)

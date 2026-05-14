@@ -140,7 +140,11 @@ struct AIHomeView: View {
                                 .foregroundStyle(AppTheme.Palette.textPrimary)
 
                             Button {
-                                bootstrap.closeSurface()
+                                // Main D: explicit return to chat is
+                                // `.completion` per
+                                // `post-return-and-continuation-ux-v1.md`
+                                // §1.2.
+                                bootstrap.recordSurfaceReturn(.completion)
                             } label: {
                                 KAirActionCapsule(
                                     title: "Return to chat",

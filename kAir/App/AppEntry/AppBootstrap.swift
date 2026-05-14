@@ -71,12 +71,47 @@ final class AppBootstrap {
     /// conversation-intent layer (separate work line).
     let capabilityRegistry: CapabilityRegistry
 
+    /// Continuation runtime composed at the app's composition root.
+    ///
+    /// Per `Contracts/UX/continuation-runtime-v1.md` §6 + §8.3, this
+    /// is the observability seam for `ChatContinuationEvent`. The
+    /// transcript projection for `renderEligible == true` is owned
+    /// by `ChatStore.recordContinuation(_:)` (via the
+    /// `continuationHandler` closure below). The runtime here is
+    /// parallel to that projection — it's where scorer / telemetry
+    /// sinks will attach in future work.
+    ///
+    /// Main D wires the FIRST real emit sites. Defaults to
+    /// `NoOpContinuationRuntime()` so previews / tests / first-run
+    /// production builds emit silently.
+    let continuationRuntime: ContinuationRuntime
+
+    /// Transcript projection sink, installed by `ChatHomeView` so
+    /// `recordSurfaceReturn(_:)` can route render-eligible events
+    /// back into the chat session. Per
+    /// `Contracts/UX/continuation-runtime-v1.md` §8.1 projection
+    /// option (b), the chat owns the projection; this closure is
+    /// the one-way handoff from bootstrap to `ChatStore`.
+    ///
+    /// `@MainActor`-only closure. Set once by the chat view; cleared
+    /// only at app teardown. Setting this to `nil` causes
+    /// render-eligible events to drop silently (suitable for
+    /// previews / tests that don't wire a transcript).
+    @ObservationIgnored var continuationHandler: ((ChatContinuationEvent) -> Void)?
+
+    /// Last `continuationRuntime.emit(_:)` task fired from
+    /// `recordSurfaceReturn(_:)`. Tests `await` this to wait for the
+    /// fire-and-forget emit to complete before asserting on a sink.
+    /// Production code does NOT consume this.
+    @ObservationIgnored private(set) var pendingContinuationEmit: Task<Void, Never>?
+
     init(
         healthStore: HealthDashboardStore? = nil,
         feedbackRuntime: FeedbackRuntime = NoOpFeedbackRuntime(),
         completedRecommendationHandoff: CompletedRecommendationHandoff = NoOpCompletedRecommendationHandoff(),
         telemetryEmitter: TelemetryEmitter = NoOpTelemetryEmitter(),
-        capabilityRegistry: CapabilityRegistry? = nil
+        capabilityRegistry: CapabilityRegistry? = nil,
+        continuationRuntime: ContinuationRuntime = NoOpContinuationRuntime()
     ) {
         self.healthStore = healthStore ?? HealthDashboardStore()
         self.feedbackRuntime = feedbackRuntime
@@ -84,6 +119,7 @@ final class AppBootstrap {
         self.telemetryEmitter = telemetryEmitter
         self.capabilityRegistry = capabilityRegistry
             ?? DefaultCapabilityRegistry.makeWithShippedStubs()
+        self.continuationRuntime = continuationRuntime
     }
 
     func showProfile() {
@@ -107,9 +143,88 @@ final class AppBootstrap {
         openSurface(.maps)
     }
 
+    /// State-only surface close: resets `currentSection` and
+    /// `presentedSurface` without firing a continuation event.
+    ///
+    /// In Main D this remains as the low-level state reset used by
+    /// `recordSurfaceReturn(_:)`. Production triggers should call
+    /// `recordSurfaceReturn(_:)` instead so the continuation event
+    /// fires; calls to this method directly are kept for
+    /// state-cleanup paths that explicitly want no event.
     func closeSurface() {
         currentSection = .chat
         presentedSurface = nil
+    }
+
+    /// Main D production seam: record a continuation event for the
+    /// currently-presented surface and reset state.
+    ///
+    /// Per `Contracts/UX/continuation-runtime-v1.md` §6, the runtime
+    /// emits an event for ALL FOUR `TerminalOutcome` cases. Only
+    /// `renderEligible` (true for `.completion` / `.abandon`) gates
+    /// the sub-payloads and the transcript projection.
+    ///
+    /// Behavior:
+    ///   1. Capture the surface kind from `currentSection`. If chat
+    ///      is foregrounded, this is a no-op (defensive — the rec
+    ///      dismiss / accept-no-entry paths from the chat surface
+    ///      itself are not Main D's responsibility; they're owned
+    ///      by `ChatStore.dismissRecommendation` / future
+    ///      accept-no-entry detection).
+    ///   2. Build the event via `ContinuationProjection.makeEvent`.
+    ///   3. Validate via `ContinuationEventValidator`. A non-empty
+    ///      violation list is a programming error — abort silently,
+    ///      still close the surface (no event = no transcript noise
+    ///      from a broken projection).
+    ///   4. If `renderEligible`, call the installed
+    ///      `continuationHandler` (the chat transcript projection).
+    ///   5. Fire `continuationRuntime.emit(event)` as a fire-and-
+    ///      forget task. Handle exposed via `pendingContinuationEmit`
+    ///      for tests.
+    ///   6. Reset state via `closeSurface()`.
+    ///
+    /// Per §8.3: this method does NOT emit telemetry on its own.
+    /// `transcript.continuation.append` / `transcript.continuation.silent`
+    /// telemetry events are out of Main D scope and will land in a
+    /// future telemetry main line.
+    func recordSurfaceReturn(_ outcome: TerminalOutcome) {
+        let section = currentSection
+        guard section != .chat,
+              let surface = SurfaceKind(rawValue: section.rawValue)
+        else {
+            // No surface to return from — defensive guard.
+            return
+        }
+
+        let event = ContinuationProjection.makeEvent(
+            surface: surface,
+            outcome: outcome
+        )
+
+        guard ContinuationEventValidator.validate(event).isEmpty else {
+            // Programming error per §7 + §10: skip emit + skip
+            // transcript projection. Still reset state.
+            closeSurface()
+            return
+        }
+
+        // Transcript projection (renderEligible only) per §8.1
+        // projection (b). The handler is installed by `ChatHomeView`;
+        // a nil handler means we drop the projection silently (no
+        // crash) — appropriate for previews / tests that don't wire
+        // a transcript.
+        if event.renderEligible {
+            continuationHandler?(event)
+        }
+
+        // Fire-and-forget runtime emit. NoOp by default; production
+        // runtimes record to scorer / telemetry sinks.
+        let runtime = continuationRuntime
+        pendingContinuationEmit = Task { @MainActor in
+            try? await runtime.emit(event)
+        }
+
+        closeSurface()
     }
 
     static var preview: AppBootstrap {

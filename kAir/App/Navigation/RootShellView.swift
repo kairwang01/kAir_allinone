@@ -26,7 +26,15 @@ struct RootShellView: View {
                 if let newValue {
                     bootstrap.openSurface(newValue)
                 } else {
-                    bootstrap.closeSurface()
+                    // Main D: the system gesture (swipe-down on the
+                    // fullScreenCover) sets this to nil. Per
+                    // `post-return-and-continuation-ux-v1.md` §1.2,
+                    // a silent / swipe-style exit is an `.abandon`
+                    // outcome. Explicit back buttons route through
+                    // `recordSurfaceReturn(.completion)` directly
+                    // (see the toolbar back button below and the
+                    // in-surface back buttons in each surface view).
+                    bootstrap.recordSurfaceReturn(.abandon)
                 }
             }
         )
@@ -83,7 +91,10 @@ private struct PresentedSurfaceView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button {
-                    bootstrap.closeSurface()
+                    // Main D: an explicit Back tap is a `.completion`
+                    // return per `post-return-and-continuation-ux-v1.md`
+                    // §1.2 (the user returned through "Back to chat").
+                    bootstrap.recordSurfaceReturn(.completion)
                 } label: {
                     Label("Chat", systemImage: "chevron.left")
                         .foregroundStyle(AppTheme.Palette.textPrimary)
