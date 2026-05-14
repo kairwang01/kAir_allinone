@@ -708,6 +708,27 @@ private struct HeroCard: View {
 }
 
 private struct ConditionPredictionRow: View {
+    // Tier 3.8 migration (audit §8.1 box 4): `ConditionPredictionRow`'s
+    // 4 §6-alias occurrences are migrated to the `AppTheme.Palette`
+    // contract tokens those aliases resolve to:
+    //
+    //   HealthPalette.ink      → AppTheme.Palette.textPrimary    (×2)
+    //   HealthPalette.mutedInk → AppTheme.Palette.textSecondary  (×2)
+    //
+    // `ConditionPredictionRow` is a `private` struct, so — like
+    // `HeroCard` (PR #40) and `RiskOrb` (PR #44) — the wiring is
+    // build-proven (no test-reachable `static`); the tokens are
+    // referenced inline. The migration's visual safety is proven by
+    // the box-4 alias-equivalence tests, which assert each
+    // `HealthPalette` alias is `==` to its `AppTheme.Palette` target.
+    //
+    // Resolver-adjacent boundary: this struct ALSO has 4
+    // `HealthPalette.color(for: prediction.id)` resolver call sites
+    // (the two `CapsuleChip` colors, the probability
+    // `.foregroundStyle`, and the background `.fill(...).opacity`).
+    // A resolver is NOT a §6 box-4 alias — those 4 calls are
+    // intentionally left untouched; resolver migration is its own
+    // dedicated PR, out of scope for this alias slice.
     let prediction: ConditionPrediction
 
     var body: some View {
@@ -716,10 +737,10 @@ private struct ConditionPredictionRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(prediction.title)
                         .font(.headline)
-                        .foregroundStyle(HealthPalette.ink)
+                        .foregroundStyle(AppTheme.Palette.textPrimary)
                     Text("Local threshold \(prediction.threshold.formattedPercent0)")
                         .font(.footnote)
-                        .foregroundStyle(HealthPalette.mutedInk)
+                        .foregroundStyle(AppTheme.Palette.textSecondary)
                 }
                 Spacer()
                 CapsuleChip(title: prediction.band, color: HealthPalette.color(for: prediction.id))
@@ -730,7 +751,7 @@ private struct ConditionPredictionRow: View {
 
             Text(prediction.summary)
                 .font(.subheadline)
-                .foregroundStyle(HealthPalette.ink)
+                .foregroundStyle(AppTheme.Palette.textPrimary)
 
             if !prediction.drivers.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -744,7 +765,7 @@ private struct ConditionPredictionRow: View {
 
             Text("ROC \(prediction.metrics.rocAUC.formattedOneDecimal) · AP \(prediction.metrics.averagePrecision.formattedOneDecimal) · ACC \(prediction.metrics.accuracy.formattedOneDecimal)")
                 .font(.footnote.monospacedDigit())
-                .foregroundStyle(HealthPalette.mutedInk)
+                .foregroundStyle(AppTheme.Palette.textSecondary)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
