@@ -33,8 +33,10 @@ final class RecommendationRailContractTests: XCTestCase {
         XCTAssertEqual(ActionCardTrustPillKind.allCases.count, 7)
     }
 
-    func test_actionCardState_hasFourCases() throws {
-        XCTAssertEqual(ActionCardState.allCases.count, 4)
+    func test_actionCardState_hasSevenCases() throws {
+        // `ActionCardState` is the full design-system-v1 §4.4 seven-state
+        // enum as of box 7 (was 4; `empty` / `error` / `disabled` added).
+        XCTAssertEqual(ActionCardState.allCases.count, 7)
     }
 
     // MARK: - Feedback menu (behavior §2.2 + V3 §4.2: ⋯ menu offers 5
@@ -160,7 +162,7 @@ final class RecommendationRailContractTests: XCTestCase {
 
     func test_state_accepted_isFullyOpaque_butHasOverlay() throws {
         XCTAssertEqual(ActionCardShell.opacity(for: .accepted), 1.0)
-        let overlay = ActionCardShell.acceptedOverlayColor(for: .accepted)
+        let overlay = ActionCardShell.backgroundOverlayColor(for: .accepted)
         XCTAssertEqual(overlay, AppTheme.Palette.success.opacity(0.10))
     }
 
@@ -173,15 +175,15 @@ final class RecommendationRailContractTests: XCTestCase {
     }
 
     func test_state_default_hasNoAcceptedOverlay() throws {
-        XCTAssertEqual(ActionCardShell.acceptedOverlayColor(for: .default), Color.clear)
+        XCTAssertEqual(ActionCardShell.backgroundOverlayColor(for: .default), Color.clear)
     }
 
     func test_state_dismissed_hasNoAcceptedOverlay() throws {
-        XCTAssertEqual(ActionCardShell.acceptedOverlayColor(for: .dismissed), Color.clear)
+        XCTAssertEqual(ActionCardShell.backgroundOverlayColor(for: .dismissed), Color.clear)
     }
 
     func test_state_loading_hasNoAcceptedOverlay() throws {
-        XCTAssertEqual(ActionCardShell.acceptedOverlayColor(for: .loading), Color.clear)
+        XCTAssertEqual(ActionCardShell.backgroundOverlayColor(for: .loading), Color.clear)
     }
 
     func test_state_accepted_borderTintsToSuccess() throws {
