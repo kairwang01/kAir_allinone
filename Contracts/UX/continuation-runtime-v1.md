@@ -298,3 +298,28 @@ v1 is ratified when ALL of the following are true:
 - [ ] `.dismiss` and `.acceptNoEntry` emissions are verified to carry `renderEligible == false` and zero sub-payloads (test asserts).
 - [ ] §7 validation rules enforced — at type level where possible, otherwise via a single chokepoint validator before emission.
 - [ ] The §8.1 projection choice (option a or b) decided and documented in the implementation; both paths MUST NOT coexist for the same surface.
+
+### 11.2 Implementation status (informational, not normative)
+
+This section is an informational mirror of §11.1, populated by the
+Contract Status Sweep. The §11.1 checklist remains the normative
+gate; this block exists so reviewers can see which boxes have a
+shipping implementation today without having to cross-reference the
+repository history.
+
+Closed by `Main D` (PR #34, merge commit `dc7407f`):
+
+- [x] At least one production runtime path emits a valid `ChatContinuationEvent` for `.completion`. Wired via `AppBootstrap.recordSurfaceReturn(.completion)` from the toolbar "Back to chat" button + the three in-surface back buttons (Maps / AI / Store).
+- [x] At least one production runtime path emits a valid `ChatContinuationEvent` for `.abandon`. Wired via the `fullScreenCover` binding nil-setter (system swipe-dismiss) calling `recordSurfaceReturn(.abandon)`.
+- [x] `.dismiss` and `.acceptNoEntry` emissions verified to carry `renderEligible == false` and zero sub-payloads. Asserted by `ContinuationProjectionTests` and `AppBootstrapContinuationTests`.
+- [x] §7 validation enforced via the single chokepoint in `AppBootstrap.recordSurfaceReturn(_:)` calling `ContinuationEventValidator.validate(_:)` before emit. A non-empty violation list silently aborts the emit and the transcript projection while still resetting surface state.
+- [x] §8.1 projection choice (b) chosen and documented in the implementation: `ConversationMessage.continuationEvent` field + `ChatStore.recordContinuation(_:)`. Option (a) is NOT used at any call site.
+
+Closed by `Main D.1` (PR #35, merge commit `228fb5a`):
+
+- (no §11.1 boxes — D.1 closed §8.3 telemetry mirror boxes in `Contracts/telemetry-contract-v1.md` §8.1, not this contract's checklist.)
+
+Still open (blockers for §11.1):
+
+- [ ] `Contracts/Design/design-system-v1.md` ratified — blocked by the token-migration sweep enumerated in `design-system-v1.md` §6 (off-grid shadows, eyebrow tracking 1.0, legacy `HealthPalette.*` aliases, `Palette.surfaceElevated`, `tint(for:)` / `statusTint(for:)` signature decision). Separate work line; not opened.
+- [ ] `Contracts/UX/continuation-transcript-visual-v1.md` ratified — the visual blocks ship, their suppression behavior is asserted, the transitive blocker is design-system-v1. Auto-unlocks once design-system-v1 ratifies.

@@ -1,5 +1,13 @@
 # Local Model Provider Contract
 
+Status: pre-canonical draft (not subject to the v1 ratification sweep)
+— this document predates the canonical contract format used by the
+`Contracts/UX/...` and `Contracts/*-v1.md` documents (no §1 purpose /
+scope, no §8 change process, no ratification checklist). It is
+retained for vocabulary / planning reference but is NOT a ratification
+candidate in its current shape. A future PR may reformat it; until
+then, no normative weight is implied by its presence under `Contracts/`.
+
 Purpose:
 - Define a common capability surface for local AI runtimes.
 

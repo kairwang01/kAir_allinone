@@ -1,5 +1,13 @@
 # Friends Service Contract
 
+Status: dormant (deferred from v1). Friends is explicitly out of
+Phase 1 scope per the project plan. No production code consumes this
+contract, no implementation work is open, and no ratification is
+sought in the v1 sweep. The §V1 立场 below (physical + semantic
+isolation from Health) remains the authoritative boundary if any
+exploratory Friends work resumes; it does NOT acquire ratified
+status by being recorded here.
+
 目的：
 
 - 预留未来社交功能的服务端边界。

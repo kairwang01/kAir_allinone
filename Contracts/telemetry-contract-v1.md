@@ -259,6 +259,39 @@ v1 is ratified when ALL of the following are true (MVP — minimum-viable instru
 - [ ] At least one production emitter fires `surface.<kind>.enter` and the matching `surface.<kind>.return`.
 - [ ] At least one production emitter fires `transcript.continuation.append` (for `.completion` / `.abandon`) and `transcript.continuation.silent` (for `.dismiss` / `.acceptNoEntry`).
 
+### 8.1.1 Implementation status (informational, not normative)
+
+This section is an informational mirror of §8.1, populated by the
+Contract Status Sweep. The §8.1 checklist remains the normative
+gate; this block exists so reviewers can see which boxes have a
+shipping implementation today without having to cross-reference
+the repository history.
+
+Closed by `Main B` (PR #32, merge commit `6d72150`):
+
+- [x] At least one production emitter fires `chat.prompt.submit` carrying `trace_id` and `thread_id`. Wired via `ChatStore.submit(prompt:using:)` → private `emitChatPromptSubmit()` → `TelemetryEmitter`.
+
+Closed by `Main D.1` (PR #35, merge commit `228fb5a`):
+
+- [x] At least one production emitter fires `transcript.continuation.append` (for `.completion` / `.abandon`) and `transcript.continuation.silent` (for `.dismiss` / `.acceptNoEntry`). Wired via `AppBootstrap.recordSurfaceReturn(_:)` → private `emitContinuationTelemetry(for:)` → `TelemetryEmitter`. Same chokepoint as the Main D continuation runtime emit (no second bypass).
+
+Still open (blockers for §8.1):
+
+- [ ] `Contracts/UX/continuation-runtime-v1.md` ratified — Main D / D.1 closed five §11.1 boxes; remaining blocker is the upstream `design-system-v1.md` ratification (see continuation-runtime-v1 §11.2 implementation-status note).
+- [ ] `Contracts/UX/mixed-recommendation-rail-visual-v1.md` ratified — content-stable, blocked by `design-system-v1.md` ratification.
+- [ ] `Contracts/UX/negative-feedback-affordance-visual-v1.md` ratified — content-stable, blocked by `design-system-v1.md` + `mixed-recommendation-rail-visual-v1.md` ratifications.
+- [ ] At least one production emitter fires `rail.slate.materialize` carrying `source_request_id`.
+- [ ] At least one production emitter fires `rail.card.impression` carrying `recommendation_id`.
+- [ ] At least one production emitter fires `rail.card.accept`.
+- [ ] At least one production emitter fires `rail.card.dismiss` co-firing with `feedback.event` (per §4.4 co-fire invariant).
+- [ ] At least one production emitter fires `surface.<kind>.enter` and the matching `surface.<kind>.return`.
+
+The five remaining production-emitter boxes are explicitly NOT
+scheduled as a single sweep — each is its own minimum real wiring
+line per the project's "one minimum wiring per main line" rhythm.
+No timeline is implied by this note; it records the gap, not a
+commitment.
+
 ### 8.2 Backlog (post-v1 ratification)
 
 These items are post-v1 strengthening — visible but not blocking ratification:
