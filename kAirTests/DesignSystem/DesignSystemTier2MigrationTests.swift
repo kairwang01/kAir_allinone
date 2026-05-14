@@ -17,9 +17,13 @@
 //      *which token* assertion a unit test.
 //    - `HeroCard` (in `DashboardSections.swift`) is a `private`
 //      struct and is intentionally not covered here — its wiring is
-//      build-proven only. `ComposerBar` is intentionally NOT
-//      migrated (see the PR description: `.caption2.weight(.bold)`
-//      matches no §3.2 token) and is therefore not covered.
+//      build-proven only.
+//    - `ComposerBar`'s mode label is an INTENTIONAL exception (not a
+//      missed migration): it is `.caption2.weight(.bold)`, which
+//      matches no §3.2 token. The exception is pinned by
+//      `test_composerBar_modeLabel_isIntentionalExceptionNotMissedEyebrowMigration`
+//      below so a future reviewer cannot mistake it for an
+//      oversight.
 //
 
 import XCTest
@@ -98,6 +102,73 @@ final class DesignSystemTier2MigrationTests: XCTestCase {
         XCTAssertEqual(
             TodayHomeView.eyebrowTypography,
             AppTheme.Typography.eyebrow
+        )
+    }
+
+    // MARK: - Box 3 scope correction: ComposerBar is an intentional exception
+
+    func test_composerBar_modeLabel_isIntentionalExceptionNotMissedEyebrowMigration() {
+        // The composer mode label was listed under "eyebrow tracking"
+        // by the audit (PR #37 §4) but is INTENTIONALLY excluded from
+        // box-3's migration scope. This test pins WHY, so the
+        // exception cannot be mistaken for an oversight in a future
+        // review:
+        //
+        //   - The label font is `.caption2.weight(.bold)`.
+        //   - `AppTheme.Typography.eyebrow` is `.caption.weight(.bold)`.
+        //   - These are DIFFERENT fonts (`.caption2` ≠ `.caption`).
+        //     Migrating the label to the `eyebrow` token would
+        //     enlarge it — a visual redesign, forbidden by Tier 2.
+        //
+        // The mode label is a composer micro-emphasis label, not a
+        // section eyebrow. Whether a dedicated micro-emphasis token
+        // should exist is deferred to a future Typography semantic
+        // audit (a contract decision, not a Tier-2 migration).
+
+        // The label font is genuinely NOT the eyebrow token's font.
+        XCTAssertNotEqual(
+            ComposerBar.modeLabelFont,
+            AppTheme.Typography.eyebrow.font,
+            "ComposerBar mode label must remain distinct from the eyebrow token font"
+        )
+        // It is specifically `.caption2.weight(.bold)`.
+        XCTAssertEqual(ComposerBar.modeLabelFont, Font.caption2.weight(.bold))
+
+        // The label tracking is genuinely NOT the eyebrow token's
+        // tracking (1.2) — it is the composer's own 0.8.
+        XCTAssertNotEqual(
+            ComposerBar.modeLabelTracking,
+            AppTheme.Typography.eyebrow.tracking,
+            "ComposerBar mode label tracking must remain distinct from the eyebrow token"
+        )
+        XCTAssertEqual(ComposerBar.modeLabelTracking, 0.8)
+    }
+
+    func test_composerBar_modeLabel_isNotAnyFrozenTypographyToken() {
+        // Stronger pin: the composer mode label's (font, tracking)
+        // pair matches NONE of the 9 frozen §3.2 tokens. This is the
+        // factual basis for "no §3.2 token fits this site" — the
+        // reason a 10th token would be required to migrate it, which
+        // is a contract expansion out of Tier-2 scope.
+        let labelToken = AppTheme.Typography.Token(
+            font: ComposerBar.modeLabelFont,
+            tracking: ComposerBar.modeLabelTracking
+        )
+        let frozen: Set<AppTheme.Typography.Token> = [
+            AppTheme.Typography.display,
+            AppTheme.Typography.sectionTitle,
+            AppTheme.Typography.heading,
+            AppTheme.Typography.actionLabel,
+            AppTheme.Typography.body,
+            AppTheme.Typography.meta,
+            AppTheme.Typography.chip,
+            AppTheme.Typography.eyebrow,
+            AppTheme.Typography.micro,
+        ]
+        XCTAssertFalse(
+            frozen.contains(labelToken),
+            "ComposerBar mode label unexpectedly matches a frozen §3.2 token — "
+                + "if a token now fits, it should be migrated, not kept as an exception"
         )
     }
 
