@@ -9,6 +9,35 @@ import Charts
 import SwiftUI
 
 struct OverviewScreen: View {
+    // MARK: - Box-4 color tokens (Tier 3.4 migration)
+    //
+    // Tier 3.4 migration (audit §8.1 box 4): `OverviewScreen`'s 6
+    // §6-alias call sites are migrated to the `AppTheme.Palette`
+    // contract tokens those aliases resolve to. These `static let`s
+    // are wiring pins referencing EXISTING contract tokens — NOT new
+    // color tokens — and dedup the inline references for the
+    // token-wiring test.
+    //
+    //   HealthPalette.ink      = AppTheme.Palette.textPrimary
+    //   HealthPalette.mutedInk = AppTheme.Palette.textSecondary
+    //   HealthPalette.mint     = AppTheme.Palette.success
+    //   HealthPalette.cyan     = AppTheme.Palette.sky      ← NOTE: the
+    //       box-4 alias `cyan` maps to the FROZEN `Palette.sky` role.
+    //       This is DISTINCT from `HealthPalette.sky` (the §7 local
+    //       `Color(0.54,0.60,0.68)` variant) — see the inline
+    //       exception note on the "Nights" MetricTile below.
+    //   HealthPalette.amber    = AppTheme.Palette.warning
+    //
+    // `OverviewScreen` has zero `HealthPalette.color(for:)` /
+    // `statusColor(for:)` calls — this slice is resolver-free. The 1
+    // §7-out-of-scope reference (`HealthPalette.sky` on the "Nights"
+    // tile) is NOT migrated; see the inline exception note.
+    static let inkColor = AppTheme.Palette.textPrimary
+    static let mutedInkColor = AppTheme.Palette.textSecondary
+    static let successAccent = AppTheme.Palette.success
+    static let skyAccent = AppTheme.Palette.sky
+    static let warningAccent = AppTheme.Palette.warning
+
     let dashboard: HealthDashboard
     let onRefresh: () -> Void
     @State private var selectedSignalID = "heart_rate"
@@ -58,7 +87,7 @@ struct OverviewScreen: View {
 
                         Text(selectedSignal.highlight)
                             .font(.subheadline)
-                            .foregroundStyle(HealthPalette.ink)
+                            .foregroundStyle(Self.inkColor)
                     }
                 }
 
@@ -66,13 +95,19 @@ struct OverviewScreen: View {
                     SectionEyebrow(title: "Sleep", subtitle: "Nightly recovery context")
                     Text(dashboard.sleepSummary.summary)
                         .font(.body)
-                        .foregroundStyle(HealthPalette.ink)
+                        .foregroundStyle(Self.inkColor)
 
                     LazyVGrid(columns: [.init(.flexible()), .init(.flexible())], spacing: 12) {
+                        // Intentional Tier-3.4 exception: `HealthPalette.sky`
+                        // is the §7-out-of-scope local `Color(0.54,0.60,0.68)`
+                        // variant — NOT a §6 box-4 alias, no `AppTheme.Palette`
+                        // counterpart. DISTINCT from the box-4 alias `cyan`
+                        // (which maps to the frozen `Palette.sky` role and IS
+                        // migrated on the "Latest Night" tile below).
                         MetricTile(title: "Nights", value: "\(dashboard.sleepSummary.nightsTracked)", accent: HealthPalette.sky)
-                        MetricTile(title: "Avg Sleep", value: "\(dashboard.sleepSummary.averageHours.formattedOneDecimal) h", accent: HealthPalette.mint)
-                        MetricTile(title: "Latest Night", value: "\(dashboard.sleepSummary.latestHours.formattedOneDecimal) h", accent: HealthPalette.cyan)
-                        MetricTile(title: "Debt", value: "\(dashboard.sleepSummary.debtHours.formattedOneDecimal) h", accent: HealthPalette.amber)
+                        MetricTile(title: "Avg Sleep", value: "\(dashboard.sleepSummary.averageHours.formattedOneDecimal) h", accent: Self.successAccent)
+                        MetricTile(title: "Latest Night", value: "\(dashboard.sleepSummary.latestHours.formattedOneDecimal) h", accent: Self.skyAccent)
+                        MetricTile(title: "Debt", value: "\(dashboard.sleepSummary.debtHours.formattedOneDecimal) h", accent: Self.warningAccent)
                     }
                 }
 
@@ -83,7 +118,7 @@ struct OverviewScreen: View {
                             ForEach(dashboard.notes, id: \.self) { note in
                                 Label(note, systemImage: "checkmark.circle")
                                     .font(.subheadline)
-                                    .foregroundStyle(HealthPalette.mutedInk)
+                                    .foregroundStyle(Self.mutedInkColor)
                             }
                         }
                     }
