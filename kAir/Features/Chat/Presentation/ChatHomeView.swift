@@ -41,6 +41,13 @@ struct ChatHomeView: View {
 
     private static let bottomAnchorID = "kair-chat-bottom"
 
+    /// Scroll-to-bottom uses the `.standard` motion tier per
+    /// `design-system-v1.md` §3.6. The previous inline
+    /// `.easeInOut(duration: 0.24)` was exactly this tier; this
+    /// replaces it with the shared token. Exposed (internal) so the
+    /// token-wiring test can assert `scrollMotion == AppTheme.Motion.standard`.
+    static let scrollMotion = AppTheme.Motion.standard
+
     private var dashboard: HealthDashboard? {
         bootstrap.healthStore.dashboard
     }
@@ -269,7 +276,7 @@ struct ChatHomeView: View {
     }
 
     private func scrollToBottom(_ proxy: ScrollViewProxy) {
-        withAnimation(.easeInOut(duration: 0.24)) {
+        withAnimation(Self.scrollMotion) {
             proxy.scrollTo(Self.bottomAnchorID, anchor: .bottom)
         }
     }
