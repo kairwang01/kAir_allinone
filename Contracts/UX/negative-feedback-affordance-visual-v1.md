@@ -346,3 +346,60 @@ v1 is ratified when ALL of the following are true:
 - [ ] An automated test asserts the menu vocabulary is exactly the 5 `MatchingFeedbackKind.allCases` (no extras, no missing).
 - [ ] No new tokens or contract clauses introduced by I3.
 - [ ] §2.1 override is enforced by I3 — the user-initiated dismissal path uses zero motion. (This contract's override is sufficient on its own; the V2 hygiene PR that retracts §6 / §7.2's superseded fade language is independent and does NOT block ratification of this contract.)
+
+### 12.2 Implementation status (informational, not normative)
+
+Informational mirror of §12.1, populated by the Visual Contract
+Unlock Sweep after `Contracts/Design/design-system-v1.md` ratified
+(PR #55, merge commit `4e60d95`). The §12.1 checklist above remains
+the normative gate; this block does NOT tick §12.1 and does NOT
+change this contract's `Status:` line — negative-feedback-affordance-visual-v1
+is **NOT ratified**.
+
+**Satisfied:**
+
+- [x] `design-system-v1.md` ratified — PR #55; `Status:` reads
+  `ratified`, all seven §8.1 boxes ticked.
+- [x] Production consumer renders both `✕` and `⋯` — `ChatHomeView` →
+  `RecommendationRail` → `ActionCardShell`, whose head region carries
+  the `✕` dismiss button and the `⋯` feedback menu (§3.1 / §3.2).
+- [x] `⋯` menu wired with the 5 `MatchingFeedbackKind` entries in
+  §4.2 order — `ActionCardShell.feedbackMenuKinds` is the frozen
+  `[.dismiss, .notInterested, .lessLikeThis, .notNow, .alreadyDone]`,
+  wired through `ChatHomeView`'s `onFeedback`.
+- [x] Test: no `ConversationMessage` appended after
+  `dismissRecommendation` — `RecommendationRailIntegrationTests`
+  (`test_allFiveKinds_writeNothingToTranscript`) asserts the message
+  count is unchanged; `ChatStore`'s dismiss path never touches
+  `session.messages`.
+- [x] Test: dismissed card removed from `recommendedMatches`
+  same-frame — `RecommendationRailIntegrationTests` asserts the
+  target is absent synchronously after `dismissRecommendation`
+  returns (`ChatStore` removes it inline before the async emit).
+- [x] Test: `⋯` menu vocabulary is exactly the 5
+  `MatchingFeedbackKind.allCases` —
+  `RecommendationRailContractTests.test_feedbackMenu_containsAllFiveKinds`
+  asserts set equality (no extras, no missing).
+- [x] No new tokens or contract clauses introduced — the affordances
+  consume only existing `design-system-v1.md` tokens (§10 binding
+  table).
+- [x] §2.1 override enforced (zero motion on dismissal) —
+  `RecommendationRail` uses `.transition(.identity)` and
+  `.animation(nil, value: objects)`; `ChatStore` removes the card
+  synchronously with no `withAnimation`. The user-initiated
+  dismissal path consumes no motion token.
+
+**Still blocking ratification:**
+
+- [ ] `mixed-recommendation-rail-visual-v1.md` ratified — that
+  contract is NOT ratified (see its §11.2): its `accepted` /
+  `refresh` production wiring and its no-`sectionHeader` automated
+  test remain open.
+
+**Conclusion.** Every §12.1 gate is satisfied **except** the
+dependency on `mixed-recommendation-rail-visual-v1.md` being
+ratified. negative-feedback-affordance-visual-v1 is therefore
+**transitively blocked** on the mixed-rail contract and stays **NOT
+ratified**. Once mixed rail's three remaining implementation gates
+close and it ratifies, this contract has no further blockers — it is
+first-in-line to ratify next.
