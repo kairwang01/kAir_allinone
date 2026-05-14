@@ -439,6 +439,28 @@ struct DataLibraryScreen: View {
 }
 
 struct HealthAccessIntroScreen: View {
+    // MARK: - Box-4 color tokens (Tier 3.3 migration)
+    //
+    // Tier 3.3 migration (audit §8.1 box 4): `HealthAccessIntroScreen`'s
+    // 7 §6-alias call sites (across 6 lines) are migrated to the
+    // `AppTheme.Palette` contract tokens those aliases resolve to.
+    // These `static let`s are wiring pins referencing EXISTING
+    // contract tokens — NOT new color tokens — and they dedup the
+    // inline references into 3 named constants for the token-wiring
+    // test.
+    //
+    //   HealthPalette.ink      = AppTheme.Palette.textPrimary
+    //   HealthPalette.mutedInk = AppTheme.Palette.textSecondary
+    //   HealthPalette.mint     = AppTheme.Palette.success
+    //
+    // This slice is fully resolver-free: `HealthAccessIntroScreen`
+    // has zero `HealthPalette.color(for:)` / `statusColor(for:)`
+    // calls and zero §7-out-of-scope references — every
+    // `HealthPalette.*` site here is a clean box-4 migration.
+    static let inkColor = AppTheme.Palette.textPrimary
+    static let mutedInkColor = AppTheme.Palette.textSecondary
+    static let chipAccent = AppTheme.Palette.success
+
     let statusMessage: String
     let supportsHealthData: Bool
     let action: () -> Void
@@ -452,16 +474,16 @@ struct HealthAccessIntroScreen: View {
 
                 GlassCard {
                     VStack(alignment: .leading, spacing: 18) {
-                        CapsuleChip(title: "Local Apple Health access", color: HealthPalette.mint)
+                        CapsuleChip(title: "Local Apple Health access", color: Self.chipAccent)
                         Text("kAir")
                             .font(.system(size: 34, weight: .bold, design: .rounded))
-                            .foregroundStyle(HealthPalette.ink)
+                            .foregroundStyle(Self.inkColor)
                         Text("Read and analyze Apple Health data directly on-device.")
                             .font(.title3.weight(.semibold))
-                            .foregroundStyle(HealthPalette.ink)
+                            .foregroundStyle(Self.inkColor)
                         Text(statusMessage)
                             .font(.body)
-                            .foregroundStyle(HealthPalette.mutedInk)
+                            .foregroundStyle(Self.mutedInkColor)
 
                         VStack(alignment: .leading, spacing: 10) {
                             Label("No XML export", systemImage: "checkmark.circle")
@@ -469,7 +491,7 @@ struct HealthAccessIntroScreen: View {
                             Label("Trends, workouts, sleep, and ECG summaries pulled locally", systemImage: "checkmark.circle")
                         }
                         .font(.subheadline)
-                        .foregroundStyle(HealthPalette.ink)
+                        .foregroundStyle(Self.inkColor)
 
                         Button(action: action) {
                             Text(supportsHealthData ? "Connect Apple Health" : "HealthKit Unavailable")
@@ -479,7 +501,7 @@ struct HealthAccessIntroScreen: View {
                                 .padding(.vertical, 16)
                                 .background(
                                     RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                        .fill(supportsHealthData ? HealthPalette.ink : HealthPalette.mutedInk)
+                                        .fill(supportsHealthData ? Self.inkColor : Self.mutedInkColor)
                                 )
                         }
                         .disabled(!supportsHealthData)
