@@ -578,6 +578,27 @@ struct LoadingStateScreen: View {
 }
 
 struct FailureStateScreen: View {
+    // MARK: - Box-4 color tokens (Tier 3.6 migration)
+    //
+    // Tier 3.6 migration (audit §8.1 box 4): `FailureStateScreen`'s
+    // 4 §6-alias occurrences are migrated to the `AppTheme.Palette`
+    // contract tokens those aliases resolve to. These `static let`s
+    // are wiring pins referencing EXISTING contract tokens — NOT new
+    // color tokens — and dedup the inline references for the
+    // token-wiring test.
+    //
+    //   HealthPalette.ink      = AppTheme.Palette.textPrimary
+    //   HealthPalette.mutedInk = AppTheme.Palette.textSecondary
+    //   HealthPalette.coral    = AppTheme.Palette.danger
+    //
+    // This slice is fully clean: `FailureStateScreen` has zero
+    // `HealthPalette.color(for:)` / `statusColor(for:)` calls and
+    // zero §7-out-of-scope references — every `HealthPalette.*` site
+    // is a clean box-4 migration, no exceptions.
+    static let inkColor = AppTheme.Palette.textPrimary
+    static let mutedInkColor = AppTheme.Palette.textSecondary
+    static let dangerAccent = AppTheme.Palette.danger
+
     let message: String
     let retry: () -> Void
 
@@ -587,13 +608,13 @@ struct FailureStateScreen: View {
 
             GlassCard {
                 VStack(alignment: .leading, spacing: 18) {
-                    CapsuleChip(title: "Load failed", color: HealthPalette.coral)
+                    CapsuleChip(title: "Load failed", color: Self.dangerAccent)
                     Text("kAir couldn’t read the local HealthKit data.")
                         .font(.system(.title2, design: .rounded).weight(.bold))
-                        .foregroundStyle(HealthPalette.ink)
+                        .foregroundStyle(Self.inkColor)
                     Text(message)
                         .font(.body)
-                        .foregroundStyle(HealthPalette.mutedInk)
+                        .foregroundStyle(Self.mutedInkColor)
 
                     Button(action: retry) {
                         Text("Try Again")
@@ -603,7 +624,7 @@ struct FailureStateScreen: View {
                             .padding(.vertical, 14)
                             .background(
                                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .fill(HealthPalette.ink)
+                                    .fill(Self.inkColor)
                             )
                     }
                 }
