@@ -15,7 +15,13 @@ struct SystemEvidenceBlock: View {
     static let labelColumnWidth: CGFloat = 120
     static let pairValueMaxLineCount: Int = 3
     static let borderWidth: CGFloat = 0.8
-    static let eyebrowTracking: CGFloat = 1.2
+
+    /// Eyebrow typography per `design-system-v1.md` §3.2. The previous
+    /// `.font(.caption.weight(.bold))` + `.tracking(1.2)` pair was
+    /// exactly the `eyebrow` token; this replaces it with the shared
+    /// token. Exposed (internal) so the token-wiring test can assert
+    /// `eyebrowTypography == AppTheme.Typography.eyebrow`.
+    static let eyebrowTypography = AppTheme.Typography.eyebrow
 
     let payload: SystemEvidencePayload
 
@@ -24,8 +30,7 @@ struct SystemEvidenceBlock: View {
             if let eyebrowText = (payload.eyebrowLocalized ?? payload.eyebrow),
                eyebrowText.isEmpty == false {
                 Text(verbatim: eyebrowText.uppercased())
-                    .font(.caption.weight(.bold))
-                    .tracking(Self.eyebrowTracking)
+                    .kAirTypography(Self.eyebrowTypography)
                     .foregroundStyle(AppTheme.Palette.textMuted)
             }
             VStack(alignment: .leading, spacing: Self.interRowSpacing) {

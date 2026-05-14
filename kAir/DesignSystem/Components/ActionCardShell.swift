@@ -38,9 +38,14 @@ struct ActionCardShell: View {
     static let secondaryCTAVerticalPadding: CGFloat = 12
     static let trustPillSpacing: CGFloat = 6
     static let borderWidth: CGFloat = 0.8
-    static let shadowOpacity: Double = 0.06
-    static let shadowBlur: CGFloat = 12
-    static let shadowOffsetY: CGFloat = 6
+
+    /// Elevation tier per `design-system-v1.md` §3.5. `ActionCardShell`
+    /// is a top-level card, so it sits at `.raised`. The previous
+    /// local shadow constants (`shadowOpacity 0.06` / `shadowBlur 12`
+    /// / `shadowOffsetY 6`) were exactly the `.raised` tier; this
+    /// replaces them with the shared token. Exposed (internal) so the
+    /// token-wiring test can assert `elevation == AppTheme.Elevation.raised`.
+    static let elevation = AppTheme.Elevation.raised
 
     let object: MatchingObject
     var state: ActionCardState = .default
@@ -71,12 +76,7 @@ struct ActionCardShell: View {
             RoundedRectangle(cornerRadius: Self.containerCornerRadius, style: .continuous)
                 .strokeBorder(Self.borderColor(for: state), lineWidth: Self.borderWidth)
         )
-        .shadow(
-            color: Color.black.opacity(Self.shadowOpacity),
-            radius: Self.shadowBlur,
-            x: 0,
-            y: Self.shadowOffsetY
-        )
+        .kAirElevation(Self.elevation)
         .opacity(Self.opacity(for: state))
     }
 
