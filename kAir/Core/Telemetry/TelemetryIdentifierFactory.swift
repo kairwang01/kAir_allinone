@@ -66,9 +66,28 @@ protocol TelemetryIdentifierFactory {
     /// time to capture the thread's stable id. Subsequent emissions
     /// reuse the captured value.
     func makeThreadID() -> ThreadID
+
+    /// Issue a fresh `SurfaceSessionID`. Per
+    /// `Contracts/telemetry-contract-v1.md` §3, the surface session
+    /// id is "one end-to-end surface entry → return". Issuer is the
+    /// execution surface itself on entry; in kAir's composition this
+    /// is `AppBootstrap`, which calls `makeSurfaceSessionID()` when
+    /// it transitions `currentSection` from `.chat` to a non-chat
+    /// surface in `openSurface(_:)`. The id is captured for the
+    /// lifetime of the surface presentation and consumed by the
+    /// surface-return / continuation-telemetry emit before being
+    /// cleared.
+    ///
+    /// Main D.1 adds this as the third issuance kind on the
+    /// factory so identifier-generation stays single-sourced. The
+    /// other four §3 identifier kinds (`recommendation_id`,
+    /// `source_request_id`, `source_recommendation_id`,
+    /// `feedback_chain_id`) have other issuers and remain outside
+    /// this factory.
+    func makeSurfaceSessionID() -> SurfaceSessionID
 }
 
-/// Default factory: `UUID().uuidString` for both ids.
+/// Default factory: `UUID().uuidString` for all three ids.
 ///
 /// Suitable for production runs and any test that does not need
 /// deterministic identifier values. Tests that DO need determinism
@@ -82,5 +101,9 @@ final class UUIDTelemetryIdentifierFactory: TelemetryIdentifierFactory {
 
     func makeThreadID() -> ThreadID {
         ThreadID(UUID().uuidString)
+    }
+
+    func makeSurfaceSessionID() -> SurfaceSessionID {
+        SurfaceSessionID(UUID().uuidString)
     }
 }

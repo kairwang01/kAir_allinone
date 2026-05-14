@@ -141,6 +141,18 @@ struct ChatHomeView: View {
                     bootstrap.continuationHandler = { [weak store] event in
                         store?.recordContinuation(event)
                     }
+
+                    // Main D.1: install the telemetry-identifier
+                    // resolver. `AppBootstrap.recordSurfaceReturn(_:)`
+                    // calls this to populate the §5.2 propagation
+                    // matrix for `transcript.continuation.append` /
+                    // `.silent`. Returns `(nil, nil)` if the chat
+                    // store has been torn down (defensive); in that
+                    // case the telemetry emit is silently skipped.
+                    bootstrap.surfaceTelemetryIdentifiers = { [weak store] in
+                        guard let store else { return (nil, nil) }
+                        return (store.lastIssuedTraceID, store.telemetryThreadID)
+                    }
                 }
                 .onChange(of: store.session.messages.count) { _, newCount in
                     guard newCount > 1 else { return }
