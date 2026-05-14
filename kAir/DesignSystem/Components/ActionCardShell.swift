@@ -15,16 +15,21 @@ import SwiftUI
 
 // MARK: - Card state
 
-/// The four per-card states the rail can render. v1 mirror of
-/// design-system-v1 §4.4 component-state mapping (the empty / error
-/// states are owned by the rail/primitive at lower levels and are
-/// out of v1 scope). `suppressed` and `refreshed` are slate-level
-/// concerns handled by `RecommendationRail`, not by this view.
+/// The seven per-card states this view can render — the complete
+/// `design-system-v1.md` §4.4 component-state mapping. `ActionCardShell`
+/// is the §8.1 box-7 reference component: it implements every §4.4
+/// state end-to-end (`default`, `accepted`, `dismissed`, `loading`,
+/// `empty`, `error`, `disabled`), proving the §4.4 table is buildable.
+/// `suppressed` and `refreshed` are slate-level concerns handled by
+/// `RecommendationRail`, not by this view.
 enum ActionCardState: Hashable, CaseIterable {
     case `default`
     case accepted
     case dismissed
     case loading
+    case empty
+    case error
+    case disabled
 }
 
 // MARK: - ActionCardShell
@@ -83,7 +88,7 @@ struct ActionCardShell: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: Self.containerCornerRadius, style: .continuous)
-                .fill(Self.acceptedOverlayColor(for: state))
+                .fill(Self.backgroundOverlayColor(for: state))
         )
         .overlay(
             RoundedRectangle(cornerRadius: Self.containerCornerRadius, style: .continuous)
@@ -99,12 +104,12 @@ struct ActionCardShell: View {
     private var head: some View {
         HStack(alignment: .center, spacing: 8) {
             HStack(spacing: 6) {
-                Image(systemName: object.kind.headerGlyph)
+                Image(systemName: Self.headerGlyph(for: state, objectGlyph: object.kind.headerGlyph))
                     .font(.caption.weight(.bold))
                 Text(verbatim: object.kind.headerLabel)
                     .kAirTypography(Self.headerLabelTypography)
             }
-            .foregroundStyle(AppTheme.Palette.accentStrong)
+            .foregroundStyle(Self.headerForegroundColor(for: state))
 
             Spacer(minLength: 8)
 
@@ -173,7 +178,7 @@ struct ActionCardShell: View {
         VStack(alignment: .leading, spacing: Self.titleSubtitleSpacing) {
             Text(verbatim: object.title)
                 .font(.title2.weight(.bold))
-                .foregroundStyle(AppTheme.Palette.textPrimary)
+                .foregroundStyle(Self.headlineColor(for: state))
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
 
@@ -217,7 +222,7 @@ struct ActionCardShell: View {
             )
         }
         .buttonStyle(.plain)
-        .disabled(state == .loading)
+        .disabled(Self.isInteractionDisabled(for: state))
     }
 
     // MARK: - Region (5) SECONDARY CTA
@@ -235,7 +240,7 @@ struct ActionCardShell: View {
                     .padding(.vertical, Self.secondaryCTAVerticalPadding)
             }
             .buttonStyle(.plain)
-            .disabled(state == .loading)
+            .disabled(Self.isInteractionDisabled(for: state))
         }
     }
 
@@ -258,37 +263,111 @@ struct ActionCardShell: View {
 
     /// Container alpha for each state.
     /// Per design-system-v1 §4.4 + V2 §6:
-    /// - default / accepted / loading: opaque (1.0)
+    /// - default / accepted / loading / empty / error: opaque (1.0)
     /// - dismissed: fades to 0
+    /// - disabled: container at 0.5
     static func opacity(for state: ActionCardState) -> Double {
         switch state {
-        case .default, .accepted, .loading:
+        case .default, .accepted, .loading, .empty, .error:
             return 1.0
         case .dismissed:
             return 0.0
+        case .disabled:
+            return 0.5
         }
     }
 
-    /// Accepted-state overlay color, per V2 §6: `Palette.success @ 0.10`.
-    /// Other states have no overlay (returns clear).
-    static func acceptedOverlayColor(for state: ActionCardState) -> Color {
+    /// Background overlay color per design-system-v1 §4.4. Two states
+    /// introduce a colored alpha overlay on top of `surface` — and per
+    /// the §4.4 note they are the ONLY two states allowed to:
+    /// - accepted: `success @ 0.10`
+    /// - error: `danger @ 0.06`
+    /// Every other state has no overlay (returns clear).
+    static func backgroundOverlayColor(for state: ActionCardState) -> Color {
         switch state {
         case .accepted:
             return AppTheme.Palette.success.opacity(0.10)
-        case .default, .dismissed, .loading:
+        case .error:
+            return AppTheme.Palette.danger.opacity(0.06)
+        case .default, .dismissed, .loading, .empty, .disabled:
             return Color.clear
         }
     }
 
-    /// Border color per V2 §6:
-    /// - accepted: `Palette.success @ 0.18`
-    /// - everything else: `Palette.line`
+    /// Border color per design-system-v1 §4.4:
+    /// - accepted: `success @ 0.18`
+    /// - error: `danger @ 0.18`
+    /// - everything else (default / dismissed / loading / empty /
+    ///   disabled): `Palette.line`
     static func borderColor(for state: ActionCardState) -> Color {
         switch state {
         case .accepted:
             return AppTheme.Palette.success.opacity(0.18)
-        case .default, .dismissed, .loading:
+        case .error:
+            return AppTheme.Palette.danger.opacity(0.18)
+        case .default, .dismissed, .loading, .empty, .disabled:
             return AppTheme.Palette.line
+        }
+    }
+
+    /// Headline (card title) text color per design-system-v1 §4.4
+    /// "Text / icon color" column:
+    /// - empty: headline at `textSecondary`
+    /// - disabled: `textMuted` for label
+    /// - default / accepted / dismissed / loading / error: `textPrimary`
+    static func headlineColor(for state: ActionCardState) -> Color {
+        switch state {
+        case .empty:
+            return AppTheme.Palette.textSecondary
+        case .disabled:
+            return AppTheme.Palette.textMuted
+        case .default, .accepted, .dismissed, .loading, .error:
+            return AppTheme.Palette.textPrimary
+        }
+    }
+
+    /// Header eyebrow + glyph color per design-system-v1 §4.4
+    /// "Text / icon color" column:
+    /// - error: icon at `danger`
+    /// - empty / disabled: icon desaturated to `textMuted`
+    /// - default / accepted / dismissed / loading: the card's
+    ///   `accentStrong` kind tint
+    static func headerForegroundColor(for state: ActionCardState) -> Color {
+        switch state {
+        case .error:
+            return AppTheme.Palette.danger
+        case .empty, .disabled:
+            return AppTheme.Palette.textMuted
+        case .default, .accepted, .dismissed, .loading:
+            return AppTheme.Palette.accentStrong
+        }
+    }
+
+    /// Header glyph per design-system-v1 §4.4 "Icon swap" column:
+    /// - error: swap to `exclamationmark.triangle`
+    /// - empty: larger illustrative `tray` placeholder glyph
+    /// - every other state: the object's own kind glyph (no swap)
+    static func headerGlyph(for state: ActionCardState, objectGlyph: String) -> String {
+        switch state {
+        case .error:
+            return "exclamationmark.triangle"
+        case .empty:
+            return "tray"
+        case .default, .accepted, .dismissed, .loading, .disabled:
+            return objectGlyph
+        }
+    }
+
+    /// Whether the card's CTAs are non-interactive, per design-system-v1
+    /// §4.4: `loading` blocks taps while content resolves; `disabled`
+    /// "does NOT animate hover / press / focus" — both suppress the
+    /// primary and secondary CTA. Every other state is interactive.
+    static func isInteractionDisabled(for state: ActionCardState) -> Bool {
+        switch state {
+        case .loading, .disabled:
+            return true
+        case .default, .accepted, .dismissed, .empty, .error:
+            return false
         }
     }
 }
@@ -353,6 +432,24 @@ struct ActionCardTrustPill: View {
 
 #Preview("loading") {
     ActionCardShell(object: RecommendationFixtures.placeRoute, state: .loading)
+        .padding(20)
+        .background(AppTheme.Palette.backgroundEnd)
+}
+
+#Preview("empty") {
+    ActionCardShell(object: RecommendationFixtures.placeRoute, state: .empty)
+        .padding(20)
+        .background(AppTheme.Palette.backgroundEnd)
+}
+
+#Preview("error") {
+    ActionCardShell(object: RecommendationFixtures.placeRoute, state: .error)
+        .padding(20)
+        .background(AppTheme.Palette.backgroundEnd)
+}
+
+#Preview("disabled") {
+    ActionCardShell(object: RecommendationFixtures.placeRoute, state: .disabled)
         .padding(20)
         .background(AppTheme.Palette.backgroundEnd)
 }
