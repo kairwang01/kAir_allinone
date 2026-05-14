@@ -1,6 +1,6 @@
 # kAir Design System Contract — v1
 
-Status: draft, normative
+Status: ratified, normative — frozen at v1 (post-ratification token changes are v2; see §8)
 Reference implementation: [`kAir/DesignSystem/Tokens/AppTheme.swift`](../../kAir/DesignSystem/Tokens/AppTheme.swift)
 Authority: this file is contract. Where it disagrees with `AppTheme.swift`, this file wins; the next code change reconciles the Swift to match. Where it disagrees with `Docs/Planning/`, this file wins absolutely.
 
@@ -262,27 +262,21 @@ This document is contract; the Swift file is implementation. Both move through h
 
 v1 is ratified when ALL of the following are true:
 
-- [ ] All §3 frozen rows have a production consumer.
-- [ ] §6 row "off-grid shadows" reaches zero remaining call sites OR each remaining call site has an exception line in §3.5.
-- [ ] §6 row "eyebrow tracking 1.0" reaches zero remaining call sites.
-- [ ] §6 rows for `HealthPalette.{mint, cyan, amber, coral, canvas, ink, mutedInk, cardStroke}` reach zero remaining call sites.
-- [ ] No new code added since this draft references `Palette.surfaceElevated` directly.
-- [ ] `tint(for: String)` and `statusTint(for: String)` either rename to typed signatures OR are formally accepted as v1-permanent (forces a v2 rename later).
-- [ ] §4.4 component-state mapping has at least one component implementing each of the seven states end-to-end (proves the table is buildable).
+- [x] All §3 frozen rows have a production consumer.
+- [x] §6 row "off-grid shadows" reaches zero remaining call sites OR each remaining call site has an exception line in §3.5.
+- [x] §6 row "eyebrow tracking 1.0" reaches zero remaining call sites.
+- [x] §6 rows for `HealthPalette.{mint, cyan, amber, coral, canvas, ink, mutedInk, cardStroke}` reach zero remaining call sites.
+- [x] No new code added since this draft references `Palette.surfaceElevated` directly.
+- [x] `tint(for: String)` and `statusTint(for: String)` either rename to typed signatures OR are formally accepted as v1-permanent (forces a v2 rename later).
+- [x] §4.4 component-state mapping has at least one component implementing each of the seven states end-to-end (proves the table is buildable).
 
-### 8.2 Implementation status (informational, not normative)
+### 8.2 Implementation status (ratification record)
 
-This section is an informational mirror of §8.1, populated by the
-Design-System Contract Recheck. The §8.1 checklist above remains the
-normative gate; this block exists so reviewers can see which boxes
-have a satisfying implementation today without cross-referencing
-repository history. It does NOT tick the §8.1 boxes and does NOT
-change this contract's `Status:` line — design-system-v1 is **NOT
-ratified**.
-
-**Satisfiable now** (the §8.1 condition is met by shipped code; the
-normative checkbox stays unticked pending a formal ratification
-pass):
+This section records the implementation evidence behind the §8.1
+ratification checklist. As of the ratification recheck, **all seven
+§8.1 boxes are satisfied**, the checklist above is ticked, and this
+contract's `Status:` line reads `ratified`. §8.1 is the normative
+record; this block is the informational evidence behind it.
 
 - **Box 1 — all §3 frozen rows have a production consumer.** The
   missing `AppTheme.Typography` / `AppTheme.Elevation` /
@@ -300,39 +294,58 @@ pass):
   `ComposerBar`'s mode label is a documented intentional exception
   (`.caption2.weight(.bold)` is not the `eyebrow` token font — see
   the token-migration audit §4.1).
-- **Box 4 — `HealthPalette.{mint,cyan,amber,coral,canvas,ink,
-  mutedInk,cardStroke}` → 0 call sites.** **Migration work
-  COMPLETE: 82/82 call sites migrated** across PRs #40–#50 (Tiers
-  3 through 3.11). The eight §6 `HealthPalette` box-4 aliases are
-  now referenced only by their own enum definition in
+- **Box 4 — `HealthPalette.{mint, cyan, amber, coral, canvas, ink,
+  mutedInk, cardStroke}` → 0 call sites.** Migration **complete:
+  82/82 call sites migrated** across PRs #40–#50 (Tiers 3 through
+  3.11). The eight §6 `HealthPalette` box-4 aliases are now
+  referenced only by their own enum definition in
   `HealthDashboardStyle.swift`; zero production call sites remain
-  in `kAir/`. The §6 §7-out-of-scope local colors
-  (`HealthPalette.sky` local variant, `.plum`, `.heroGradient`)
-  and the `HealthPalette.color(for:)` / `statusColor(for:)`
-  resolver functions are intentionally preserved — they are not
-  §6 box-4 aliases. **Box 4 is now checkable.**
+  in `kAir/`. The §7-out-of-scope local colors (`HealthPalette.sky`
+  local variant, `.plum`, `.heroGradient`) and the
+  `HealthPalette.color(for:)` / `statusColor(for:)` resolver
+  functions are intentionally preserved — they are not §6 box-4
+  aliases.
 - **Box 5 — no new code references `Palette.surfaceElevated`
-  directly.** Already passing at audit time; still passing.
+  directly.** Passing at audit time; still passing at ratification.
 - **Box 6 — `tint(for:)` / `statusTint(for:)` signature decision.**
-  **Resolved.** §6's alias-candidate rows for both functions have
-  been amended to formally accept the `String` signatures as
-  v1-permanent (the box-6 resolution; the typed-enum rename is
-  recorded as the deferred v2 path). The §8.1 box-6 condition —
-  "either rename to typed signatures OR are formally accepted as
-  v1-permanent" — is now met. Box 6 is checkable.
+  Resolved by PR #53: §6's alias-candidate rows for both functions
+  were amended to formally accept the `String` signatures as
+  v1-permanent (the typed-enum rename — `HealthMetricToken` /
+  `StatusBand` — is recorded as the deferred v2 path). The §8.1
+  box-6 condition — "either rename to typed signatures OR are
+  formally accepted as v1-permanent" — is met.
+- **Box 7 — §4.4 seven-state coverage.** Implemented by PR #54:
+  `ActionCardShell` was extended from 4 of the 7 §4.4 component
+  states to all seven — `default`, `accepted`, `dismissed`,
+  `loading`, `empty`, `error`, `disabled` — each with a verifiable
+  rendered or behavioral difference and dedicated test coverage
+  (`DesignSystemBox7SevenStateCoverageTests`, +14 tests). The §4.4
+  table is proven buildable end-to-end on one real component.
 
-**Still blocking ratification** (this §8.1 condition is NOT met;
-it is the remaining gate before design-system-v1 can ratify):
+**Implementation evidence chain.** The §8.1 checklist was closed by a
+contiguous, ordered work line, PRs #38–#54:
 
-- **Box 7 — §4.4 seven-state coverage.** `ActionCardShell` covers
-  4 of the 7 component states (`default`, `accepted`, `dismissed`,
-  `loading`). No component implements `empty`, `error`, or
-  `disabled` end-to-end. Box 7 is open.
+- **#38** — Token API Implementation (Tier 1): created the missing
+  `Typography` / `Elevation` / `Motion` token enums → box 1.
+- **#39** — Tier-2 migration: off-grid shadows → `Elevation` tiers,
+  eyebrow tracking → `Typography.eyebrow` → boxes 2, 3.
+- **#40–#50** — Tier-3 `HealthPalette` box-4 alias migration, 82/82
+  call sites across Tiers 3–3.11 → box 4.
+- **#51** — Design-System Contract Recheck (doc-only): populated the
+  §8.2 implementation mirror once box 4's migration completed.
+- **#52** — 2026 open-source methods → kAir mapping (research doc):
+  ran alongside the line but is **not** a ratification input.
+- **#53** — box-6 signature ruling enacted into §6 → box 6.
+- **#54** — box-7 §4.4 seven-state coverage on `ActionCardShell` →
+  box 7.
 
-**Conclusion.** Boxes 1–6 are now satisfiable — box 4's migration
-work is complete and box 6's signature ruling is enacted in §6.
-design-system-v1 still **cannot ratify** — **box 7 is the sole
-remaining gate**. Closing box 7 (an implementation slice on the
-component-state layer) is the last work line before ratification.
-Ticking the §8.1 checklist and flipping the `Status:` line is a
-separate, deliberate ratification pass — not done here.
+Box 5 required no PR — it was passing at audit time and stayed
+passing.
+
+**Conclusion.** All seven §8.1 boxes are satisfied; the checklist is
+ticked and design-system-v1 is **ratified**. Per §8, v1 is now
+frozen: renaming or removing a frozen token, or changing a value
+outside its row's declared "allowed change scope", is a v2 change
+requiring a new contract. This ratification covers **design-system-v1
+only** — the visual-contract trio ratification is tracked separately
+and is neither affected by nor advanced by this pass.
