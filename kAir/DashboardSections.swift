@@ -857,6 +857,28 @@ private struct RiskOrb: View {
 }
 
 private struct InsightRow: View {
+    // Tier 3.10 migration (audit §8.1 box 4): `InsightRow`'s 2
+    // §6-alias occurrences are migrated to the `AppTheme.Palette`
+    // contract tokens those aliases resolve to:
+    //
+    //   HealthPalette.ink      → AppTheme.Palette.textPrimary    (×1)
+    //   HealthPalette.mutedInk → AppTheme.Palette.textSecondary  (×1)
+    //
+    // `InsightRow` is a `private` struct, so — like `HeroCard`
+    // (PR #40), `RiskOrb` (PR #44), and `ConditionPredictionRow`
+    // (PR #48) — the wiring is build-proven (no test-reachable
+    // `static`); the tokens are referenced inline. The migration's
+    // visual safety is proven by the box-4 alias-equivalence tests,
+    // which assert each `HealthPalette` alias is `==` to its
+    // `AppTheme.Palette` target.
+    //
+    // Resolver-adjacent boundary: this struct ALSO has 3
+    // `HealthPalette.color(for: insight.accentToken)` resolver call
+    // sites (the `CapsuleChip` color, the score `.foregroundStyle`,
+    // and the background `.fill(...).opacity`). A resolver is NOT a
+    // §6 box-4 alias — those 3 calls are intentionally left
+    // untouched; resolver migration is its own dedicated PR, out of
+    // scope for this alias slice.
     let insight: InsightCard
 
     var body: some View {
@@ -864,7 +886,7 @@ private struct InsightRow: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(insight.title)
                     .font(.headline)
-                    .foregroundStyle(HealthPalette.ink)
+                    .foregroundStyle(AppTheme.Palette.textPrimary)
                 Spacer()
                 CapsuleChip(title: insight.band, color: HealthPalette.color(for: insight.accentToken))
                 Text(insight.score.formattedPercent1)
@@ -873,7 +895,7 @@ private struct InsightRow: View {
             }
             Text(insight.summary)
                 .font(.subheadline)
-                .foregroundStyle(HealthPalette.mutedInk)
+                .foregroundStyle(AppTheme.Palette.textSecondary)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -885,6 +907,27 @@ private struct InsightRow: View {
 }
 
 private struct SignalChart: View {
+    // Tier 3.10 migration (audit §8.1 box 4): `SignalChart`'s 5
+    // §6-alias occurrences are migrated to the `AppTheme.Palette`
+    // contract tokens those aliases resolve to:
+    //
+    //   HealthPalette.ink      → AppTheme.Palette.textPrimary    (×3)
+    //   HealthPalette.mutedInk → AppTheme.Palette.textSecondary  (×2)
+    //
+    // `SignalChart` is a `private` struct, so — like `HeroCard`
+    // (PR #40), `RiskOrb` (PR #44), and `ConditionPredictionRow`
+    // (PR #48) — the wiring is build-proven (no test-reachable
+    // `static`); the tokens are referenced inline. The migration's
+    // visual safety is proven by the box-4 alias-equivalence tests,
+    // which assert each `HealthPalette` alias is `==` to its
+    // `AppTheme.Palette` target.
+    //
+    // Resolver-adjacent boundary: this struct ALSO has 2
+    // `HealthPalette.color(for: series.id)` resolver call sites (the
+    // `AreaMark` gradient stop and the `LineMark` `.foregroundStyle`).
+    // A resolver is NOT a §6 box-4 alias — those 2 calls are
+    // intentionally left untouched; resolver migration is its own
+    // dedicated PR, out of scope for this alias slice.
     let series: SignalSeries
     @State private var selectedDate: Date?
 
@@ -919,25 +962,25 @@ private struct SignalChart: View {
                     x: .value("Time", sample.timestamp),
                     y: .value(series.label, sample.value)
                 )
-                .foregroundStyle(HealthPalette.ink.opacity(0.72))
+                .foregroundStyle(AppTheme.Palette.textPrimary.opacity(0.72))
                 .symbolSize(34)
                 
                 if let selectedDate,
                    let sample = series.samples.min(by: { abs($0.timestamp.timeIntervalSince(selectedDate)) < abs($1.timestamp.timeIntervalSince(selectedDate)) }) {
                     RuleMark(x: .value("Selected Time", sample.timestamp))
-                        .foregroundStyle(HealthPalette.mutedInk)
+                        .foregroundStyle(AppTheme.Palette.textSecondary)
                         .annotation(position: .top) {
                             VStack(spacing: 2) {
                                 Text("\(sample.value.formattedOneDecimal) \(series.unit)")
                                     .font(.caption.bold())
-                                    .foregroundStyle(HealthPalette.ink)
+                                    .foregroundStyle(AppTheme.Palette.textPrimary)
                                 Text(sample.timestamp, format: .dateTime.month(.abbreviated).day().hour().minute())
                                     .font(.caption2)
-                                    .foregroundStyle(HealthPalette.mutedInk)
+                                    .foregroundStyle(AppTheme.Palette.textSecondary)
                             }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(HealthPalette.ink.opacity(0.05))
+                            .background(AppTheme.Palette.textPrimary.opacity(0.05))
                             .cornerRadius(6)
                         }
                 }
