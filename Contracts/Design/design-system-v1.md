@@ -216,8 +216,8 @@ These exist in code today but are explicitly NOT part of v1. New code MUST avoid
 |---|---|
 | `Palette.surfaceElevated` | **v1 does not freeze. New code MUST use `Palette.surface` instead.** Existing consumers (`MessageBubble`, `ComposerBar`) are grandfathered until next touch; on next touch they reroute to `surface`. v2 decides whether a real `surfaceElevated` value emerges. |
 | `Palette.lineStrong` | No consumers; do not freeze. New code MUST NOT use it. v2 decides whether to retire or repurpose. |
-| `AppTheme.tint(for: String)` signature | Behavior frozen (§4.2); signature not. v2 typechecks via a `HealthMetricToken` enum. New consumers SHOULD anticipate the rename. |
-| `AppTheme.statusTint(for: String)` signature | Behavior frozen (§4.3); signature not. v2 typechecks via a `StatusBand` enum. |
+| `AppTheme.tint(for: String)` signature | Behavior frozen (§4.2). **Signature ruling (box-6 resolution): the `String` signature is formally accepted as v1-permanent.** It will NOT change during the v1 lifetime; the typed-enum rename (`HealthMetricToken`) is recorded as the v2 path and is explicitly deferred to v2. New consumers MAY rely on the `String` signature within v1 and SHOULD anticipate the v2 rename. |
+| `AppTheme.statusTint(for: String)` signature | Behavior frozen (§4.3). **Signature ruling (box-6 resolution): the `String` signature is formally accepted as v1-permanent.** It will NOT change during the v1 lifetime; the typed-enum rename (`StatusBand`) is recorded as the v2 path and is explicitly deferred to v2. New consumers MAY rely on the `String` signature within v1 and SHOULD anticipate the v2 rename. |
 | `HealthPalette.{mint, cyan, amber, coral}` | Color-name aliases of `success`, `sky`, `warning`, `danger`. Forbidden in new code. Existing call sites migrate on next touch. |
 | `HealthPalette.{canvas, ink, mutedInk, cardStroke}` | Aliases of `backgroundStart`, `textPrimary`, `textSecondary`, `line`. Forbidden in new code. |
 | Off-grid shadows in `KAirSurface.hero`, `KAirSurface.sunken`, `GlassCard`, `KAirActionCapsule` non-emphasized | Reroute to `elevation.raised` on next touch. |
@@ -313,25 +313,26 @@ pass):
   §6 box-4 aliases. **Box 4 is now checkable.**
 - **Box 5 — no new code references `Palette.surfaceElevated`
   directly.** Already passing at audit time; still passing.
-
-**Still blocking ratification** (these §8.1 conditions are NOT met;
-they are the remaining gate before design-system-v1 can ratify):
-
 - **Box 6 — `tint(for:)` / `statusTint(for:)` signature decision.**
-  The token-migration audit (§6) recommended *formally accepting
-  the `String` signatures as v1-permanent*, but that ruling has
-  not been enacted into this contract. Until §6's alias-candidate
-  rows for these two functions are amended to record a v1-permanent
-  acceptance (or the typed-enum rename is done), box 6 is open.
+  **Resolved.** §6's alias-candidate rows for both functions have
+  been amended to formally accept the `String` signatures as
+  v1-permanent (the box-6 resolution; the typed-enum rename is
+  recorded as the deferred v2 path). The §8.1 box-6 condition —
+  "either rename to typed signatures OR are formally accepted as
+  v1-permanent" — is now met. Box 6 is checkable.
+
+**Still blocking ratification** (this §8.1 condition is NOT met;
+it is the remaining gate before design-system-v1 can ratify):
+
 - **Box 7 — §4.4 seven-state coverage.** `ActionCardShell` covers
   4 of the 7 component states (`default`, `accepted`, `dismissed`,
   `loading`). No component implements `empty`, `error`, or
   `disabled` end-to-end. Box 7 is open.
 
-**Conclusion.** Boxes 1–5 are satisfiable; box 4's migration work
-is fully complete. design-system-v1 still **cannot ratify** —
-boxes 6 and 7 remain. Enacting box 6 (a doc-only contract
-amendment) and closing box 7 (an implementation slice on the
-component-state layer) are the two remaining work lines. Ticking
-the §8.1 checklist and flipping the `Status:` line is a separate,
-deliberate ratification pass — not done here.
+**Conclusion.** Boxes 1–6 are now satisfiable — box 4's migration
+work is complete and box 6's signature ruling is enacted in §6.
+design-system-v1 still **cannot ratify** — **box 7 is the sole
+remaining gate**. Closing box 7 (an implementation slice on the
+component-state layer) is the last work line before ratification.
+Ticking the §8.1 checklist and flipping the `Status:` line is a
+separate, deliberate ratification pass — not done here.
