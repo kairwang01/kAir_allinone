@@ -308,6 +308,41 @@ final class ChatStore {
         submit(prompt: prompt, using: dashboard)
     }
 
+    /// Main D transcript projection per
+    /// `Contracts/UX/continuation-runtime-v1.md` §8.1 (option b).
+    ///
+    /// Appends exactly one `.assistant` `ConversationMessage` carrying
+    /// the typed `continuationEvent` for `renderEligible == true`
+    /// events. For `renderEligible == false` events (`.dismiss` /
+    /// `.acceptNoEntry`), appends NOTHING — those are silent records.
+    ///
+    /// The assistant message's text uses the event's summary text so
+    /// the existing transcript renderer has fallback content while
+    /// `ContinuationBlockRenderer` reads the typed payload.
+    ///
+    /// Boundary:
+    ///   - This method does NOT emit telemetry. The runtime emit
+    ///     fires from `AppBootstrap.recordSurfaceReturn(_:)` and is
+    ///     parallel to this projection per §8.3.
+    ///   - This method does NOT re-validate the event. Validation
+    ///     belongs to the chokepoint in `recordSurfaceReturn(_:)`.
+    func recordContinuation(_ event: ChatContinuationEvent) {
+        guard event.renderEligible else {
+            // Silent path per §6 + §8.1: zero `ConversationMessage`
+            // emissions. The event is recorded by the runtime for
+            // observability only.
+            return
+        }
+
+        let text = event.summary?.summary ?? "Returned to chat."
+        session.messages.append(
+            .assistant(
+                text: text,
+                continuationEvent: event
+            )
+        )
+    }
+
     func recordHandoff(to section: AppSection) {
         session.messages.append(
             .system(

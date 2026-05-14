@@ -316,7 +316,10 @@ private struct MapsEmptyState: View {
                         .foregroundStyle(AppTheme.Palette.textSecondary)
 
                     Button {
-                        bootstrap.closeSurface()
+                        // Main D: explicit "Back to chat" is a
+                        // `.completion` per
+                        // `post-return-and-continuation-ux-v1.md` §1.2.
+                        bootstrap.recordSurfaceReturn(.completion)
                     } label: {
                         KAirActionCapsule(
                             title: "Back to chat",
