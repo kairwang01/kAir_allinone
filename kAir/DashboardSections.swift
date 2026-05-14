@@ -527,10 +527,19 @@ private struct HeroCard: View {
     var body: some View {
         GlassCard {
             VStack(alignment: .leading, spacing: 18) {
+                // Tier 2 migration (audit §8.1 box 3): the previous
+                // `.font(.caption.weight(.bold))` + `.tracking(1.1)`
+                // pair used the eyebrow font but an off-spec
+                // tracking (`1.1`). Routed through the shared
+                // `eyebrow` token (tracking `1.2`). `HeroCard` is a
+                // `private` struct, so the wiring is build-proven
+                // (no test-reachable `static`). The
+                // `.foregroundStyle(HealthPalette.mutedInk)` is left
+                // untouched — `HealthPalette` is out of Tier-2 scope
+                // (audit Tier 4).
                 Text("On-Device Model Stack")
-                    .font(.caption.weight(.bold))
+                    .kAirTypography(AppTheme.Typography.eyebrow)
                     .foregroundStyle(HealthPalette.mutedInk)
-                    .tracking(1.1)
 
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .center, spacing: 20) {

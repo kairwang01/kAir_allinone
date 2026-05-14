@@ -68,6 +68,18 @@ struct HealthScreenBackground: View {
 }
 
 struct GlassCard<Content: View>: View {
+    /// Elevation tier per `design-system-v1.md` §3.5.
+    ///
+    /// Tier 2 migration (audit §8.1 box 2): the previous inline
+    /// shadow (α 0.04 / blur 18 / y 10) was off-grid. The contract
+    /// §6 rules: "Off-grid shadows in … `GlassCard` … reroute to
+    /// `elevation.raised` on next touch." This IS that touch.
+    ///
+    /// Declared as a static *computed* property because `GlassCard`
+    /// is generic (static *stored* properties are forbidden on
+    /// generic types). Exposed (internal) for the token-wiring test.
+    static var elevation: AppTheme.Elevation.Token { AppTheme.Elevation.raised }
+
     private let content: Content
 
     init(@ViewBuilder content: () -> Content) {
@@ -88,7 +100,7 @@ struct GlassCard<Content: View>: View {
                 )
                 .modifier(LiquidGlassSurface())
         }
-        .shadow(color: Color.black.opacity(0.04), radius: 18, x: 0, y: 10)
+        .kAirElevation(Self.elevation)
     }
 }
 

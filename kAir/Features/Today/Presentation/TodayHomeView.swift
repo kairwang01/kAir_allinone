@@ -8,6 +8,17 @@
 import SwiftUI
 
 struct TodayHomeView: View {
+    /// Eyebrow typography per `design-system-v1.md` §3.2.
+    ///
+    /// Tier 2 migration (audit §8.1 box 3): the four section-label
+    /// `Text`s ("TODAY", "WHAT CHANGED", "NEXT STEP", "RECENT
+    /// CONTEXT") each used `.font(.caption.weight(.bold))` +
+    /// `.tracking(1.1)` — the eyebrow font with an off-spec tracking
+    /// (`1.1`). All four now route through the shared `eyebrow`
+    /// token (tracking `1.2`). Exposed (internal) for the
+    /// token-wiring test.
+    static let eyebrowTypography = AppTheme.Typography.eyebrow
+
     let dashboard: HealthDashboard
     let onRefresh: () -> Void
     let onOpenCoach: () -> Void
@@ -49,9 +60,8 @@ struct TodayHomeView: View {
         KAirSurface(style: .hero) {
             VStack(alignment: .leading, spacing: 16) {
                 Text("TODAY")
-                    .font(.caption.weight(.bold))
+                    .kAirTypography(Self.eyebrowTypography)
                     .foregroundStyle(AppTheme.Palette.textMuted)
-                    .tracking(1.1)
 
                 Text(dashboard.hero.summary)
                     .font(.system(.title2, design: .rounded).weight(.semibold))
@@ -86,9 +96,8 @@ struct TodayHomeView: View {
         KAirSurface {
             VStack(alignment: .leading, spacing: 14) {
                 Text("WHAT CHANGED")
-                    .font(.caption.weight(.bold))
+                    .kAirTypography(Self.eyebrowTypography)
                     .foregroundStyle(AppTheme.Palette.textMuted)
-                    .tracking(1.1)
 
                 ForEach(dashboard.insights) { insight in
                     VStack(alignment: .leading, spacing: 8) {
@@ -123,9 +132,8 @@ struct TodayHomeView: View {
         KAirSurface {
             VStack(alignment: .leading, spacing: 14) {
                 Text("NEXT STEP")
-                    .font(.caption.weight(.bold))
+                    .kAirTypography(Self.eyebrowTypography)
                     .foregroundStyle(AppTheme.Palette.textMuted)
-                    .tracking(1.1)
 
                 Text("The strongest current focus is \(leadingInsight?.title.lowercased() ?? "recent health trends"). Ask Coach for a plain-language explanation or open Health to inspect the underlying context.")
                     .font(.body)
@@ -152,9 +160,8 @@ struct TodayHomeView: View {
         KAirSurface {
             VStack(alignment: .leading, spacing: 14) {
                 Text("RECENT CONTEXT")
-                    .font(.caption.weight(.bold))
+                    .kAirTypography(Self.eyebrowTypography)
                     .foregroundStyle(AppTheme.Palette.textMuted)
-                    .tracking(1.1)
 
                 LazyVGrid(columns: [.init(.flexible()), .init(.flexible())], spacing: 12) {
                     metricTile(

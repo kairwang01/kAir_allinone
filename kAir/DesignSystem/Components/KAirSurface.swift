@@ -14,6 +14,24 @@ enum KAirSurfaceStyle {
 }
 
 struct KAirSurface<Content: View>: View {
+    /// Elevation tier per `design-system-v1.md` §3.5.
+    ///
+    /// Tier 2 migration (audit §8.1 box 2): the previous per-style
+    /// `shadowColor` switch produced off-grid α values for `.hero`
+    /// (0.07) and `.sunken` (0.04); `.elevated` was already on-grid
+    /// (0.06). The contract §6 rules: "Off-grid shadows in
+    /// `KAirSurface.hero`, `KAirSurface.sunken` … reroute to
+    /// `elevation.raised` on next touch." This IS that touch — all
+    /// three styles now resolve to `.raised`, so the `shadowColor`
+    /// switch is gone. (`KAirSurfaceStyle` still drives `fillStyle`;
+    /// that is out of Tier-2 scope and untouched.)
+    ///
+    /// Declared as a static *computed* property because
+    /// `KAirSurface` is generic and Swift forbids static *stored*
+    /// properties on generic types. Exposed (internal) so the
+    /// token-wiring test can assert it equals `AppTheme.Elevation.raised`.
+    static var elevation: AppTheme.Elevation.Token { AppTheme.Elevation.raised }
+
     private let style: KAirSurfaceStyle
     private let padding: CGFloat
     private let content: Content
@@ -34,7 +52,7 @@ struct KAirSurface<Content: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(backgroundShape)
             .overlay(borderShape)
-            .shadow(color: shadowColor, radius: 12, x: 0, y: 6)
+            .kAirElevation(Self.elevation)
     }
 
     private var fillStyle: AnyShapeStyle {
@@ -45,17 +63,6 @@ struct KAirSurface<Content: View>: View {
             return AnyShapeStyle(Color.white)
         case .sunken:
             return AnyShapeStyle(Color.white)
-        }
-    }
-
-    private var shadowColor: Color {
-        switch style {
-        case .hero:
-            return Color.black.opacity(0.07)
-        case .elevated:
-            return Color.black.opacity(0.06)
-        case .sunken:
-            return Color.black.opacity(0.04)
         }
     }
 
