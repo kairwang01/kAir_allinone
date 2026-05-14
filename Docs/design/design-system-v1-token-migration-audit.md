@@ -17,6 +17,50 @@ performed here.
 
 ---
 
+## 0. Post-audit status update (Design-System Contract Recheck)
+
+**The §1–§8 audit below is the original point-in-time snapshot at
+repo `be6c908`.** It has NOT been rewritten. This §0 records what
+has changed since, so the FAIL/PARTIAL-FAIL statuses in §1's table
+are not mistaken for current state.
+
+The §7 follow-up backlog has been substantially executed:
+
+- **Tier 1 (token API) — DONE** (PR #38). `AppTheme.Typography` /
+  `AppTheme.Elevation` / `AppTheme.Motion` enums created with
+  production consumers. → unblocks **box 1**.
+- **Tier 2 (off-grid shadows + eyebrow tracking) — DONE** (PR #39).
+  All off-grid shadow call sites migrated to `AppTheme.Elevation`;
+  all true eyebrow-font tracking sites migrated to
+  `AppTheme.Typography.eyebrow`; `ComposerBar` mode label recorded
+  as an intentional non-eyebrow exception (§4.1). → satisfies
+  **box 2** and **box 3**.
+- **Tier 4 (`HealthPalette` box-4 aliases) — DONE** (PRs #40–#50,
+  done as bounded slices "Tier 3" through "Tier 3.11", serial then
+  parallel). **82/82 box-4 alias call sites migrated; zero remain
+  in `kAir/`.** The §7-out-of-scope local colors and the
+  `color(for:)` / `statusColor(for:)` resolvers were preserved
+  untouched. → satisfies **box 4** (now checkable).
+- **Box 5** — was PASS at audit time; still PASS.
+
+**Still open — the remaining ratification blockers:**
+
+- **Box 6** — the §6 `tint(for:)` / `statusTint(for:)` signature
+  ruling recommended in this audit's §6 (accept the `String`
+  signatures as v1-permanent) has **not** been enacted into
+  `design-system-v1.md`. Doc-only amendment still pending.
+- **Box 7** — §4.4 seven-state coverage: `ActionCardShell` covers
+  4 of 7 states; `empty` / `error` / `disabled` are not covered
+  end-to-end. Implementation slice still pending (this audit's
+  §7 "Tier 5").
+
+**Authoritative current status:** see
+[`Contracts/Design/design-system-v1.md`](../../Contracts/Design/design-system-v1.md)
+§8.2 "Implementation status (informational, not normative)".
+design-system-v1 is **NOT ratified** — boxes 6 and 7 remain.
+
+---
+
 ## 1. §8.1 ratification checklist — box-by-box
 
 | §8.1 box | Status | One-line finding |

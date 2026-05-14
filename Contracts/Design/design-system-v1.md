@@ -269,3 +269,69 @@ v1 is ratified when ALL of the following are true:
 - [ ] No new code added since this draft references `Palette.surfaceElevated` directly.
 - [ ] `tint(for: String)` and `statusTint(for: String)` either rename to typed signatures OR are formally accepted as v1-permanent (forces a v2 rename later).
 - [ ] §4.4 component-state mapping has at least one component implementing each of the seven states end-to-end (proves the table is buildable).
+
+### 8.2 Implementation status (informational, not normative)
+
+This section is an informational mirror of §8.1, populated by the
+Design-System Contract Recheck. The §8.1 checklist above remains the
+normative gate; this block exists so reviewers can see which boxes
+have a satisfying implementation today without cross-referencing
+repository history. It does NOT tick the §8.1 boxes and does NOT
+change this contract's `Status:` line — design-system-v1 is **NOT
+ratified**.
+
+**Satisfiable now** (the §8.1 condition is met by shipped code; the
+normative checkbox stays unticked pending a formal ratification
+pass):
+
+- **Box 1 — all §3 frozen rows have a production consumer.** The
+  missing `AppTheme.Typography` / `AppTheme.Elevation` /
+  `AppTheme.Motion` token enums were created with production
+  consumers in the Token API Implementation work (PR #38); §3.1
+  color / §3.3 spacing / §3.4 radius already had consumers.
+- **Box 2 — off-grid shadows → 0 call sites.** All off-grid shadow
+  call sites (`KAirSurface.hero`/`.sunken`, `GlassCard`,
+  `KAirActionCapsule` non-emphasized, plus the un-enumerated
+  `ChatHomeView` sites) were migrated to `AppTheme.Elevation` tiers
+  in the Tier-2 migration (PR #39).
+- **Box 3 — eyebrow tracking `1.0` → 0 call sites.** All true
+  eyebrow-font tracking call sites were migrated to
+  `AppTheme.Typography.eyebrow` in the Tier-2 migration (PR #39).
+  `ComposerBar`'s mode label is a documented intentional exception
+  (`.caption2.weight(.bold)` is not the `eyebrow` token font — see
+  the token-migration audit §4.1).
+- **Box 4 — `HealthPalette.{mint,cyan,amber,coral,canvas,ink,
+  mutedInk,cardStroke}` → 0 call sites.** **Migration work
+  COMPLETE: 82/82 call sites migrated** across PRs #40–#50 (Tiers
+  3 through 3.11). The eight §6 `HealthPalette` box-4 aliases are
+  now referenced only by their own enum definition in
+  `HealthDashboardStyle.swift`; zero production call sites remain
+  in `kAir/`. The §6 §7-out-of-scope local colors
+  (`HealthPalette.sky` local variant, `.plum`, `.heroGradient`)
+  and the `HealthPalette.color(for:)` / `statusColor(for:)`
+  resolver functions are intentionally preserved — they are not
+  §6 box-4 aliases. **Box 4 is now checkable.**
+- **Box 5 — no new code references `Palette.surfaceElevated`
+  directly.** Already passing at audit time; still passing.
+
+**Still blocking ratification** (these §8.1 conditions are NOT met;
+they are the remaining gate before design-system-v1 can ratify):
+
+- **Box 6 — `tint(for:)` / `statusTint(for:)` signature decision.**
+  The token-migration audit (§6) recommended *formally accepting
+  the `String` signatures as v1-permanent*, but that ruling has
+  not been enacted into this contract. Until §6's alias-candidate
+  rows for these two functions are amended to record a v1-permanent
+  acceptance (or the typed-enum rename is done), box 6 is open.
+- **Box 7 — §4.4 seven-state coverage.** `ActionCardShell` covers
+  4 of the 7 component states (`default`, `accepted`, `dismissed`,
+  `loading`). No component implements `empty`, `error`, or
+  `disabled` end-to-end. Box 7 is open.
+
+**Conclusion.** Boxes 1–5 are satisfiable; box 4's migration work
+is fully complete. design-system-v1 still **cannot ratify** —
+boxes 6 and 7 remain. Enacting box 6 (a doc-only contract
+amendment) and closing box 7 (an implementation slice on the
+component-state layer) are the two remaining work lines. Ticking
+the §8.1 checklist and flipping the `Status:` line is a separate,
+deliberate ratification pass — not done here.
