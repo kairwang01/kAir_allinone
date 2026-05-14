@@ -55,9 +55,10 @@ extension AppTheme {
     enum Typography {
         /// A single typography token: a `Font` plus its `tracking`.
         ///
-        /// `Equatable` (via `Font`'s own `Hashable` conformance) so
-        /// tests can pin token values and consumers can compare.
-        struct Token: Equatable {
+        /// `Hashable` (via `Font`'s own `Hashable` conformance) so
+        /// tests can pin token values, compare, and collect tokens
+        /// in a `Set`.
+        struct Token: Hashable {
             /// The SwiftUI font (dynamic-type style + weight).
             let font: Font
             /// Letter spacing in points. `0` means "default" (no

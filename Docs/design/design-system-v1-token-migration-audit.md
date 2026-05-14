@@ -179,7 +179,7 @@ spread of other off-spec tracking values.
 | `ActionCardShell.swift:93` | `1.0` | **Not** named in §6 — a second `1.0` site |
 | `DashboardSections.swift:533` | `1.1` | Off-spec (contract unifies at `1.2`) |
 | `TodayHomeView.swift:54,91,128,157` | `1.1` ×4 | Off-spec |
-| `ComposerBar.swift:48` | `0.8` | Off-spec |
+| `ComposerBar.swift:48` | `0.8` | **Reclassified — see §4.1.** NOT an eyebrow (`.caption2.weight(.bold)`, not `.caption.weight(.bold)`); intentional exception, excluded from box-3 scope |
 | `HealthDashboardStyle.swift:146` | `1.2` | ✓ on-spec |
 | `SystemSummaryBlock` / `NextStepPromptBlock` / `SystemEvidenceBlock` | `1.2` (via `Self.eyebrowTracking`) | ✓ on-spec, 3 sites |
 
@@ -194,6 +194,57 @@ Note the Continuation blocks already define a `static let
 eyebrowTracking: CGFloat = 1.2` per file — three local copies of
 the same constant. A shared `Typography`/`Metrics`-level token
 would dedupe these.
+
+### 4.1 ComposerBar tracking exception (box-3 scope correction)
+
+**Decision (Tier 2, PR #39): `ComposerBar.swift:48` is excluded
+from box-3's migration scope as a documented, intentional
+exception. It is NOT migrated, NO new token is added, and its
+visual is unchanged.**
+
+The audit table above listed `ComposerBar.swift:48` under
+"eyebrow-tracking call sites" because it carries a `.tracking(0.8)`
+call. On closer inspection during Tier 2, that classification is
+wrong: the site is **not** an eyebrow.
+
+| | `ComposerBar` mode label | `AppTheme.Typography.eyebrow` |
+|---|---|---|
+| Font | `.caption2.weight(.bold)` | `.caption.weight(.bold)` |
+| Tracking | `0.8` | `1.2` |
+
+Why it is excluded rather than migrated:
+
+1. **Font mismatch.** The mode label uses `.caption2`, the
+   `eyebrow` token uses `.caption`. They are different sizes — the
+   site genuinely does not match the `eyebrow` token.
+2. **No-redesign constraint.** Forcing `.kAirTypography(.eyebrow)`
+   would enlarge the label from `.caption2` to `.caption`,
+   changing the composer's visual hierarchy. Tier 2 forbids visual
+   redesign.
+3. **No-new-token constraint.** Inventing a 10th §3.2 token (a
+   "micro-emphasis" token for `.caption2.weight(.bold)`) is a
+   *contract expansion*, not a Tier-2 migration. Tier 1 (PR #38)
+   froze the §3.2 set at 9 tokens.
+4. **Therefore the site is excluded from box-3 scope.** It is a
+   composer micro-emphasis label, not a section eyebrow. Whether a
+   dedicated micro-emphasis token should be added is **deferred to
+   a future Typography semantic audit** — a contract decision, not
+   a missed migration.
+
+The site is pinned in source as named `static let`s
+(`ComposerBar.modeLabelFont` / `.modeLabelTracking`) with the full
+rationale in a code comment, and pinned in tests by
+`DesignSystemTier2MigrationTests
+.test_composerBar_modeLabel_isIntentionalExceptionNotMissedEyebrowMigration`
+(plus `…_isNotAnyFrozenTypographyToken`). The values are
+byte-identical to the previous inline literals — zero visual
+change. This guarantees a future reviewer sees it as an
+intentional exception, not an oversight.
+
+**Box-3 scope, corrected:** every *true* eyebrow site (the 7
+`.caption.weight(.bold)` sites) is migrated to
+`AppTheme.Typography.eyebrow`; the composer micro-emphasis label
+is deferred. Box 3 is satisfied for its actual scope.
 
 ---
 

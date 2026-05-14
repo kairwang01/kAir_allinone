@@ -8,6 +8,52 @@
 import SwiftUI
 
 struct ComposerBar: View {
+    // MARK: - Mode-label typography — intentional Tier-2 exception
+    //
+    // The composer's selected-mode label (e.g. "ASK", "COACH") is
+    // rendered with `.caption2.weight(.bold)` + tracking `0.8`. The
+    // Design-System Token Migration Audit (PR #37 §4) listed this
+    // call site under "eyebrow tracking" sites because it carries a
+    // `.tracking(...)` call — but it is NOT the contract's `eyebrow`
+    // token semantically, and Tier 2 intentionally does NOT migrate
+    // it. Rationale:
+    //
+    //   1. Font mismatch. `AppTheme.Typography.eyebrow` is
+    //      `.caption.weight(.bold)`. This label is
+    //      `.caption2.weight(.bold)` — a smaller size. They are
+    //      different fonts; the site does not match the `eyebrow`
+    //      token.
+    //   2. No-redesign constraint. Forcing `.kAirTypography(.eyebrow)`
+    //      here would enlarge the label from `.caption2` to
+    //      `.caption`, changing the composer's visual hierarchy —
+    //      a redesign, which Tier 2 forbids.
+    //   3. No-new-token constraint. Inventing a 10th §3.2 token
+    //      (e.g. a "micro-emphasis" token for `.caption2.weight(.bold)`)
+    //      is a contract expansion, not a Tier-2 migration. Tier 1
+    //      (PR #38) froze the §3.2 set at 9 tokens.
+    //   4. Therefore this site is EXCLUDED from box-3's migration
+    //      scope. It is a composer micro-emphasis label, not a
+    //      section eyebrow. Whether a dedicated micro-emphasis token
+    //      should exist is deferred to a future Typography semantic
+    //      audit — it is NOT a missed migration.
+    //
+    // The font + tracking are pinned as named `static let`s below
+    // (a source pin, not a token migration) so this exception is
+    // testable and cannot be mistaken for an oversight. The values
+    // are byte-identical to the previous inline literals — zero
+    // visual change.
+
+    /// Font for the composer's selected-mode label. Intentionally a
+    /// raw `Font` (not an `AppTheme.Typography` token) — see the
+    /// "intentional Tier-2 exception" note above. `.caption2` does
+    /// not match the `eyebrow` token's `.caption`.
+    static let modeLabelFont: Font = .caption2.weight(.bold)
+
+    /// Tracking for the composer's selected-mode label. Intentionally
+    /// a raw value (not `AppTheme.Typography.eyebrow.tracking`, which
+    /// is `1.2`) — see the "intentional Tier-2 exception" note above.
+    static let modeLabelTracking: CGFloat = 0.8
+
     @Binding var text: String
 
     let placeholder: String
@@ -43,9 +89,15 @@ struct ComposerBar: View {
                         Spacer(minLength: 12)
 
                         if let selectedMode {
+                            // Intentional Tier-2 exception — see the
+                            // "Mode-label typography" note at the top
+                            // of `ComposerBar`. NOT migrated to
+                            // `AppTheme.Typography.eyebrow`: this is a
+                            // composer micro-emphasis label, not a
+                            // section eyebrow.
                             Text(selectedMode.title.uppercased())
-                                .font(.caption2.weight(.bold))
-                                .tracking(0.8)
+                                .font(Self.modeLabelFont)
+                                .tracking(Self.modeLabelTracking)
                                 .foregroundStyle(AppTheme.Palette.textMuted)
                         }
                     }

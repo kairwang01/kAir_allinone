@@ -44,9 +44,10 @@ extension AppTheme {
     enum Elevation {
         /// A single elevation tier: shadow opacity + blur radius +
         /// vertical offset. Shadow color is always pure black;
-        /// x-offset is always `0` (per §3.5). `Equatable` so tests
-        /// can pin tier values and consumers can compare.
-        struct Token: Equatable {
+        /// x-offset is always `0` (per §3.5). `Hashable` so tests
+        /// can pin tier values, compare, and collect tiers in a
+        /// `Set`.
+        struct Token: Hashable {
             /// Shadow opacity applied to pure black. `0` means "no
             /// shadow" (the `flat` tier).
             let shadowOpacity: Double

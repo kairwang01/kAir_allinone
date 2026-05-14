@@ -48,6 +48,17 @@ struct ChatHomeView: View {
     /// token-wiring test can assert `scrollMotion == AppTheme.Motion.standard`.
     static let scrollMotion = AppTheme.Motion.standard
 
+    /// Elevation tier for the chat surfaces (assistant card, composer
+    /// bar, adjacent capsule button) per `design-system-v1.md` §3.5.
+    ///
+    /// Tier 2 migration (audit §8.1 box 2): the three previous inline
+    /// shadows here (α 0.08 / blur 22 / y 10 and α 0.09 / blur 20 /
+    /// y 8 ×2) were off-grid AND un-enumerated by the contract §6
+    /// note. Per §6's blanket ruling — "Off-grid shadows … reroute to
+    /// `elevation.raised` on next touch" — all three resolve to
+    /// `.raised`. Exposed (internal) for the token-wiring test.
+    static let surfaceElevation = AppTheme.Elevation.raised
+
     private var dashboard: HealthDashboard? {
         bootstrap.healthStore.dashboard
     }
@@ -471,7 +482,7 @@ private struct EmptyConversationState: View {
                                 )
                                 .strokeBorder(Color.black.opacity(0.07), lineWidth: 1)
                             )
-                            .shadow(color: Color.black.opacity(0.08), radius: 22, x: 0, y: 10)
+                            .kAirElevation(ChatHomeView.surfaceElevation)
                         }
                         .buttonStyle(.plain)
                     }
@@ -525,7 +536,7 @@ private struct FloatingAskComposer: View {
                 Capsule(style: .continuous)
                     .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
             )
-            .shadow(color: Color.black.opacity(0.09), radius: 20, x: 0, y: 8)
+            .kAirElevation(ChatHomeView.surfaceElevation)
 
             Button(action: onUserTap) {
                 Text("User")
@@ -541,7 +552,7 @@ private struct FloatingAskComposer: View {
                         Capsule(style: .continuous)
                             .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
                     )
-                    .shadow(color: Color.black.opacity(0.09), radius: 20, x: 0, y: 8)
+                    .kAirElevation(ChatHomeView.surfaceElevation)
             }
             .buttonStyle(.plain)
         }

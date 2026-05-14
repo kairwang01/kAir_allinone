@@ -47,6 +47,19 @@ struct ActionCardShell: View {
     /// token-wiring test can assert `elevation == AppTheme.Elevation.raised`.
     static let elevation = AppTheme.Elevation.raised
 
+    /// Header-label (kind eyebrow) typography per
+    /// `design-system-v1.md` §3.2.
+    ///
+    /// Tier 2 migration (audit §8.1 box 3): the previous
+    /// `.font(.caption.weight(.bold))` + `.tracking(1.0)` pair on the
+    /// kind-label `Text` used the eyebrow font but an off-spec
+    /// tracking (`1.0`). This routes it through the shared `eyebrow`
+    /// token (tracking `1.2`). The sibling glyph `Image` keeps its
+    /// own `.font(.caption.weight(.bold))` — `.tracking` does not
+    /// apply to images, so it is not an eyebrow consumer. Exposed
+    /// (internal) for the token-wiring test.
+    static let headerLabelTypography = AppTheme.Typography.eyebrow
+
     let object: MatchingObject
     var state: ActionCardState = .default
     var onPrimaryTap: () -> Void = {}
@@ -89,8 +102,7 @@ struct ActionCardShell: View {
                 Image(systemName: object.kind.headerGlyph)
                     .font(.caption.weight(.bold))
                 Text(verbatim: object.kind.headerLabel)
-                    .font(.caption.weight(.bold))
-                    .tracking(1.0)
+                    .kAirTypography(Self.headerLabelTypography)
             }
             .foregroundStyle(AppTheme.Palette.accentStrong)
 
