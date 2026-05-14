@@ -147,6 +147,42 @@ struct OverviewScreen: View {
 }
 
 struct SignalsScreen: View {
+    // MARK: - Box-4 color tokens (Tier 3.11 migration)
+    //
+    // Tier 3.11 migration (audit §8.1 box 4): `SignalsScreen`'s 8
+    // §6-alias call sites are migrated to the `AppTheme.Palette`
+    // contract tokens those aliases resolve to. These `static let`s
+    // are wiring pins referencing EXISTING contract tokens — NOT new
+    // color tokens — and dedup the inline references for the
+    // token-wiring test.
+    //
+    //   HealthPalette.ink      = AppTheme.Palette.textPrimary    (×2)
+    //   HealthPalette.mutedInk = AppTheme.Palette.textSecondary  (×2)
+    //   HealthPalette.amber    = AppTheme.Palette.warning        (×1)
+    //   HealthPalette.coral    = AppTheme.Palette.danger         (×1)
+    //   HealthPalette.cyan     = AppTheme.Palette.sky      ← NOTE: the
+    //       box-4 alias `cyan` maps to the FROZEN `Palette.sky` role.
+    //       This is DISTINCT from `HealthPalette.sky` (the §7 local
+    //       `Color(0.54,0.60,0.68)` variant) — see the inline
+    //       exception notes on the "Expected …" CapsuleChip and the
+    //       "Age" MetricTile below.
+    //   HealthPalette.mint     = AppTheme.Palette.success        (×1)
+    //
+    // Resolver-adjacent boundary: this struct ALSO has 1
+    // `HealthPalette.color(for: source.id)` resolver call site (the
+    // "Coverage" sample-count `.foregroundStyle`). A resolver is NOT
+    // a §6 box-4 alias — that call is intentionally left untouched;
+    // resolver migration is its own dedicated PR. The 2
+    // §7-out-of-scope `HealthPalette.sky` (local) references and the
+    // 1 `HealthPalette.plum` reference are NOT migrated; see the
+    // inline exception notes.
+    static let inkColor = AppTheme.Palette.textPrimary
+    static let mutedInkColor = AppTheme.Palette.textSecondary
+    static let warningAccent = AppTheme.Palette.warning
+    static let dangerAccent = AppTheme.Palette.danger
+    static let skyAccent = AppTheme.Palette.sky
+    static let successAccent = AppTheme.Palette.success
+
     let dashboard: HealthDashboard
     let onRefresh: () -> Void
     @State private var selectedSignalID = "heart_rate"
@@ -173,6 +209,11 @@ struct SignalsScreen: View {
                             .frame(height: 260)
 
                         if let normalRange = selectedSignal.normalRange {
+                            // Intentional Tier-3.11 exception: `HealthPalette.sky`
+                            // is the §7-out-of-scope local `Color(0.54,0.60,0.68)`
+                            // variant — NOT a §6 box-4 alias, no `AppTheme.Palette`
+                            // counterpart. DISTINCT from the box-4 alias `cyan`
+                            // (which maps to the frozen `Palette.sky` role).
                             CapsuleChip(
                                 title: "Expected \(normalRange.lowerBound.formattedOneDecimal)-\(normalRange.upperBound.formattedOneDecimal) \(selectedSignal.unit)",
                                 color: HealthPalette.sky
@@ -181,22 +222,31 @@ struct SignalsScreen: View {
 
                         Text(selectedSignal.highlight)
                             .font(.body)
-                            .foregroundStyle(HealthPalette.ink)
+                            .foregroundStyle(Self.inkColor)
                         Text(selectedSignal.detail)
                             .font(.subheadline)
-                            .foregroundStyle(HealthPalette.mutedInk)
+                            .foregroundStyle(Self.mutedInkColor)
                     }
                 }
 
                 GlassCard {
                     SectionEyebrow(title: "Profile", subtitle: "Current Apple Health context")
                     LazyVGrid(columns: [.init(.flexible()), .init(.flexible())], spacing: 12) {
+                        // Intentional Tier-3.11 exceptions: `HealthPalette.sky`
+                        // ("Age") is the §7-out-of-scope local
+                        // `Color(0.54,0.60,0.68)` variant, and
+                        // `HealthPalette.plum` ("Sex") is the §7-out-of-scope
+                        // local `Color(0.43,0.40,0.50)` — neither is a §6 box-4
+                        // alias, neither has an `AppTheme.Palette` counterpart.
+                        // The local `sky` is DISTINCT from the box-4 alias
+                        // `cyan` (which maps to the frozen `Palette.sky` role
+                        // and IS migrated on the "Height" tile below).
                         MetricTile(title: "Age", value: dashboard.profile.ageYears.map(String.init) ?? "—", accent: HealthPalette.sky)
                         MetricTile(title: "Sex", value: dashboard.profile.biologicalSex ?? "—", accent: HealthPalette.plum)
-                        MetricTile(title: "BMI", value: dashboard.profile.bodyMassIndex.map { $0.formattedOneDecimal } ?? "—", accent: HealthPalette.amber)
-                        MetricTile(title: "Weight", value: dashboard.profile.weightKilograms.map { "\($0.formattedOneDecimal) kg" } ?? "—", accent: HealthPalette.coral)
-                        MetricTile(title: "Height", value: dashboard.profile.heightCentimeters.map { "\($0.formattedOneDecimal) cm" } ?? "—", accent: HealthPalette.cyan)
-                        MetricTile(title: "VO₂ Max", value: dashboard.profile.vo2Max.map { $0.formattedOneDecimal } ?? "—", accent: HealthPalette.mint)
+                        MetricTile(title: "BMI", value: dashboard.profile.bodyMassIndex.map { $0.formattedOneDecimal } ?? "—", accent: Self.warningAccent)
+                        MetricTile(title: "Weight", value: dashboard.profile.weightKilograms.map { "\($0.formattedOneDecimal) kg" } ?? "—", accent: Self.dangerAccent)
+                        MetricTile(title: "Height", value: dashboard.profile.heightCentimeters.map { "\($0.formattedOneDecimal) cm" } ?? "—", accent: Self.skyAccent)
+                        MetricTile(title: "VO₂ Max", value: dashboard.profile.vo2Max.map { $0.formattedOneDecimal } ?? "—", accent: Self.successAccent)
                     }
                 }
 
@@ -208,12 +258,16 @@ struct SignalsScreen: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(source.title)
                                         .font(.subheadline.weight(.semibold))
-                                        .foregroundStyle(HealthPalette.ink)
+                                        .foregroundStyle(Self.inkColor)
                                     Text(source.summary)
                                         .font(.footnote)
-                                        .foregroundStyle(HealthPalette.mutedInk)
+                                        .foregroundStyle(Self.mutedInkColor)
                                 }
                                 Spacer()
+                                // `HealthPalette.color(for:)` is a resolver
+                                // function, NOT a §6 box-4 alias — left
+                                // untouched. Resolver migration is a separate
+                                // dedicated PR, out of scope for this slice.
                                 Text("\(source.sampleCount)")
                                     .font(.headline.monospacedDigit())
                                     .foregroundStyle(HealthPalette.color(for: source.id))
@@ -654,6 +708,31 @@ struct FailureStateScreen: View {
 }
 
 private struct HeroCard: View {
+    // Tier 3.11 migration (audit §8.1 box 4): `HeroCard`'s 7 §6-alias
+    // occurrences are migrated to the `AppTheme.Palette` contract
+    // tokens those aliases resolve to:
+    //
+    //   HealthPalette.ink      → AppTheme.Palette.textPrimary    (×3)
+    //   HealthPalette.mutedInk → AppTheme.Palette.textSecondary  (×3)
+    //   HealthPalette.cyan     → AppTheme.Palette.sky            (×1)
+    //       NOTE: the box-4 alias `cyan` maps to the FROZEN
+    //       `Palette.sky` role — DISTINCT from `HealthPalette.sky`
+    //       (the §7 local `Color(0.54,0.60,0.68)` variant), which is
+    //       left as a documented exception below.
+    //
+    // `HeroCard` is a `private` struct, so — like `RiskOrb` (PR #44)
+    // — the wiring is build-proven (no test-reachable `static`); the
+    // tokens are referenced inline. The migration's visual safety is
+    // proven by the box-4 alias-equivalence tests, which assert each
+    // `HealthPalette` alias is `==` to its `AppTheme.Palette` target.
+    //
+    // Resolver-adjacent boundary: this struct ALSO has 1
+    // `HealthPalette.color(for: "overall")` resolver call site (the
+    // "band" `CapsuleChip` color). A resolver is NOT a §6 box-4 alias
+    // — that call is intentionally left untouched; resolver migration
+    // is its own dedicated PR. The 2 §7-out-of-scope references
+    // (`HealthPalette.sky` local and `HealthPalette.heroGradient`)
+    // are NOT migrated; see the inline exception notes.
     let hero: AnalysisHero
     let dashboard: HealthDashboard
 
@@ -666,13 +745,10 @@ private struct HeroCard: View {
                 // tracking (`1.1`). Routed through the shared
                 // `eyebrow` token (tracking `1.2`). `HeroCard` is a
                 // `private` struct, so the wiring is build-proven
-                // (no test-reachable `static`). The
-                // `.foregroundStyle(HealthPalette.mutedInk)` is left
-                // untouched — `HealthPalette` is out of Tier-2 scope
-                // (audit Tier 4).
+                // (no test-reachable `static`).
                 Text("On-Device Model Stack")
                     .kAirTypography(AppTheme.Typography.eyebrow)
-                    .foregroundStyle(HealthPalette.mutedInk)
+                    .foregroundStyle(AppTheme.Palette.textSecondary)
 
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .center, spacing: 20) {
@@ -689,19 +765,32 @@ private struct HeroCard: View {
 
                 Text(hero.recommendation)
                     .font(.subheadline)
-                    .foregroundStyle(HealthPalette.mutedInk)
+                    .foregroundStyle(AppTheme.Palette.textSecondary)
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
+                        // `HealthPalette.color(for:)` is a resolver function,
+                        // NOT a §6 box-4 alias — left untouched (resolver
+                        // migration is a separate dedicated PR). The next
+                        // `CapsuleChip` uses `HealthPalette.sky`, the
+                        // §7-out-of-scope local `Color(0.54,0.60,0.68)`
+                        // variant — NOT a §6 box-4 alias, no `AppTheme.Palette`
+                        // counterpart, left as a documented exception. It is
+                        // DISTINCT from the box-4 alias `cyan` on the third
+                        // chip (which maps to the frozen `Palette.sky` role
+                        // and IS migrated).
                         CapsuleChip(title: hero.band, color: HealthPalette.color(for: "overall"))
                         CapsuleChip(title: "\(hero.confidence.formattedPercent0) confidence", color: HealthPalette.sky)
-                        CapsuleChip(title: hero.availabilitySummary, color: HealthPalette.cyan)
+                        CapsuleChip(title: hero.availabilitySummary, color: AppTheme.Palette.sky)
                     }
                 }
             }
             .padding(4)
             .background(
                 RoundedRectangle(cornerRadius: 34, style: .continuous)
+                    // Intentional Tier-3.11 exception: `HealthPalette.heroGradient`
+                    // is a `LinearGradient`, NOT a color token — `design-system-v1.md`
+                    // §7 out-of-scope, no `AppTheme.Palette` counterpart. Left as-is.
                     .fill(HealthPalette.heroGradient)
                     .opacity(0.72)
             )
@@ -712,16 +801,16 @@ private struct HeroCard: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(dashboard.predictions.first.map { "\($0.title) Risk Model" } ?? "On-Device Risk Prediction")
                 .font(.system(.title3, design: .rounded).weight(.semibold))
-                .foregroundStyle(HealthPalette.ink)
+                .foregroundStyle(AppTheme.Palette.textPrimary)
             Text(hero.overallScore.formattedPercent1)
                 .font(.system(size: 48, weight: .bold, design: .rounded))
-                .foregroundStyle(HealthPalette.ink)
+                .foregroundStyle(AppTheme.Palette.textPrimary)
             Text("\(dashboard.analysisWindow.start, format: .dateTime.month(.wide).day()) - \(dashboard.analysisWindow.end, format: .dateTime.month(.wide).day())")
                 .font(.headline)
-                .foregroundStyle(HealthPalette.mutedInk)
+                .foregroundStyle(AppTheme.Palette.textSecondary)
             Text(hero.summary)
                 .font(.subheadline)
-                .foregroundStyle(HealthPalette.ink.opacity(0.84))
+                .foregroundStyle(AppTheme.Palette.textPrimary.opacity(0.84))
         }
     }
 }
