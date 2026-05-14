@@ -331,3 +331,62 @@ Upstream contracts are in canonical position (see §2). Remaining gates are cons
 - [ ] At least one production consumer renders `nextStepPrompt` Mode A.
 - [ ] At least one production consumer renders `nextStepPrompt` Mode B (primary CTA).
 - [ ] Suppression of `dismiss` and `acceptNoEntry` verified by a test asserting zero block views are constructed for those outcomes.
+
+### 11.2 Implementation status (informational, not normative)
+
+Informational mirror of §11.1, populated by the Visual Contract
+Unlock Sweep after `Contracts/Design/design-system-v1.md` ratified
+(PR #55, merge commit `4e60d95`). The §11.1 checklist above remains
+the normative gate; this block does NOT tick §11.1 and does NOT
+change this contract's `Status:` line — continuation-transcript-visual-v1
+is **NOT ratified**.
+
+**Satisfied:**
+
+- [x] `design-system-v1.md` ratified — PR #55; `Status:` reads
+  `ratified`, all seven §8.1 boxes ticked.
+- [x] Production consumer renders `systemSummary` — `ChatHomeView`'s
+  `continuationLayout` renders `ContinuationBlockRenderer(event:)`
+  (reached when `message.continuationEvent != nil`), which renders
+  `SystemSummaryBlock`. A real transcript surface, not a `#Preview`.
+- [x] Production consumer renders `systemEvidence` — the same
+  renderer path renders `SystemEvidenceBlock` when the envelope
+  carries evidence.
+- [x] Production consumer renders `nextStepPrompt` Mode A — the same
+  path renders `NextStepPromptBlock`'s chip strip.
+- [x] Production consumer renders `nextStepPrompt` Mode B — the same
+  `NextStepPromptBlock` renders the primary CTA when
+  `payload.mode == .primaryWithSecondary`.
+- [x] Suppression of `dismiss` / `acceptNoEntry` verified by test —
+  `ContinuationContractTests` and `ContinuationTranscriptIntegrationTests`
+  assert zero block views / empty `continuationBlockKinds` for those
+  outcomes; `ContinuationBlockRenderer` returns `EmptyView()` when
+  `renderEligible == false`.
+
+**Still blocking ratification:**
+
+- [ ] `continuation-runtime-v1.md` ratified — that contract is NOT
+  ratified.
+
+**Circular dependency (structural — flagged, not resolved here).**
+`continuation-runtime-v1.md` §11.1 requires
+`continuation-transcript-visual-v1.md` ratified, and this contract's
+§11.1 requires `continuation-runtime-v1.md` ratified. Per
+`continuation-runtime-v1.md` §11.2, every OTHER box of that contract
+is closed — its runtime emit paths, validation, and projection
+choice by PR #34; its own `design-system-v1.md` box is cleared by
+PR #55 (its §11.2 "still open" list now carries a stale
+`design-system-v1.md` entry, flagged for a follow-up since this
+sweep does not edit that file). So the two contracts are mutually
+each other's sole remaining blocker. Neither can ratify
+independently; they require a single joint ratification pass. This
+sweep is doc-only and scoped to the three visual contracts — it does
+not edit `continuation-runtime-v1.md` and does not resolve the
+cycle. Breaking it is a separate, deliberate pass.
+
+**Conclusion.** All five consumer-proof gates are satisfied and
+`design-system-v1.md` is ratified. continuation-transcript-visual-v1
+**cannot ratify** in this sweep — it is blocked solely on
+`continuation-runtime-v1.md`, which is itself circularly blocked on
+this contract. continuation-transcript-visual-v1 stays **NOT
+ratified**; it is NOT force-ratified.

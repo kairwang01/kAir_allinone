@@ -309,3 +309,54 @@ v1 is ratified when ALL of the following are true:
 - [ ] An automated test asserts that a rail with `recommendedMatches.isEmpty` produces zero view-tree presence (matches §3 "rail is absent").
 - [ ] An automated test asserts that the rail's view tree contains zero `sectionHeader`-style children regardless of slate composition (matches §8 "no group headers").
 - [ ] No new V0 tokens or contract clauses introduced by I2.
+
+### 11.2 Implementation status (informational, not normative)
+
+Informational mirror of §11.1, populated by the Visual Contract
+Unlock Sweep after `Contracts/Design/design-system-v1.md` ratified
+(PR #55, merge commit `4e60d95`). The §11.1 checklist above remains
+the normative gate; this block does NOT tick §11.1 and does NOT
+change this contract's `Status:` line — mixed-recommendation-rail-visual-v1
+is **NOT ratified**.
+
+**Satisfied:**
+
+- [x] `design-system-v1.md` ratified — PR #55; its `Status:` reads
+  `ratified` and all seven §8.1 boxes are ticked.
+- [x] Single / dual / triple production rendering — `ChatHomeView`
+  renders `RecommendationRail(objects: store.recommendedMatches)` as
+  a production consumer; the rail is generic over slate size and
+  `RecommendationRailIntegrationTests` proves `store.recommendedMatches`
+  reaches `.single` / `.dual` / `.triple`.
+- [x] `dismissed` state triggered in production — `ChatHomeView`
+  wires the rail's `onDismiss` (✕) and `onFeedback` (⋯) to
+  `ChatStore.dismissRecommendation`; the card is removed same-frame.
+- [x] Empty-rail zero presence (automated test) — `RecommendationRail`
+  returns `EmptyView()` for an empty slate;
+  `RecommendationRailContractTests.test_rail_emptyObjects_isAbsent`
+  asserts `isAbsent`, `renderedCardCount == 0`, `layoutState == .absent`.
+- [x] No new V0 tokens or contract clauses introduced — the rail and
+  `ActionCardShell` consume only existing `design-system-v1.md`
+  tokens (this contract's §9 binding table).
+
+**Still blocking ratification:**
+
+- [ ] `accepted` state — no production consumer triggers it.
+  `RecommendationRail` exposes no accept handler; `ChatHomeView`'s
+  call site wires only `onDismiss` / `onFeedback` and its source
+  comment states "Accept / refresh wiring stay deferred to a later
+  PR." The §6 `accepted` flash is never exercised in production.
+- [ ] `refresh` transition — `ChatStore.refreshRecommendedMatches()`
+  exists and runs internally after a dismissal, but no production
+  consumer drives a refresh with §7's instantaneous-swap property
+  verified; the same source comment defers refresh wiring.
+- [ ] No automated test asserts "zero `sectionHeader`-style children."
+  `RecommendationRail` is structurally header-free, but §11.1 demands
+  an automated test; none exists.
+
+**Conclusion.** `design-system-v1.md` ratification cleared the first
+§11.1 box but is **not** the only blocker. Three gates remain — the
+`accepted` and `refresh` production wiring and the no-`sectionHeader`
+automated test — each requiring Swift changes (a later implementation
+line), out of scope for this doc-only sweep.
+mixed-recommendation-rail-visual-v1 stays **NOT ratified**.
