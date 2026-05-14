@@ -8,6 +8,13 @@
 import SwiftUI
 
 struct ContentView: View {
+    // MARK: - Design-System Migration Tier 3.9
+    // Box-4 alias slice: the live-dashboard `TabView` tint was
+    // `HealthPalette.mint`, the §6 alias of `AppTheme.Palette.success`.
+    // Wired here to the contract token directly (pure rename, zero
+    // visual change — `HealthPalette.mint == AppTheme.Palette.success`).
+    static let tintColor = AppTheme.Palette.success
+
     let store: HealthDashboardStore
     @State private var selectedTab: DashboardTab = .overview
     @State private var bootstrap: AppBootstrap
@@ -87,7 +94,7 @@ struct ContentView: View {
             }
             .tag(DashboardTab.data)
         }
-        .tint(HealthPalette.mint)
+        .tint(Self.tintColor)
     }
 }
 
