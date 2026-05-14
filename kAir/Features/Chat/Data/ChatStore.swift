@@ -92,6 +92,32 @@ final class ChatStore {
     /// of this `ChatStore` instance.
     private let threadID: ThreadID
 
+    /// Public accessor for the chat's `thread_id`. Exposed for the
+    /// Main D.1 continuation-telemetry emit, which runs in
+    /// `AppBootstrap.recordSurfaceReturn(_:)` and needs to populate
+    /// the §5.2 propagation matrix without holding chat-store
+    /// internals. The value is `let` underneath; consumers cannot
+    /// mutate it.
+    var telemetryThreadID: ThreadID { threadID }
+
+    /// Last `TraceID` issued by `emitChatPromptSubmit()` for this
+    /// chat session, or `nil` if no prompt has been submitted yet.
+    ///
+    /// Per `Contracts/telemetry-contract-v1.md` §3, the `trace_id`
+    /// is "issued by chat home... at the moment a user prompt is
+    /// committed." Downstream events that occur in the same user
+    /// request lifecycle (rail, surface, continuation) MUST carry
+    /// the SAME `trace_id`. Main D.1 wires the first non-chat
+    /// downstream consumer: the continuation-telemetry emit reads
+    /// this value at surface-return time.
+    ///
+    /// `nil` is a valid state — a surface might be opened before
+    /// any prompt is submitted (e.g., the user taps a section
+    /// directly). The continuation-telemetry emit treats a `nil`
+    /// `trace_id` as a missing-required-id programming error per
+    /// §5.2 and silently skips the emit.
+    private(set) var lastIssuedTraceID: TraceID?
+
     private var lastRefreshDate: Date?
     private var supportsHealthData = true
     private var pendingMapsIntent: PendingMapsIntent?
@@ -508,6 +534,12 @@ final class ChatStore {
             // Programming error: skip emit, let the prompt commit.
             return
         }
+
+        // Main D.1: capture the issued trace_id so the
+        // continuation-telemetry emit at surface return can
+        // propagate the SAME trace_id per
+        // `Contracts/telemetry-contract-v1.md` §3 + §5.1.
+        lastIssuedTraceID = traceID
 
         let emitter = telemetryEmitter
         pendingTelemetryEmit = Task { @MainActor in

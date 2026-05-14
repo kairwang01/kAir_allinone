@@ -263,4 +263,11 @@ private final class DeterministicTelemetryIdentifierFactory: TelemetryIdentifier
     func makeThreadID() -> ThreadID {
         ThreadID(threadRaw)
     }
+
+    func makeSurfaceSessionID() -> SurfaceSessionID {
+        // Main D.1 added `makeSurfaceSessionID()` to the protocol;
+        // this test double doesn't exercise the surface-session path,
+        // so a unique-per-call UUID is sufficient.
+        SurfaceSessionID(UUID().uuidString)
+    }
 }

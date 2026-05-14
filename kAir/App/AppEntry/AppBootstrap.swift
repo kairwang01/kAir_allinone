@@ -86,6 +86,20 @@ final class AppBootstrap {
     /// production builds emit silently.
     let continuationRuntime: ContinuationRuntime
 
+    /// Telemetry identifier factory composed at the app's composition
+    /// root. Main D.1 uses this to issue `SurfaceSessionID` per
+    /// `Contracts/telemetry-contract-v1.md` §3 (issuer = the
+    /// execution surface itself on entry; in kAir's composition
+    /// this is `AppBootstrap.openSurface(_:)`).
+    ///
+    /// `ChatStore` carries its OWN factory instance for the
+    /// `TraceID` / `ThreadID` issuance path from Main B. Both
+    /// bootstrap and the chat store route identifier issuance
+    /// through their injected factory, which keeps generation
+    /// single-sourced per factory while letting tests inject
+    /// deterministic conformances at either seam.
+    let identifierFactory: TelemetryIdentifierFactory
+
     /// Transcript projection sink, installed by `ChatHomeView` so
     /// `recordSurfaceReturn(_:)` can route render-eligible events
     /// back into the chat session. Per
@@ -99,11 +113,44 @@ final class AppBootstrap {
     /// previews / tests that don't wire a transcript).
     @ObservationIgnored var continuationHandler: ((ChatContinuationEvent) -> Void)?
 
+    /// Resolver that returns the chat's current `(TraceID?, ThreadID?)`
+    /// pair at the moment `recordSurfaceReturn(_:)` fires. Installed
+    /// by `ChatHomeView` alongside `continuationHandler` so the
+    /// continuation-telemetry emit (Main D.1) can populate the §5.2
+    /// propagation matrix without bootstrap holding a direct
+    /// `ChatStore` reference.
+    ///
+    /// `TraceID?` is optional because a surface entry might happen
+    /// before any prompt has been submitted (no trace_id yet); in
+    /// that case the continuation telemetry emit is silently skipped
+    /// (programming-error path per the §5.2 missing-required-id
+    /// rule). `ThreadID?` is optional for symmetry; the chat thread
+    /// id is set at `ChatStore` init, so this is non-nil in
+    /// practice.
+    @ObservationIgnored var surfaceTelemetryIdentifiers: (() -> (trace: TraceID?, thread: ThreadID?))?
+
+    /// `surface_session_id` issued for the currently-presented
+    /// non-chat surface, or `nil` when chat is foregrounded.
+    ///
+    /// Issued in `openSurface(_:)` on a `.chat` → non-chat
+    /// transition; consumed by the continuation-telemetry emit in
+    /// `recordSurfaceReturn(_:)`, then cleared in `closeSurface()`.
+    @ObservationIgnored private(set) var currentSurfaceSessionID: SurfaceSessionID?
+
     /// Last `continuationRuntime.emit(_:)` task fired from
     /// `recordSurfaceReturn(_:)`. Tests `await` this to wait for the
     /// fire-and-forget emit to complete before asserting on a sink.
     /// Production code does NOT consume this.
     @ObservationIgnored private(set) var pendingContinuationEmit: Task<Void, Never>?
+
+    /// Last `telemetryEmitter.emit(_:_:)` task fired from
+    /// `recordSurfaceReturn(_:)` for the Main D.1 continuation
+    /// telemetry events (`transcript.continuation.append` /
+    /// `transcript.continuation.silent`). Tests `await` this to
+    /// wait for the fire-and-forget emit before asserting on the
+    /// `TelemetryEmitter` sink. Production code does NOT consume
+    /// this.
+    @ObservationIgnored private(set) var pendingContinuationTelemetryEmit: Task<Void, Never>?
 
     init(
         healthStore: HealthDashboardStore? = nil,
@@ -111,7 +158,8 @@ final class AppBootstrap {
         completedRecommendationHandoff: CompletedRecommendationHandoff = NoOpCompletedRecommendationHandoff(),
         telemetryEmitter: TelemetryEmitter = NoOpTelemetryEmitter(),
         capabilityRegistry: CapabilityRegistry? = nil,
-        continuationRuntime: ContinuationRuntime = NoOpContinuationRuntime()
+        continuationRuntime: ContinuationRuntime = NoOpContinuationRuntime(),
+        identifierFactory: TelemetryIdentifierFactory = UUIDTelemetryIdentifierFactory()
     ) {
         self.healthStore = healthStore ?? HealthDashboardStore()
         self.feedbackRuntime = feedbackRuntime
@@ -120,6 +168,7 @@ final class AppBootstrap {
         self.capabilityRegistry = capabilityRegistry
             ?? DefaultCapabilityRegistry.makeWithShippedStubs()
         self.continuationRuntime = continuationRuntime
+        self.identifierFactory = identifierFactory
     }
 
     func showProfile() {
@@ -132,6 +181,13 @@ final class AppBootstrap {
             return
         }
 
+        // Main D.1: when transitioning from chat to a non-chat
+        // surface, issue a fresh `SurfaceSessionID` per
+        // `Contracts/telemetry-contract-v1.md` §3. Re-entry to the
+        // same `AppSection` while already presented produces a new
+        // surface session per §3 ("a user can re-enter the same
+        // recommendation_id... to begin a new surface_session_id").
+        currentSurfaceSessionID = identifierFactory.makeSurfaceSessionID()
         currentSection = section
         presentedSurface = section
     }
@@ -143,8 +199,9 @@ final class AppBootstrap {
         openSurface(.maps)
     }
 
-    /// State-only surface close: resets `currentSection` and
-    /// `presentedSurface` without firing a continuation event.
+    /// State-only surface close: resets `currentSection`,
+    /// `presentedSurface`, AND `currentSurfaceSessionID` without
+    /// firing a continuation event.
     ///
     /// In Main D this remains as the low-level state reset used by
     /// `recordSurfaceReturn(_:)`. Production triggers should call
@@ -154,6 +211,7 @@ final class AppBootstrap {
     func closeSurface() {
         currentSection = .chat
         presentedSurface = nil
+        currentSurfaceSessionID = nil
     }
 
     /// Main D production seam: record a continuation event for the
@@ -183,10 +241,16 @@ final class AppBootstrap {
     ///      for tests.
     ///   6. Reset state via `closeSurface()`.
     ///
-    /// Per §8.3: this method does NOT emit telemetry on its own.
-    /// `transcript.continuation.append` / `transcript.continuation.silent`
-    /// telemetry events are out of Main D scope and will land in a
-    /// future telemetry main line.
+    /// Main D.1: this method emits the §4.1 continuation telemetry
+    /// event (`transcript.continuation.append` for renderEligible
+    /// outcomes, `transcript.continuation.silent` otherwise) AT THE
+    /// SAME CHOKEPOINT as the continuation runtime emit. No second
+    /// bypass path is permitted — the §5.2 propagation matrix is
+    /// validated locally before emit; a missing required id (e.g.
+    /// no `trace_id` yet because no prompt has been submitted) is a
+    /// programming error and silently skips the emit without
+    /// blocking the continuation runtime emit or the transcript
+    /// projection.
     func recordSurfaceReturn(_ outcome: TerminalOutcome) {
         let section = currentSection
         guard section != .chat,
@@ -224,7 +288,80 @@ final class AppBootstrap {
             try? await runtime.emit(event)
         }
 
+        // Main D.1: parallel telemetry emit per §4.1 + §8.3. Same
+        // chokepoint, no second bypass.
+        emitContinuationTelemetry(for: event)
+
         closeSurface()
+    }
+
+    /// Build and fire the §4.1 continuation telemetry event that
+    /// mirrors the `ChatContinuationEvent` emitted via the
+    /// continuation runtime.
+    ///
+    /// Per `Contracts/telemetry-contract-v1.md` §4.1:
+    ///   - `renderEligible == true` → `transcript.continuation.append`
+    ///   - `renderEligible == false` → `transcript.continuation.silent`
+    ///
+    /// Per §5.2, both events require `trace_id`, `thread_id`, and
+    /// `surface_session_id`. Identifier sources:
+    ///   - `trace_id`: the chat thread's last issued `TraceID` (set
+    ///     by `ChatStore.emitChatPromptSubmit()` per Main B). Read
+    ///     via the `surfaceTelemetryIdentifiers` resolver
+    ///     installed by `ChatHomeView`. If no prompt has been
+    ///     submitted yet, the resolver returns `nil` and this emit
+    ///     is silently skipped (programming-error path; the
+    ///     continuation runtime emit and the transcript projection
+    ///     still fire).
+    ///   - `thread_id`: the chat thread's `ThreadID` (set at
+    ///     `ChatStore` init). Same resolver.
+    ///   - `surface_session_id`: `currentSurfaceSessionID`, issued
+    ///     in `openSurface(_:)` on the chat → surface transition.
+    ///
+    /// Validation runs through `TelemetryPropagationMatrix` before
+    /// emit. A non-empty violation list is silently absorbed (the
+    /// `TelemetryEmitter.emit(_:_:)` contract is non-throwing and
+    /// telemetry MUST NOT break user-visible flow).
+    private func emitContinuationTelemetry(for event: ChatContinuationEvent) {
+        guard let resolver = surfaceTelemetryIdentifiers else {
+            // No resolver installed — typical of previews / tests
+            // that don't wire a chat store. Telemetry is silently
+            // skipped; the continuation runtime emit still fires.
+            return
+        }
+        let identifiers = resolver()
+
+        guard let traceID = identifiers.trace,
+              let threadID = identifiers.thread,
+              let surfaceSessionID = currentSurfaceSessionID
+        else {
+            // Missing required id per §5.2 — programming error.
+            // Skip emit; do NOT throw or alter other paths.
+            return
+        }
+
+        let telemetryEvent: TelemetryEvent = event.renderEligible
+            ? .transcriptContinuationAppend
+            : .transcriptContinuationSilent
+
+        let payload = TelemetryEventPayload(
+            traceID: traceID,
+            threadID: threadID,
+            surfaceSessionID: surfaceSessionID
+        )
+
+        guard TelemetryPropagationMatrix
+            .violations(telemetryEvent, payload)
+            .isEmpty
+        else {
+            // Programming error per §5.2 — skip emit silently.
+            return
+        }
+
+        let emitter = telemetryEmitter
+        pendingContinuationTelemetryEmit = Task { @MainActor in
+            await emitter.emit(telemetryEvent, payload)
+        }
     }
 
     static var preview: AppBootstrap {
