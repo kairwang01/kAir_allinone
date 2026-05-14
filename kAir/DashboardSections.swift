@@ -735,18 +735,47 @@ private struct ConditionPredictionRow: View {
 }
 
 private struct RiskOrb: View {
+    // Tier 3.5 migration (audit §8.1 box 4): `RiskOrb`'s 5 §6-alias
+    // occurrences are migrated to the `AppTheme.Palette` contract
+    // tokens those aliases resolve to:
+    //
+    //   HealthPalette.ink      → AppTheme.Palette.textPrimary    (×2)
+    //   HealthPalette.mutedInk → AppTheme.Palette.textSecondary  (×1)
+    //   HealthPalette.mint     → AppTheme.Palette.success        (×1)
+    //   HealthPalette.cyan     → AppTheme.Palette.sky            (×1)
+    //
+    // `RiskOrb` is a `private` struct, so — like `HeroCard` (PR #40)
+    // — the wiring is build-proven (no test-reachable `static`); the
+    // tokens are referenced inline. The migration's visual safety is
+    // proven by the box-4 alias-equivalence tests, which assert each
+    // `HealthPalette` alias is `==` to its `AppTheme.Palette` target.
+    //
+    // `RiskOrb` has zero `HealthPalette.color(for:)` /
+    // `statusColor(for:)` calls — this slice is resolver-free. The 1
+    // §7-out-of-scope reference (`HealthPalette.plum` in the
+    // AngularGradient) is NOT migrated; see the inline exception note.
     let value: Double
 
     var body: some View {
         ZStack {
             Circle()
-                .stroke(HealthPalette.ink.opacity(0.08), lineWidth: 16)
+                .stroke(AppTheme.Palette.textPrimary.opacity(0.08), lineWidth: 16)
 
             Circle()
                 .trim(from: 0, to: value)
                 .stroke(
                     AngularGradient(
-                        colors: [HealthPalette.mint, HealthPalette.cyan, HealthPalette.plum],
+                        // `HealthPalette.plum` is an intentional Tier-3.5
+                        // exception: it is the §7-out-of-scope local
+                        // `Color(0.43, 0.40, 0.50)` — NOT a §6 box-4 alias,
+                        // no `AppTheme.Palette` counterpart. The other two
+                        // gradient stops (`mint`, `cyan`) ARE box-4 aliases
+                        // and are migrated.
+                        colors: [
+                            AppTheme.Palette.success,
+                            AppTheme.Palette.sky,
+                            HealthPalette.plum,
+                        ],
                         center: .center
                     ),
                     style: StrokeStyle(lineWidth: 16, lineCap: .round)
@@ -756,10 +785,10 @@ private struct RiskOrb: View {
             VStack(spacing: 6) {
                 Text("Current")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(HealthPalette.mutedInk)
+                    .foregroundStyle(AppTheme.Palette.textSecondary)
                 Text(value.formattedPercent0)
                     .font(.system(.title2, design: .rounded).weight(.bold))
-                    .foregroundStyle(HealthPalette.ink)
+                    .foregroundStyle(AppTheme.Palette.textPrimary)
             }
         }
         .frame(width: 144, height: 144)
