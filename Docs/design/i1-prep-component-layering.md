@@ -1,12 +1,19 @@
 # Continuation Transcript Blocks — I1-prep Component Layering Sketch
 
 Status: implementation-side architecture, NOT a contract.
+
+Note (Contract Status Sweep): this file was relocated from
+`Contracts/UX/i1-prep-component-layering.md` to its current path
+under `Docs/design/` so that `find Contracts -name "*.md"` returns
+only contracts. Content is unchanged from its previous form except
+for the link fix-ups required by the new path.
+
 Authority: this doc describes how the I1-prep scaffolding lays out files and which existing components it borders. It introduces zero new normative rules. All rules live in:
 
-- [`Contracts/Design/design-system-v1.md`](../Design/design-system-v1.md)
-- [`Contracts/UX/continuation-runtime-v1.md`](continuation-runtime-v1.md)
-- [`Contracts/UX/continuation-transcript-visual-v1.md`](continuation-transcript-visual-v1.md)
-- [`Contracts/UX/post-return-and-continuation-ux-v1.md`](post-return-and-continuation-ux-v1.md)
+- [`Contracts/Design/design-system-v1.md`](../../Contracts/Design/design-system-v1.md)
+- [`Contracts/UX/continuation-runtime-v1.md`](../../Contracts/UX/continuation-runtime-v1.md)
+- [`Contracts/UX/continuation-transcript-visual-v1.md`](../../Contracts/UX/continuation-transcript-visual-v1.md)
+- [`Contracts/UX/post-return-and-continuation-ux-v1.md`](../../Contracts/UX/post-return-and-continuation-ux-v1.md)
 
 If this doc disagrees with any of those, the contracts win.
 
