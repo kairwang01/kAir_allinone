@@ -210,6 +210,34 @@ struct SignalsScreen: View {
 }
 
 struct DataLibraryScreen: View {
+    // MARK: - Box-4 color tokens (Tier 3.2 migration)
+    //
+    // Tier 3.2 migration (audit §8.1 box 4): `DataLibraryScreen`'s
+    // 23 §6-alias call sites are migrated to the `AppTheme.Palette`
+    // contract tokens those aliases resolve to. These `static let`s
+    // are wiring pins referencing EXISTING contract tokens — NOT new
+    // color tokens — and they dedup the 23 inline references into 5
+    // named constants for the token-wiring test.
+    //
+    //   HealthPalette.ink      = AppTheme.Palette.textPrimary
+    //   HealthPalette.mutedInk = AppTheme.Palette.textSecondary
+    //   HealthPalette.mint     = AppTheme.Palette.success
+    //   HealthPalette.amber    = AppTheme.Palette.warning
+    //   HealthPalette.coral    = AppTheme.Palette.danger
+    //
+    // The 2 §7-out-of-scope references (`HealthPalette.sky` on the
+    // "Version" MetricTile, `HealthPalette.plum` on the ECG card
+    // fill) are NOT migrated — they have no `AppTheme.Palette`
+    // counterpart; see the inline exception comments. The 3
+    // `HealthPalette.color(for:)` resolver calls are also untouched
+    // (a resolver is not a box-4 alias call site; per Tier 3.2
+    // scope, `color(for:)` is out of scope).
+    static let inkColor = AppTheme.Palette.textPrimary
+    static let mutedInkColor = AppTheme.Palette.textSecondary
+    static let successAccent = AppTheme.Palette.success
+    static let warningAccent = AppTheme.Palette.warning
+    static let dangerAccent = AppTheme.Palette.danger
+
     let dashboard: HealthDashboard
     let onRefresh: () -> Void
 
@@ -221,13 +249,18 @@ struct DataLibraryScreen: View {
                         SectionEyebrow(title: "Model Bundle", subtitle: "Embedded on-device prediction stack")
                         Text("kAir ships a compact local model bundle and executes it inside the app. The disease predictions below are generated without network access.")
                             .font(.body)
-                            .foregroundStyle(HealthPalette.ink)
+                            .foregroundStyle(Self.inkColor)
 
                         LazyVGrid(columns: [.init(.flexible()), .init(.flexible())], spacing: 12) {
+                            // Intentional Tier-3.2 exception: `HealthPalette.sky`
+                            // is the §7-out-of-scope local `Color(0.54,0.60,0.68)`
+                            // variant — NOT a §6 box-4 alias, no `AppTheme.Palette`
+                            // counterpart. Left as-is (see the CapsuleChip /
+                            // MetricTile exception notes in HealthDashboardStyle.swift).
                             MetricTile(title: "Version", value: modelSummary.version, accent: HealthPalette.sky)
-                            MetricTile(title: "Features", value: "\(modelSummary.featureCount)", accent: HealthPalette.mint)
-                            MetricTile(title: "Training Windows", value: "\(modelSummary.sampleCount)", accent: HealthPalette.amber)
-                            MetricTile(title: "Signal Window", value: "\(modelSummary.signalWindowDays) d", accent: HealthPalette.coral)
+                            MetricTile(title: "Features", value: "\(modelSummary.featureCount)", accent: Self.successAccent)
+                            MetricTile(title: "Training Windows", value: "\(modelSummary.sampleCount)", accent: Self.warningAccent)
+                            MetricTile(title: "Signal Window", value: "\(modelSummary.signalWindowDays) d", accent: Self.dangerAccent)
                         }
 
                         VStack(spacing: 12) {
@@ -236,10 +269,10 @@ struct DataLibraryScreen: View {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(prediction.title)
                                             .font(.headline)
-                                            .foregroundStyle(HealthPalette.ink)
+                                            .foregroundStyle(Self.inkColor)
                                         Text(prediction.summary)
                                             .font(.footnote)
-                                            .foregroundStyle(HealthPalette.mutedInk)
+                                            .foregroundStyle(Self.mutedInkColor)
                                     }
                                     Spacer()
                                     VStack(alignment: .trailing, spacing: 4) {
@@ -248,7 +281,7 @@ struct DataLibraryScreen: View {
                                             .foregroundStyle(HealthPalette.color(for: prediction.id))
                                         Text("ROC \(prediction.metrics.rocAUC.formattedOneDecimal)")
                                             .font(.footnote)
-                                            .foregroundStyle(HealthPalette.mutedInk)
+                                            .foregroundStyle(Self.mutedInkColor)
                                     }
                                 }
                                 .padding(16)
@@ -266,7 +299,7 @@ struct DataLibraryScreen: View {
                     SectionEyebrow(title: "Connected Data", subtitle: "Direct Apple Health access")
                     Text("kAir reads local HealthKit data after permission is granted. There is no export or import step in this app flow.")
                         .font(.body)
-                        .foregroundStyle(HealthPalette.ink)
+                        .foregroundStyle(Self.inkColor)
 
                     VStack(spacing: 12) {
                         ForEach(dashboard.dataSources) { source in
@@ -278,20 +311,20 @@ struct DataLibraryScreen: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(source.title)
                                         .font(.subheadline.weight(.semibold))
-                                        .foregroundStyle(HealthPalette.ink)
+                                        .foregroundStyle(Self.inkColor)
                                     Text(source.summary)
                                         .font(.footnote)
-                                        .foregroundStyle(HealthPalette.mutedInk)
+                                        .foregroundStyle(Self.mutedInkColor)
                                     if let lastSampleDate = source.lastSampleDate {
                                         Text("Latest \(lastSampleDate, format: .dateTime.month(.abbreviated).day().hour().minute())")
                                             .font(.caption)
-                                            .foregroundStyle(HealthPalette.mutedInk)
+                                            .foregroundStyle(Self.mutedInkColor)
                                     }
                                 }
                                 Spacer()
                                 Text("\(source.sampleCount)")
                                     .font(.headline.monospacedDigit())
-                                    .foregroundStyle(HealthPalette.ink)
+                                    .foregroundStyle(Self.inkColor)
                             }
                         }
                     }
@@ -311,24 +344,24 @@ struct DataLibraryScreen: View {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(workout.activity)
                                             .font(.headline)
-                                            .foregroundStyle(HealthPalette.ink)
+                                            .foregroundStyle(Self.inkColor)
                                         Text(workout.startDate, format: .dateTime.month(.abbreviated).day().hour().minute())
                                             .font(.footnote)
-                                            .foregroundStyle(HealthPalette.mutedInk)
+                                            .foregroundStyle(Self.mutedInkColor)
                                     }
                                     Spacer()
                                     VStack(alignment: .trailing, spacing: 4) {
                                         Text("\(workout.durationMinutes.formattedOneDecimal) min")
                                             .font(.subheadline.weight(.semibold))
-                                            .foregroundStyle(HealthPalette.ink)
+                                            .foregroundStyle(Self.inkColor)
                                         if let distance = workout.distanceKilometers {
                                             Text("\(distance.formattedOneDecimal) km")
                                                 .font(.footnote)
-                                                .foregroundStyle(HealthPalette.mutedInk)
+                                                .foregroundStyle(Self.mutedInkColor)
                                         } else if let calories = workout.energyKilocalories {
                                             Text("\(calories.formattedOneDecimal) kcal")
                                                 .font(.footnote)
-                                                .foregroundStyle(HealthPalette.mutedInk)
+                                                .foregroundStyle(Self.mutedInkColor)
                                         }
                                     }
                                 }
@@ -336,7 +369,7 @@ struct DataLibraryScreen: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(
                                     RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                        .fill(HealthPalette.amber.opacity(0.10))
+                                        .fill(Self.warningAccent.opacity(0.10))
                                 )
                             }
                         }
@@ -357,28 +390,31 @@ struct DataLibraryScreen: View {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(reading.classification)
                                             .font(.headline)
-                                            .foregroundStyle(HealthPalette.ink)
+                                            .foregroundStyle(Self.inkColor)
                                         Text(reading.startDate, format: .dateTime.month(.abbreviated).day().hour().minute())
                                             .font(.footnote)
-                                            .foregroundStyle(HealthPalette.mutedInk)
+                                            .foregroundStyle(Self.mutedInkColor)
                                         Text(reading.symptomsStatus)
                                             .font(.footnote)
-                                            .foregroundStyle(HealthPalette.mutedInk)
+                                            .foregroundStyle(Self.mutedInkColor)
                                     }
                                     Spacer()
                                     VStack(alignment: .trailing, spacing: 4) {
                                         Text(reading.averageHeartRate.map { "\($0.formattedOneDecimal) bpm" } ?? "—")
                                             .font(.subheadline.weight(.semibold))
-                                            .foregroundStyle(HealthPalette.ink)
+                                            .foregroundStyle(Self.inkColor)
                                         Text(reading.samplingFrequencyHertz.map { "\($0.formattedOneDecimal) Hz" } ?? "—")
                                             .font(.footnote)
-                                            .foregroundStyle(HealthPalette.mutedInk)
+                                            .foregroundStyle(Self.mutedInkColor)
                                     }
                                 }
                                 .padding(16)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(
                                     RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                        // Intentional Tier-3.2 exception: `HealthPalette.plum`
+                                        // is a §7-out-of-scope local color — NOT a §6 box-4
+                                        // alias, no `AppTheme.Palette` counterpart. Left as-is.
                                         .fill(HealthPalette.plum.opacity(0.10))
                                 )
                             }
