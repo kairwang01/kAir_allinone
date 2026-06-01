@@ -31,9 +31,8 @@ struct RootShellView: View {
                     // `post-return-and-continuation-ux-v1.md` §1.2,
                     // a silent / swipe-style exit is an `.abandon`
                     // outcome. Explicit back buttons route through
-                    // `recordSurfaceReturn(.completion)` directly
-                    // (see the toolbar back button below and the
-                    // in-surface back buttons in each surface view).
+                    // `recordSurfaceReturn(.completion)` directly from
+                    // each ExecutionSurfaceShell rail.
                     bootstrap.recordSurfaceReturn(.abandon)
                 }
             }
@@ -41,6 +40,12 @@ struct RootShellView: View {
 
         NavigationStack {
             ChatHomeView(bootstrap: bootstrap)
+        }
+        .onAppear {
+            SurfaceRouter.applyPendingAppIntentRoute(to: bootstrap)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: SurfaceRouter.routeRequestedNotification)) { _ in
+            SurfaceRouter.applyPendingAppIntentRoute(to: bootstrap)
         }
         .fullScreenCover(item: presentedSurface) { surface in
             NavigationStack {
@@ -84,21 +89,12 @@ private struct PresentedSurfaceView: View {
                 AIHomeView(bootstrap: bootstrap)
             case .maps:
                 MapsHomeView(bootstrap: bootstrap)
+            case .search:
+                SearchHomeView {
+                    bootstrap.recordSurfaceReturn(.completion)
+                }
             case .store:
                 StoreHomeView(bootstrap: bootstrap)
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    // Main D: an explicit Back tap is a `.completion`
-                    // return per `post-return-and-continuation-ux-v1.md`
-                    // §1.2 (the user returned through "Back to chat").
-                    bootstrap.recordSurfaceReturn(.completion)
-                } label: {
-                    Label("Chat", systemImage: "chevron.left")
-                        .foregroundStyle(AppTheme.Palette.textPrimary)
-                }
             }
         }
     }

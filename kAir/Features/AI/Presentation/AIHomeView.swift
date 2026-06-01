@@ -2,7 +2,31 @@
 //  AIHomeView.swift
 //  kAir
 //
-//  All-in-one AI surface for kAir.
+//  AI Execution Surface — a pure caller of `ExecutionSurfaceShell`.
+//
+//  A1 step 3 / I1 (AI): `AIHomeView` no longer renders a private
+//  `KAirPageHeader`, a private "Handoff" return card, or its own
+//  navigation title. It maps the static AI-runtime content onto the
+//  shared `ExecutionSurfaceShell` (Docs/design/execution-surface-
+//  framework-v1.md §1–§11), mirroring the Maps migration:
+//    - region (2) title       ← "AI" + runtime summary
+//    - region (4) status strip ← "local runtime, cloud off" note
+//    - region (3) primary card ← the orchestrator as a disabled
+//                                 `ActionCardShell` (framework §4)
+//    - supplementary           ← runtime metrics + remaining models +
+//                                 surface-routing list
+//    - state                   ← always `.ready` (AI is a static info
+//                                 surface; it has no empty/error path)
+//    - onReturnToChat          ← AppBootstrap.recordSurfaceReturn(.completion)
+//
+//  Region (5) emits no trust pills: AI has no stub / partner / permission
+//  state to advertise from the shared `ActionCardTrustPillKind`
+//  vocabulary, so the partner row collapses (framework §5).
+//
+//  AI is English-only in this build; localizing it is out of scope for
+//  this migration. The shell's back-to-chat copy therefore renders in
+//  English (`.english`). The shared RootShellView platform toolbar back
+//  is left in place until Store / Health also migrate (framework §2).
 //
 
 import SwiftUI
@@ -42,125 +66,16 @@ struct AIHomeView: View {
     ]
 
     var body: some View {
-        ZStack {
-            AppBackground()
-
-            ScrollView {
-                VStack(spacing: AppTheme.Metrics.sectionSpacing) {
-                    KAirPageHeader(
-                        title: "AI",
-                        summary: "The AI layer is a quiet runtime: route first, explain second, and only surface depth when the task asks for it.",
-                        badges: [
-                            KAirHeaderBadge(title: "Local-first", systemImage: "lock.shield", tint: AppTheme.Palette.success),
-                            KAirHeaderBadge(title: "Health grounded", systemImage: "heart.text.square", tint: AppTheme.Palette.sky)
-                        ]
-                    )
-
-                    KAirSurface {
-                        VStack(alignment: .leading, spacing: 14) {
-                            Text("Runtime")
-                                .font(.headline)
-                                .foregroundStyle(AppTheme.Palette.textPrimary)
-
-                            HStack(spacing: 12) {
-                                runtimeMetric(title: "Primary", value: "kAir Orchestrator")
-                                runtimeMetric(title: "Cloud", value: "Off")
-                                runtimeMetric(title: "Fallback", value: "Planner")
-                            }
-                        }
-                    }
-
-                    VStack(spacing: 12) {
-                        ForEach(models) { model in
-                            KAirSurface(style: .sunken) {
-                                VStack(alignment: .leading, spacing: 12) {
-                                    HStack(alignment: .top) {
-                                        VStack(alignment: .leading, spacing: 6) {
-                                            Text(model.title)
-                                                .font(.title3.weight(.semibold))
-                                                .foregroundStyle(AppTheme.Palette.textPrimary)
-
-                                            Text(model.summary)
-                                                .font(.subheadline)
-                                                .foregroundStyle(AppTheme.Palette.textSecondary)
-                                        }
-
-                                        Spacer()
-
-                                        KAirStatusPill(
-                                            title: model.status,
-                                            systemImage: "cpu",
-                                            tint: AppTheme.Palette.sky
-                                        )
-                                    }
-
-                                    Text(model.footprint)
-                                        .font(.caption.weight(.medium))
-                                        .foregroundStyle(AppTheme.Palette.textMuted)
-                                }
-                            }
-                        }
-                    }
-
-                    KAirSurface(style: .sunken) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Surface Routing")
-                                .font(.headline)
-                                .foregroundStyle(AppTheme.Palette.textPrimary)
-
-                            VStack(spacing: 10) {
-                                ForEach(tools) { tool in
-                                    HStack(alignment: .top) {
-                                        Circle()
-                                            .fill(tool.tint)
-                                            .frame(width: 10, height: 10)
-                                            .padding(.top, 5)
-
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(tool.title)
-                                                .font(.subheadline.weight(.semibold))
-                                                .foregroundStyle(AppTheme.Palette.textPrimary)
-
-                                            Text(tool.summary)
-                                                .font(.footnote)
-                                                .foregroundStyle(AppTheme.Palette.textSecondary)
-                                        }
-
-                                        Spacer()
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    KAirSurface(style: .sunken) {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Handoff")
-                                .font(.headline)
-                                .foregroundStyle(AppTheme.Palette.textPrimary)
-
-                            Button {
-                                // Main D: explicit return to chat is
-                                // `.completion` per
-                                // `post-return-and-continuation-ux-v1.md`
-                                // §1.2.
-                                bootstrap.recordSurfaceReturn(.completion)
-                            } label: {
-                                KAirActionCapsule(
-                                    title: "Return to chat",
-                                    systemImage: "bubble.left.and.bubble.right"
-                                )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-                .padding(.horizontal, AppTheme.Metrics.screenPadding)
-                .padding(.vertical, 16)
-            }
-            .scrollIndicators(.hidden)
-        }
-        .navigationTitle("AI")
+        ExecutionSurfaceShell(
+            inputs: shellInputs,
+            onReturnToChat: {
+                // Explicit return to chat is `.completion` per
+                // `post-return-and-continuation-ux-v1.md` §1.2.
+                bootstrap.recordSurfaceReturn(.completion)
+            },
+            primary: { primaryCard },
+            supplementary: { supplementaryContent }
+        )
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -175,6 +90,145 @@ struct AIHomeView: View {
                         )
                 }
                 .buttonStyle(.plain)
+            }
+        }
+    }
+
+    // MARK: - Shell inputs (regions 1, 2, 4, 5, 6)
+
+    private var shellInputs: ExecutionSurfaceShellInputs {
+        ExecutionSurfaceShellInputs(
+            navRail: ExecutionSurfaceNavRail(),
+            title: ExecutionSurfaceTitle(
+                eyebrow: "AI",
+                title: "AI",
+                summary: "The AI layer is a quiet runtime: route first, explain second, and only surface depth when the task asks for it."
+            ),
+            status: ExecutionSurfaceStatus(
+                statusMessage: "Local runtime — cloud inference off"
+            ),
+            state: .ready,
+            language: .english
+        )
+    }
+
+    // MARK: - Region (3) primary card
+
+    /// The orchestrator (the primary, active model) rendered as a
+    /// first-class `ActionCardShell` in the disabled state (framework §4
+    /// requires region 3 to be an Action Card). Disabled reflects that
+    /// the local runtime is already grounded and active — there is no
+    /// pending action to take here, so the CTA must not be interactive.
+    private var primaryCard: some View {
+        ActionCardShell(
+            object: Self.runtimeObject(models[0]),
+            state: .disabled
+        )
+    }
+
+    private static func runtimeObject(_ model: AIModelCard) -> MatchingObject {
+        MatchingObject(
+            id: "ai-runtime-\(model.id)",
+            kind: .toolEntry,
+            title: model.title,
+            subtitleTokens: [model.footprint, model.status],
+            reasonText: model.summary,
+            primaryCTA: "Runtime active",
+            secondaryCTA: nil
+        )
+    }
+
+    // MARK: - Supplementary (the vertical's "rest of the page", framework §1)
+
+    private var supplementaryContent: some View {
+        VStack(spacing: AppTheme.Metrics.sectionSpacing) {
+            runtimeCard
+
+            VStack(spacing: 12) {
+                ForEach(Array(models.dropFirst())) { model in
+                    modelCard(model)
+                }
+            }
+
+            surfaceRoutingCard
+        }
+    }
+
+    private var runtimeCard: some View {
+        KAirSurface {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Runtime")
+                    .font(.headline)
+                    .foregroundStyle(AppTheme.Palette.textPrimary)
+
+                HStack(spacing: 12) {
+                    runtimeMetric(title: "Primary", value: "kAir Orchestrator")
+                    runtimeMetric(title: "Cloud", value: "Off")
+                    runtimeMetric(title: "Fallback", value: "Planner")
+                }
+            }
+        }
+    }
+
+    private func modelCard(_ model: AIModelCard) -> some View {
+        KAirSurface(style: .sunken) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(model.title)
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(AppTheme.Palette.textPrimary)
+
+                        Text(model.summary)
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.Palette.textSecondary)
+                    }
+
+                    Spacer()
+
+                    KAirStatusPill(
+                        title: model.status,
+                        systemImage: "cpu",
+                        tint: AppTheme.Palette.sky
+                    )
+                }
+
+                Text(model.footprint)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(AppTheme.Palette.textMuted)
+            }
+        }
+    }
+
+    private var surfaceRoutingCard: some View {
+        KAirSurface(style: .sunken) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Surface Routing")
+                    .font(.headline)
+                    .foregroundStyle(AppTheme.Palette.textPrimary)
+
+                VStack(spacing: 10) {
+                    ForEach(tools) { tool in
+                        HStack(alignment: .top) {
+                            Circle()
+                                .fill(tool.tint)
+                                .frame(width: 10, height: 10)
+                                .padding(.top, 5)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(tool.title)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(AppTheme.Palette.textPrimary)
+
+                                Text(tool.summary)
+                                    .font(.footnote)
+                                    .foregroundStyle(AppTheme.Palette.textSecondary)
+                            }
+
+                            Spacer()
+                        }
+                    }
+                }
             }
         }
     }
@@ -211,4 +265,12 @@ private struct AIRouteCard: Identifiable {
     let title: String
     let summary: String
     let tint: Color
+}
+
+// MARK: - Previews
+
+#Preview("AI") {
+    NavigationStack {
+        AIHomeView(bootstrap: .preview)
+    }
 }

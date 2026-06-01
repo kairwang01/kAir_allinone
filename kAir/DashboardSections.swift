@@ -40,7 +40,18 @@ struct OverviewScreen: View {
 
     let dashboard: HealthDashboard
     let onRefresh: () -> Void
+    let showsNavigationChrome: Bool
     @State private var selectedSignalID = "heart_rate"
+
+    init(
+        dashboard: HealthDashboard,
+        onRefresh: @escaping () -> Void,
+        showsNavigationChrome: Bool = true
+    ) {
+        self.dashboard = dashboard
+        self.onRefresh = onRefresh
+        self.showsNavigationChrome = showsNavigationChrome
+    }
 
     private var selectedSignal: SignalSeries? {
         dashboard.signals.first(where: { $0.id == selectedSignalID }) ?? dashboard.signals.first
@@ -128,16 +139,12 @@ struct OverviewScreen: View {
             .padding(.vertical, 18)
         }
         .background(HealthScreenBackground())
-        .navigationTitle("Health")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: onRefresh) {
-                    Image(systemName: "arrow.clockwise")
-                }
-                .accessibilityLabel("Refresh health analysis")
-            }
-        }
-        .navigationBarTitleDisplayMode(.large)
+        .healthDashboardNavigationChrome(
+            title: "Health",
+            displayMode: .large,
+            shows: showsNavigationChrome,
+            onRefresh: onRefresh
+        )
         .onAppear {
             if dashboard.signals.contains(where: { $0.id == selectedSignalID }) == false {
                 selectedSignalID = dashboard.signals.first?.id ?? "heart_rate"
@@ -185,7 +192,18 @@ struct SignalsScreen: View {
 
     let dashboard: HealthDashboard
     let onRefresh: () -> Void
+    let showsNavigationChrome: Bool
     @State private var selectedSignalID = "heart_rate"
+
+    init(
+        dashboard: HealthDashboard,
+        onRefresh: @escaping () -> Void,
+        showsNavigationChrome: Bool = true
+    ) {
+        self.dashboard = dashboard
+        self.onRefresh = onRefresh
+        self.showsNavigationChrome = showsNavigationChrome
+    }
 
     private var selectedSignal: SignalSeries? {
         dashboard.signals.first(where: { $0.id == selectedSignalID }) ?? dashboard.signals.first
@@ -281,15 +299,12 @@ struct SignalsScreen: View {
             .padding(.vertical, 18)
         }
         .background(HealthScreenBackground())
-        .navigationTitle("Signals")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: onRefresh) {
-                    Image(systemName: "arrow.clockwise")
-                }
-            }
-        }
-        .navigationBarTitleDisplayMode(.inline)
+        .healthDashboardNavigationChrome(
+            title: "Signals",
+            displayMode: .inline,
+            shows: showsNavigationChrome,
+            onRefresh: onRefresh
+        )
         .onAppear {
             if dashboard.signals.contains(where: { $0.id == selectedSignalID }) == false {
                 selectedSignalID = dashboard.signals.first?.id ?? "heart_rate"
@@ -329,6 +344,17 @@ struct DataLibraryScreen: View {
 
     let dashboard: HealthDashboard
     let onRefresh: () -> Void
+    let showsNavigationChrome: Bool
+
+    init(
+        dashboard: HealthDashboard,
+        onRefresh: @escaping () -> Void,
+        showsNavigationChrome: Bool = true
+    ) {
+        self.dashboard = dashboard
+        self.onRefresh = onRefresh
+        self.showsNavigationChrome = showsNavigationChrome
+    }
 
     var body: some View {
         ScrollView {
@@ -515,15 +541,37 @@ struct DataLibraryScreen: View {
             .padding(.vertical, 18)
         }
         .background(HealthScreenBackground())
-        .navigationTitle("Coverage")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: onRefresh) {
-                    Image(systemName: "arrow.clockwise")
+        .healthDashboardNavigationChrome(
+            title: "Coverage",
+            displayMode: .inline,
+            shows: showsNavigationChrome,
+            onRefresh: onRefresh
+        )
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func healthDashboardNavigationChrome(
+        title: String,
+        displayMode: NavigationBarItem.TitleDisplayMode,
+        shows: Bool,
+        onRefresh: @escaping () -> Void
+    ) -> some View {
+        if shows {
+            navigationTitle(title)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: onRefresh) {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                        .accessibilityLabel("Refresh health analysis")
+                    }
                 }
-            }
+                .navigationBarTitleDisplayMode(displayMode)
+        } else {
+            self
         }
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

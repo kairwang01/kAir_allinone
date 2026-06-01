@@ -53,6 +53,8 @@ enum AppTheme {
             return Palette.sky
         case .maps:
             return Palette.warning
+        case .search:
+            return Palette.sky
         case .store:
             return Palette.accent
         }

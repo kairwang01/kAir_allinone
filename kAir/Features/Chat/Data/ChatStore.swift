@@ -8,6 +8,97 @@
 import Foundation
 import Observation
 
+enum ChatSearchAvailabilityState: Equatable, Sendable {
+    case notInBuild
+    case registeredUnavailable
+    case available
+
+    init(webSearchAvailability: Bool?) {
+        switch webSearchAvailability {
+        case .some(true):
+            self = .available
+        case .some(false):
+            self = .registeredUnavailable
+        case nil:
+            self = .notInBuild
+        }
+    }
+
+    var statusLine: String {
+        switch self {
+        case .notInBuild:
+            return "Search not installed"
+        case .registeredUnavailable:
+            return "Search reserved but unavailable"
+        case .available:
+            return "Search available"
+        }
+    }
+}
+
+struct ChatSearchAvailabilityDisplay: Equatable, Sendable {
+    enum Tone: String, Equatable, Sendable {
+        case neutral
+        case warning
+        case positive
+    }
+
+    let isVisible: Bool
+    let systemImage: String
+    let tone: Tone
+    let title: String
+    let statusLine: String
+    let accessibilityLabel: String
+
+    init(
+        isVisible: Bool,
+        systemImage: String,
+        tone: Tone,
+        title: String,
+        statusLine: String,
+        accessibilityLabel: String
+    ) {
+        self.isVisible = isVisible
+        self.systemImage = systemImage
+        self.tone = tone
+        self.title = title
+        self.statusLine = statusLine
+        self.accessibilityLabel = accessibilityLabel
+    }
+
+    init(state: ChatSearchAvailabilityState) {
+        switch state {
+        case .notInBuild:
+            self.init(
+                isVisible: false,
+                systemImage: "magnifyingglass",
+                tone: .neutral,
+                title: "Search not installed",
+                statusLine: "Search not installed",
+                accessibilityLabel: "Search is not installed in this build."
+            )
+        case .registeredUnavailable:
+            self.init(
+                isVisible: true,
+                systemImage: "magnifyingglass.circle",
+                tone: .warning,
+                title: "Search unavailable",
+                statusLine: "Search reserved but unavailable",
+                accessibilityLabel: "Search is reserved but unavailable."
+            )
+        case .available:
+            self.init(
+                isVisible: true,
+                systemImage: "magnifyingglass.circle.fill",
+                tone: .positive,
+                title: "Search available",
+                statusLine: "Search available",
+                accessibilityLabel: "Search is available."
+            )
+        }
+    }
+}
+
 @MainActor
 @Observable
 final class ChatStore {
@@ -79,6 +170,7 @@ final class ChatStore {
     private(set) var capabilityAvailability: [CapabilityKind: Bool] = [:]
 
     private let recommendationProvider: RecommendationProvider
+    private let providerStatusProvider: ProviderStatusProviding?
     private let feedbackRuntime: FeedbackRuntime
     private let completedRecommendationHandoff: CompletedRecommendationHandoff
     private let telemetryEmitter: TelemetryEmitter
@@ -124,17 +216,24 @@ final class ChatStore {
     private var resolvedMapsSession: MapsRouteSession?
 
     init(
-        recommendationProvider: RecommendationProvider = StubRecommendationProvider(),
-        feedbackRuntime: FeedbackRuntime = NoOpFeedbackRuntime(),
-        completedRecommendationHandoff: CompletedRecommendationHandoff = NoOpCompletedRecommendationHandoff(),
-        telemetryEmitter: TelemetryEmitter = NoOpTelemetryEmitter(),
-        identifierFactory: TelemetryIdentifierFactory = UUIDTelemetryIdentifierFactory(),
+        recommendationProvider: RecommendationProvider? = nil,
+        providerStatusProvider: ProviderStatusProviding? = nil,
+        feedbackRuntime: FeedbackRuntime? = nil,
+        completedRecommendationHandoff: CompletedRecommendationHandoff? = nil,
+        telemetryEmitter: TelemetryEmitter? = nil,
+        identifierFactory: TelemetryIdentifierFactory? = nil,
         capabilityRegistry: CapabilityRegistry? = nil
     ) {
+        let recommendationProvider = recommendationProvider ?? StubRecommendationProvider()
+        let identifierFactory = identifierFactory ?? UUIDTelemetryIdentifierFactory()
+
         self.recommendationProvider = recommendationProvider
-        self.feedbackRuntime = feedbackRuntime
+        self.providerStatusProvider = providerStatusProvider
+            ?? (recommendationProvider as? ProviderStatusProviding)
+        self.feedbackRuntime = feedbackRuntime ?? NoOpFeedbackRuntime()
         self.completedRecommendationHandoff = completedRecommendationHandoff
-        self.telemetryEmitter = telemetryEmitter
+            ?? NoOpCompletedRecommendationHandoff()
+        self.telemetryEmitter = telemetryEmitter ?? NoOpTelemetryEmitter()
         self.identifierFactory = identifierFactory
         self.capabilityRegistry = capabilityRegistry
             ?? DefaultCapabilityRegistry.makeWithShippedStubs()
@@ -173,6 +272,16 @@ final class ChatStore {
         }
     }
 
+    var searchAvailabilityState: ChatSearchAvailabilityState {
+        ChatSearchAvailabilityState(
+            webSearchAvailability: capabilityAvailability[.webSearch]
+        )
+    }
+
+    var searchAvailabilityDisplay: ChatSearchAvailabilityDisplay {
+        ChatSearchAvailabilityDisplay(state: searchAvailabilityState)
+    }
+
     /// Re-fetches the slate from the recommendation provider.
     ///
     /// Per `Contracts/UX/feedback-runtime-v1.md` §6.2, this fires
@@ -190,6 +299,69 @@ final class ChatStore {
     /// is out of scope.
     func refreshRecommendedMatches() {
         self.recommendedMatches = recommendationProvider.recommendedMatches()
+    }
+
+    /// Optional provider-status side channel. The rail still consumes only
+    /// `recommendedMatches`; providers that do not opt into
+    /// `ProviderStatusProviding` return nil here so default fixtures do not
+    /// invent fake provider/cost/freshness badges.
+    func providerStatusPresentation(
+        for recommendationID: String
+    ) -> ProviderStatusPresentation? {
+        guard recommendedMatches.contains(where: { $0.id == recommendationID }) else {
+            return nil
+        }
+        return providerStatusProvider?.providerStatusPresentation(for: recommendationID)
+    }
+
+    // MARK: - Recommendation accept / dismiss
+
+    /// V1 step 2 (chat-home §3.5): the explicit accept bridge for a
+    /// Recommended Next card. Distinct from `dismissRecommendation` — it
+    /// emits **no** `FeedbackEvent`, no toast, no banner.
+    ///
+    /// - Existence check: an object not in `recommendedMatches` is a no-op
+    ///   (`.unknown`); nothing is removed or written.
+    /// - Removes **only** the accepted target; siblings are preserved.
+    /// - Writes the target's `activationPrompt` into the thread as a user
+    ///   message. This is NOT the composer submit path, so it does not stage
+    ///   the §9 `DirectSubmitGate` and does not run `route(for:)`.
+    /// - Clears any pending raw Maps route context before returning a route,
+    ///   so recommendation accept cannot consume a stale composer Maps
+    ///   session.
+    /// - Returns `.route(section)` when `preferredSection` maps to a
+    ///   closed-catalog surface, else `.threadOnly` (the thread write is the
+    ///   only effect — the caller must not guess a surface to open).
+    func prepareRecommendationForAccept(
+        _ object: MatchingObject
+    ) -> RecommendationAcceptResult {
+        guard let index = recommendedMatches.firstIndex(where: { $0.id == object.id }) else {
+            return .unknown
+        }
+        let target = recommendedMatches.remove(at: index)
+        clearPendingMapsRouteContext()
+
+        if target.activationPrompt.isEmpty == false {
+            session.messages.append(.user(text: target.activationPrompt))
+        }
+
+        if let surface = target.preferredSection,
+           let section = AppSection(rawValue: surface.rawValue) {
+            return .route(section)
+        }
+        return .threadOnly
+    }
+
+    /// Outcome of `prepareRecommendationForAccept(_:)`.
+    enum RecommendationAcceptResult: Equatable {
+        /// The object was not in `recommendedMatches`; nothing changed.
+        case unknown
+        /// Accepted (target removed + activation prompt written); the caller
+        /// should open this surface.
+        case route(AppSection)
+        /// Accepted (target removed + activation prompt written) but the route
+        /// is not resolvable — the thread write is the only effect.
+        case threadOnly
     }
 
     /// Removes the given recommendation from the rail (same-frame per
@@ -270,6 +442,11 @@ final class ChatStore {
             // Four negatives: refresh once after removal per §6.2.
             refreshRecommendedMatches()
         }
+    }
+
+    private func clearPendingMapsRouteContext() {
+        pendingMapsIntent = nil
+        resolvedMapsSession = nil
     }
 
     func bootstrap(with dashboard: HealthDashboard) {

@@ -67,8 +67,8 @@ struct ConversationMessage: Identifiable, Hashable {
     let tags: [String]
     let toolResults: [ConversationToolResult]
     /// Optional structured continuation payload. When non-nil, the
-    /// transcript render path (ConversationInboxRow) projects this
-    /// through `ContinuationBlockRenderer` per
+    /// transcript render path projects this through
+    /// `ContinuationBlockRenderer` per
     /// Contracts/UX/continuation-runtime-v1.md §8.1 option (b).
     let continuationEvent: ChatContinuationEvent?
 

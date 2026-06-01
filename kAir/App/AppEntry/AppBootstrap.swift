@@ -17,6 +17,17 @@ final class AppBootstrap {
     var activeMapsSession: MapsRouteSession?
     let healthStore: HealthDashboardStore
 
+    /// Recommendation source composed at the app's composition root.
+    ///
+    /// `ChatStore` still owns slate state and feedback mutations, but it no
+    /// longer has to decide which provider seeded the first Recommended Next
+    /// slate. This lets the app pass a `ProjectedRecommendationProvider` later
+    /// so rendered card ids line up with provider-status sources.
+    ///
+    /// Defaults to `StubRecommendationProvider()` so first-run, previews, and
+    /// existing tests keep the current curated triple-slate behavior.
+    let recommendationProvider: RecommendationProvider
+
     /// Feedback runtime composed at the app's composition root.
     ///
     /// `ChatStore` does NOT decide its own runtime instance; consumers
@@ -69,7 +80,50 @@ final class AppBootstrap {
     /// adapter commitment per the contract. Routing / ranking /
     /// AI-fallback decisions are out of Main C scope and live in the
     /// conversation-intent layer (separate work line).
+    ///
+    /// Reserved Search opt-in is explicit: callers that need `.webSearch`
+    /// during experiments pass either a built `SearchCapabilityAdapter` or a
+    /// Search configuration to `init`. A directly injected registry still wins
+    /// and is stored as-is.
     let capabilityRegistry: CapabilityRegistry
+
+    /// Provider access defaults composed at the app root.
+    ///
+    /// This is the single app-level value that carries membership tier, default
+    /// region, preferred provider, metered entitlements, experimental provider
+    /// enablement, unavailable providers, and cache fallback before a provider,
+    /// search, or MCP request is built. It is intentionally value-only: no
+    /// provider SDK, API key, server transport, crawler runtime, or purchase
+    /// runtime is stored here.
+    ///
+    /// Defaults to `.freeLocalDefault` so first-run, previews, and tests remain
+    /// iOS-local unless a composition root explicitly injects a paid/provider
+    /// profile.
+    let providerAccessProfile: ProviderAccessProfile
+
+    /// Provider quota snapshot composed at the app root.
+    ///
+    /// This is the value-only package/cost boundary that future provider
+    /// envelope factories will consume. It is deliberately stored here without
+    /// being executed: `AppBootstrap` does not call provider factories, Search,
+    /// MCP, runtime pipeline, or server transport. By default it is derived from
+    /// `providerAccessProfile` through the A45 bridge, which keeps first-run and
+    /// preview builds local-only.
+    let providerQuotaSnapshot: ServerProviderQuotaSnapshot
+
+    /// Optional provider-status source composed at the app root.
+    ///
+    /// `ChatStore` can derive status from its recommendation provider when no
+    /// explicit source exists, but future receipt/status composition belongs
+    /// here. This lets the app install `ProviderStatusSourceMultiplexer`
+    /// without making `ChatStore` infer source priority.
+    /// A directly injected `providerStatusProvider` is stored as-is; otherwise
+    /// a non-empty `providerStatusSources` list passed to `init` is composed in
+    /// caller order with first-source-wins semantics.
+    ///
+    /// Defaults to nil so first-run, tests, and previews keep the existing
+    /// no-fake-provider-status behavior.
+    let providerStatusProvider: ProviderStatusProviding?
 
     /// Continuation runtime composed at the app's composition root.
     ///
@@ -154,21 +208,70 @@ final class AppBootstrap {
 
     init(
         healthStore: HealthDashboardStore? = nil,
-        feedbackRuntime: FeedbackRuntime = NoOpFeedbackRuntime(),
-        completedRecommendationHandoff: CompletedRecommendationHandoff = NoOpCompletedRecommendationHandoff(),
-        telemetryEmitter: TelemetryEmitter = NoOpTelemetryEmitter(),
+        recommendationProvider: RecommendationProvider? = nil,
+        feedbackRuntime: FeedbackRuntime? = nil,
+        completedRecommendationHandoff: CompletedRecommendationHandoff? = nil,
+        telemetryEmitter: TelemetryEmitter? = nil,
         capabilityRegistry: CapabilityRegistry? = nil,
-        continuationRuntime: ContinuationRuntime = NoOpContinuationRuntime(),
-        identifierFactory: TelemetryIdentifierFactory = UUIDTelemetryIdentifierFactory()
+        reservedSearchAdapter: SearchCapabilityAdapter? = nil,
+        reservedSearchConfiguration: SearchCapabilityAdapter.Configuration? = nil,
+        providerAccessProfile: ProviderAccessProfile? = nil,
+        providerQuotaSnapshot: ServerProviderQuotaSnapshot? = nil,
+        providerStatusProvider: ProviderStatusProviding? = nil,
+        providerStatusSources: [any ProviderStatusProviding] = [],
+        continuationRuntime: ContinuationRuntime? = nil,
+        identifierFactory: TelemetryIdentifierFactory? = nil
     ) {
         self.healthStore = healthStore ?? HealthDashboardStore()
-        self.feedbackRuntime = feedbackRuntime
+        self.recommendationProvider = recommendationProvider ?? StubRecommendationProvider()
+        self.feedbackRuntime = feedbackRuntime ?? NoOpFeedbackRuntime()
         self.completedRecommendationHandoff = completedRecommendationHandoff
-        self.telemetryEmitter = telemetryEmitter
-        self.capabilityRegistry = capabilityRegistry
-            ?? DefaultCapabilityRegistry.makeWithShippedStubs()
-        self.continuationRuntime = continuationRuntime
-        self.identifierFactory = identifierFactory
+            ?? NoOpCompletedRecommendationHandoff()
+        self.telemetryEmitter = telemetryEmitter ?? NoOpTelemetryEmitter()
+        let resolvedProviderAccessProfile = providerAccessProfile ?? .freeLocalDefault
+        let resolvedProviderQuotaSnapshot = providerQuotaSnapshot ?? ServerProviderQuotaSnapshot(
+            providerAccessProfile: resolvedProviderAccessProfile
+        )
+        self.providerAccessProfile = resolvedProviderAccessProfile
+        self.providerQuotaSnapshot = resolvedProviderQuotaSnapshot
+        self.capabilityRegistry = Self.makeCapabilityRegistry(
+            explicitRegistry: capabilityRegistry,
+            reservedSearchAdapter: reservedSearchAdapter,
+            reservedSearchConfiguration: reservedSearchConfiguration,
+            providerQuotaSnapshot: resolvedProviderQuotaSnapshot
+        )
+        if let providerStatusProvider {
+            self.providerStatusProvider = providerStatusProvider
+        } else if providerStatusSources.isEmpty {
+            self.providerStatusProvider = nil
+        } else {
+            self.providerStatusProvider = ProviderStatusSourceMultiplexer(
+                sources: providerStatusSources
+            )
+        }
+        self.continuationRuntime = continuationRuntime ?? NoOpContinuationRuntime()
+        self.identifierFactory = identifierFactory ?? UUIDTelemetryIdentifierFactory()
+    }
+
+    private static func makeCapabilityRegistry(
+        explicitRegistry: CapabilityRegistry?,
+        reservedSearchAdapter: SearchCapabilityAdapter?,
+        reservedSearchConfiguration: SearchCapabilityAdapter.Configuration?,
+        providerQuotaSnapshot: ServerProviderQuotaSnapshot
+    ) -> CapabilityRegistry {
+        if let explicitRegistry {
+            return explicitRegistry
+        }
+
+        let resolvedSearchAdapter = reservedSearchAdapter ?? reservedSearchConfiguration.map {
+            var configuration = $0
+            configuration.providerQuotaSnapshot = providerQuotaSnapshot
+            return SearchCapabilityAdapter(configuration: configuration)
+        }
+
+        return DefaultCapabilityRegistry.makeWithShippedStubs(
+            reservedSearchAdapter: resolvedSearchAdapter
+        )
     }
 
     func showProfile() {

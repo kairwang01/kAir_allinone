@@ -2,7 +2,26 @@
 //  MapsHomeView.swift
 //  kAir
 //
-//  Nearby places and route shell for kAir.
+//  Maps Execution Surface — a pure caller of `ExecutionSurfaceShell`.
+//
+//  A1 step 3 / I1 (Maps): `MapsHomeView` no longer renders a private
+//  hero / back path / status strip. It maps its `MapsRouteSession` onto
+//  the shared `ExecutionSurfaceShell` (Docs/design/execution-surface-
+//  framework-v1.md §1–§11), supplying:
+//    - region (2) title       ← session hero copy
+//    - region (5) trust pills  ← stub/estimate/partner-pending state
+//    - region (4) status strip ← "placeholder result" note
+//    - region (3) primary card ← recommended route as an ActionCardShell
+//    - supplementary           ← map canvas / metrics / route list / planner
+//    - state                   ← session present → .ready, else → .empty
+//    - onReturnToChat          ← AppBootstrap.recordSurfaceReturn(.completion)
+//
+//  The shell owns the authoritative `Back to chat` rail across every
+//  state — the active-session view previously had no in-surface return
+//  control (only RootShellView's platform toolbar). That platform back
+//  is left in place for now; removing the shared RootShellView toolbar
+//  is deferred until AI / Store / Health also migrate (framework §2
+//  permits the rail to coexist with platform chrome).
 //
 
 import SwiftUI
@@ -14,34 +33,21 @@ struct MapsHomeView: View {
         bootstrap.activeMapsSession
     }
 
+    private var language: ExecutionSurfaceLanguage {
+        activeSession?.language == .chinese ? .chinese : .english
+    }
+
     var body: some View {
-        ZStack {
-            AppBackground()
-
-            ScrollView {
-                VStack(spacing: AppTheme.Metrics.sectionSpacing) {
-                    if let activeSession {
-                        RouteHero(session: activeSession)
-                        RouteMapCanvas(session: activeSession)
-                        RouteMetrics(session: activeSession)
-
-                        VStack(spacing: 12) {
-                            ForEach(activeSession.routeOptions) { option in
-                                RouteOptionCard(option: option, mode: activeSession.mode)
-                            }
-                        }
-
-                        PlannerWindowCard(session: activeSession)
-                    } else {
-                        MapsEmptyState(bootstrap: bootstrap)
-                    }
-                }
-                .padding(.horizontal, AppTheme.Metrics.screenPadding)
-                .padding(.vertical, 16)
-            }
-            .scrollIndicators(.hidden)
-        }
-        .navigationTitle(activeSession?.language == .chinese ? "路线" : "Maps")
+        ExecutionSurfaceShell(
+            inputs: shellInputs,
+            onReturnToChat: {
+                // Explicit "Back to chat" is a `.completion` per
+                // `post-return-and-continuation-ux-v1.md` §1.2.
+                bootstrap.recordSurfaceReturn(.completion)
+            },
+            primary: { primaryCard },
+            supplementary: { supplementaryContent }
+        )
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -59,33 +65,113 @@ struct MapsHomeView: View {
             }
         }
     }
-}
 
-private struct RouteHero: View {
-    let session: MapsRouteSession
+    // MARK: - Shell inputs (regions 1, 2, 4, 5, 6)
 
-    var body: some View {
-        KAirPageHeader(
-            title: session.heroTitle,
-            summary: session.heroSummary,
-            badges: [
-                KAirHeaderBadge(
-                    title: session.language == .chinese ? "本地规划" : "Local planning",
-                    systemImage: "sparkles.rectangle.stack",
-                    tint: AppTheme.Palette.warning
+    private var shellInputs: ExecutionSurfaceShellInputs {
+        if let session = activeSession {
+            return ExecutionSurfaceShellInputs(
+                navRail: ExecutionSurfaceNavRail(trustPills: Self.stubTrustPills),
+                title: ExecutionSurfaceTitle(
+                    eyebrow: language == .chinese ? "路线" : "Route",
+                    title: session.heroTitle,
+                    summary: session.heroSummary
                 ),
-                KAirHeaderBadge(
-                    title: session.language == .chinese ? session.mode.chineseTitle : session.mode.title,
-                    systemImage: session.mode.systemImage,
-                    tint: AppTheme.Palette.sky
+                status: ExecutionSurfaceStatus(
+                    statusMessage: language == .chinese
+                        ? "本地占位结果 · 未接真实地图引擎"
+                        : "Local placeholder result — real map engine not wired"
                 ),
-                KAirHeaderBadge(
-                    title: session.language == .chinese ? "私有" : "Private",
-                    systemImage: "lock",
-                    tint: AppTheme.Palette.success
-                )
-            ]
+                state: .ready,
+                language: language
+            )
+        } else {
+            return ExecutionSurfaceShellInputs(
+                title: ExecutionSurfaceTitle(
+                    eyebrow: language == .chinese ? "地图" : "Maps",
+                    title: "Maps",
+                    summary: language == .chinese
+                        ? "在聊天里说出目的地，并确认步行或驾车，路线结果会落在这里。"
+                        : "Name a destination in chat and confirm walking or driving — the route result lands here."
+                ),
+                state: .empty,
+                language: language
+            )
+        }
+    }
+
+    /// Maps v0.1 is entirely stub data, so the partner/source row
+    /// truthfully advertises estimated/place-stub/partner-pending state
+    /// (maps-ui-spec-v1 §1.5 / §2.4). All cases are drawn from the shared
+    /// `ActionCardTrustPillKind` vocabulary — no Maps-private pill.
+    private static let stubTrustPills: [ActionCardTrustPillKind] = [
+        .placeResolutionStub,
+        .etaConfidenceEstimate,
+        .partnerFallback
+    ]
+
+    // MARK: - Region (3) primary card
+
+    /// The recommended route as a first-class `ActionCardShell`
+    /// (framework §4: region 3 must be an Action Card). It renders as
+    /// disabled because v0.1 has already selected and displayed the
+    /// placeholder route; real turn-by-turn navigation is future work,
+    /// so the CTA must not imply an executable action. In the `.empty`
+    /// state this collapses and the shell's locked empty region carries
+    /// the message.
+    @ViewBuilder
+    private var primaryCard: some View {
+        if let session = activeSession, let option = recommendedOption(in: session) {
+            ActionCardShell(
+                object: Self.routeObject(session: session, option: option),
+                state: .disabled
+            )
+        } else {
+            EmptyView()
+        }
+    }
+
+    private func recommendedOption(in session: MapsRouteSession) -> MapsRouteOption? {
+        session.routeOptions.first(where: { $0.recommended }) ?? session.routeOptions.first
+    }
+
+    private static func routeObject(session: MapsRouteSession, option: MapsRouteOption) -> MatchingObject {
+        let isZH = session.language == .chinese
+        return MatchingObject(
+            id: "maps-route-\(option.id)",
+            kind: .route,
+            title: option.title,
+            subtitleTokens: [
+                option.eta,
+                option.distance,
+                isZH ? session.mode.chineseTitle : session.mode.title
+            ],
+            reasonText: option.emphasis,
+            primaryCTA: isZH ? "路线已显示" : "Route shown",
+            secondaryCTA: nil
         )
+    }
+
+    // MARK: - Supplementary (the vertical's "rest of the page", framework §1)
+
+    @ViewBuilder
+    private var supplementaryContent: some View {
+        if let session = activeSession {
+            VStack(spacing: AppTheme.Metrics.sectionSpacing) {
+                RouteMapCanvas(session: session)
+                RouteMetrics(session: session)
+
+                VStack(spacing: 12) {
+                    ForEach(session.routeOptions) { option in
+                        RouteOptionCard(option: option, mode: session.mode, language: session.language)
+                    }
+                }
+
+                PlannerWindowCard(session: session)
+            }
+        } else {
+            EmptyView()
+        }
     }
 }
 
@@ -95,7 +181,7 @@ private struct RouteMapCanvas: View {
     var body: some View {
         KAirSurface(style: .sunken) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(session.language == .chinese ? "Map canvas" : "Map canvas")
+                Text(session.language == .chinese ? "地图画布" : "Map canvas")
                     .font(.headline)
                     .foregroundStyle(AppTheme.Palette.textPrimary)
 
@@ -155,7 +241,7 @@ private struct RouteMetrics: View {
     var body: some View {
         KAirSurface {
             VStack(alignment: .leading, spacing: 14) {
-                Text(session.language == .chinese ? "Route snapshot" : "Route snapshot")
+                Text(session.language == .chinese ? "路线概览" : "Route snapshot")
                     .font(.headline)
                     .foregroundStyle(AppTheme.Palette.textPrimary)
 
@@ -200,6 +286,7 @@ private struct RouteMetrics: View {
 private struct RouteOptionCard: View {
     let option: MapsRouteOption
     let mode: MapsTravelMode
+    let language: MapsConversationLanguage
 
     private var tint: Color {
         option.recommended ? AppTheme.Palette.success : AppTheme.Palette.warning
@@ -229,9 +316,9 @@ private struct RouteOptionCard: View {
                 }
 
                 HStack(spacing: 12) {
-                    routeMetric("ETA", option.eta)
-                    routeMetric("Distance", option.distance)
-                    routeMetric("Why", option.emphasis)
+                    routeMetric(language == .chinese ? "预计" : "ETA", option.eta)
+                    routeMetric(language == .chinese ? "距离" : "Distance", option.distance)
+                    routeMetric(language == .chinese ? "原因" : "Why", option.emphasis)
                 }
             }
         }
@@ -289,50 +376,6 @@ private struct PlannerWindowCard: View {
     }
 }
 
-private struct MapsEmptyState: View {
-    let bootstrap: AppBootstrap
-
-    var body: some View {
-        VStack(spacing: AppTheme.Metrics.sectionSpacing) {
-            KAirSurface(style: .hero) {
-                KAirPageHeader(
-                    title: "Maps",
-                    summary: "Say “我想去超市” in chat, then confirm whether you want to walk or drive. That conversation will stage a route result here.",
-                    badges: [
-                        KAirHeaderBadge(title: "Chat-first", systemImage: "bubble.left", tint: AppTheme.Palette.warning),
-                        KAirHeaderBadge(title: "LLM window", systemImage: "cpu", tint: AppTheme.Palette.sky)
-                    ]
-                )
-            }
-
-            KAirSurface(style: .sunken) {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("v0.1 flow")
-                        .font(.headline)
-                        .foregroundStyle(AppTheme.Palette.textPrimary)
-
-                    Text("1. User types a destination in chat.\n2. kAir asks whether to drive or walk.\n3. The app stages two placeholder routes.\n4. Maps becomes the focused surface for the result.")
-                        .font(.subheadline)
-                        .foregroundStyle(AppTheme.Palette.textSecondary)
-
-                    Button {
-                        // Main D: explicit "Back to chat" is a
-                        // `.completion` per
-                        // `post-return-and-continuation-ux-v1.md` §1.2.
-                        bootstrap.recordSurfaceReturn(.completion)
-                    } label: {
-                        KAirActionCapsule(
-                            title: "Back to chat",
-                            systemImage: "bubble.left.and.bubble.right"
-                        )
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-    }
-}
-
 private struct RouteLineShape: Shape {
     let curveDepth: CGFloat
 
@@ -350,5 +393,31 @@ private struct RouteLineShape: Shape {
             control2: CGPoint(x: rect.maxX - 74, y: rect.minY + 88)
         )
         return path
+    }
+}
+
+// MARK: - Previews
+
+#Preview("Maps · ready") {
+    MapsPreviewHost(session: .mock(destination: "Blue Bottle", mode: .driving, language: .english))
+}
+
+#Preview("Maps · empty") {
+    MapsPreviewHost(session: nil)
+}
+
+private struct MapsPreviewHost: View {
+    let session: MapsRouteSession?
+    @State private var bootstrap = AppBootstrap.preview
+
+    var body: some View {
+        NavigationStack {
+            MapsHomeView(bootstrap: bootstrap)
+        }
+        .onAppear {
+            if let session {
+                bootstrap.openMaps(with: session)
+            }
+        }
     }
 }

@@ -74,4 +74,58 @@ enum DefaultCapabilityRegistry {
         registry.register(StubLocalStoreLookupAdapter())
         return registry
     }
+
+    /// Build the shipped registry and optionally install an explicitly
+    /// constructed reserved Search adapter.
+    ///
+    /// This keeps the default registry local-only while giving the composition
+    /// root a single opt-in seam for future `.webSearch` experiments.
+    @MainActor
+    static func makeWithShippedStubs(
+        reservedSearchAdapter: SearchCapabilityAdapter?
+    ) -> CapabilityRegistry {
+        let registry = makeWithShippedStubs()
+        if let reservedSearchAdapter {
+            registry.register(reservedSearchAdapter)
+        }
+        return registry
+    }
+
+    /// Build the reserved Search adapter configuration without registering
+    /// `.webSearch` in the default shipped registry.
+    ///
+    /// This is a composition seam only. Search remains disabled unless the
+    /// caller explicitly passes `isEnabled: true`, and every source/runtime-adjacent
+    /// signal stays explicit at the call site: privacy, source mode, freshness,
+    /// robots state, result drafts, cached results, registry, and timestamp.
+    @MainActor
+    static func makeReservedSearchConfiguration(
+        isEnabled: Bool = false,
+        providerAccessProfile: ProviderAccessProfile? = nil,
+        providerQuotaSnapshot: ServerProviderQuotaSnapshot? = nil,
+        category: SearchIntent.Category = .lifeService,
+        sourceMode: SearchIntent.SourceMode = .searchAPI,
+        privacyClass: ProviderPrivacyClass = .general,
+        freshness: ProviderFreshness = .cachedOK,
+        robotsState: SearchRobotsState = .notApplicable,
+        resultDrafts: [String: SearchResultDraft] = [:],
+        cachedResults: [String: SearchResultEnvelope] = [:],
+        registry: [SearchProviderDescriptor]? = nil,
+        now: Date = Date()
+    ) -> SearchCapabilityAdapter.Configuration {
+        SearchCapabilityAdapter.Configuration(
+            isEnabled: isEnabled,
+            category: category,
+            sourceMode: sourceMode,
+            privacyClass: privacyClass,
+            providerAccessProfile: providerAccessProfile ?? .freeLocalDefault,
+            providerQuotaSnapshot: providerQuotaSnapshot,
+            freshness: freshness,
+            robotsState: robotsState,
+            resultDrafts: resultDrafts,
+            cachedResults: cachedResults,
+            registry: registry ?? SearchProviderDescriptor.defaultRegistry,
+            now: now
+        )
+    }
 }

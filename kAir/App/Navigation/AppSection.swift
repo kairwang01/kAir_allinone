@@ -7,11 +7,12 @@
 
 import Foundation
 
-enum AppSection: String, CaseIterable, Identifiable {
+enum AppSection: String, CaseIterable, Identifiable, Sendable {
     case chat
     case health
     case ai
     case maps
+    case search
     case store
 
     var id: String { rawValue }
@@ -26,6 +27,8 @@ enum AppSection: String, CaseIterable, Identifiable {
             return "AI"
         case .maps:
             return "Maps"
+        case .search:
+            return "Search"
         case .store:
             return "Store"
         }
@@ -41,6 +44,8 @@ enum AppSection: String, CaseIterable, Identifiable {
             return "sparkles.rectangle.stack"
         case .maps:
             return "map"
+        case .search:
+            return "magnifyingglass"
         case .store:
             return "bag"
         }

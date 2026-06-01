@@ -24,7 +24,9 @@ enum RecommendationFixtures {
         subtitleTokens: ["1.4 mi", "Café"],
         reasonText: "Matches your morning pattern",
         primaryCTA: "Open in Maps",
-        secondaryCTA: "Save for later"
+        secondaryCTA: "Save for later",
+        activationPrompt: "Take me to Pier 7",
+        preferredSection: .maps
     )
 
     static let placeWithTrustPills = MatchingObject(
@@ -54,7 +56,8 @@ enum RecommendationFixtures {
         subtitleTokens: ["Aurora Skies", "3:42"],
         reasonText: "From your focus mix",
         primaryCTA: "Play",
-        secondaryCTA: "Queue"
+        secondaryCTA: "Queue",
+        activationPrompt: "Play Sunset Drive"
     )
 
     static let videoTutorial = MatchingObject(
@@ -74,7 +77,9 @@ enum RecommendationFixtures {
         subtitleTokens: ["AI-synthesized", "1-paragraph"],
         reasonText: "Based on the last 7 days of data",
         primaryCTA: "Read",
-        secondaryCTA: "Open Health"
+        secondaryCTA: "Open Health",
+        activationPrompt: "Explain my SpO₂ trend this week",
+        preferredSection: .health
     )
 
     static let searchResult = MatchingObject(

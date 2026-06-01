@@ -18,6 +18,18 @@
 
 import Foundation
 
+/// The closed-catalog surfaces a recommendation can activate on accept
+/// (V1 step 2 — chat-home §3.5). Domain-pure: its raw values mirror the
+/// App-layer `AppSection`, so the chat layer bridges via
+/// `AppSection(rawValue:)` without this Core model importing `AppSection`.
+enum RecommendedSurface: String, Hashable, CaseIterable {
+    case health
+    case ai
+    case maps
+    case search
+    case store
+}
+
 struct MatchingObject: Identifiable, Hashable {
     let id: String
     let kind: MatchingObjectKind
@@ -30,4 +42,35 @@ struct MatchingObject: Identifiable, Hashable {
     let primaryCTA: String
     /// Optional secondary CTA. nil means the secondary slot is omitted.
     let secondaryCTA: String?
+    /// V1 step 2 (accept bridge): the prompt written into the thread when the
+    /// user accepts this recommendation (chat-home §3.5). Empty means "no
+    /// activation prompt" (the accept writes nothing). This is **explicit
+    /// data** — the view never derives it from `title` / `primaryCTA`.
+    let activationPrompt: String
+    /// V1 step 2: the closed-catalog surface this recommendation opens on
+    /// accept, or `nil` when the route is not resolvable (the accept writes
+    /// the thread only — no guessing). Domain-pure `RecommendedSurface`.
+    let preferredSection: RecommendedSurface?
+
+    nonisolated init(
+        id: String,
+        kind: MatchingObjectKind,
+        title: String,
+        subtitleTokens: [String],
+        reasonText: String?,
+        primaryCTA: String,
+        secondaryCTA: String?,
+        activationPrompt: String = "",
+        preferredSection: RecommendedSurface? = nil
+    ) {
+        self.id = id
+        self.kind = kind
+        self.title = title
+        self.subtitleTokens = subtitleTokens
+        self.reasonText = reasonText
+        self.primaryCTA = primaryCTA
+        self.secondaryCTA = secondaryCTA
+        self.activationPrompt = activationPrompt
+        self.preferredSection = preferredSection
+    }
 }
