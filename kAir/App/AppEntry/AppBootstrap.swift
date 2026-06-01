@@ -154,6 +154,33 @@ final class AppBootstrap {
     /// deterministic conformances at either seam.
     let identifierFactory: TelemetryIdentifierFactory
 
+    /// On-device assistant text generator composed at the app root (B6).
+    ///
+    /// Apple Foundation Models primary (on-device, free, private — iOS 26+)
+    /// with a deterministic fallback so chat always produces a reply. Stored
+    /// here so the composition root owns the generation seam; `ChatHomeView`
+    /// threads it into `ChatStore`. Generation is on-device only — no prompt or
+    /// health/private context leaves the device through this seam. Defaults to
+    /// `KAirTextGeneratorFactory.makeDefault()`; tests/previews can inject a
+    /// deterministic double.
+    let textGenerator: any KAirTextGenerator
+
+    /// Optional server account session (#13). Owns token storage + refresh.
+    /// Defaults to an in-memory store so previews/tests never touch the Keychain;
+    /// the production app injects a Keychain-backed manager when
+    /// `FeatureFlag.serverAuthEnabled` is enabled. Unused while that flag is off.
+    let authSession: KAirAuthSessionManager
+
+    /// Server endpoint configuration (base URL). Consumed only when server
+    /// features are on (`FeatureFlag.serverAuthEnabled` / `serverProvidersEnabled`).
+    let serverConfiguration: KAirServerConfiguration
+
+    /// Capability surfaces this composition may open. Defaults to every surface
+    /// (so tests/previews keep full behavior); the production entry restricts it
+    /// to `FeatureFlag.v1EnabledSurfaces`. `openSurface(_:)` enforces it, so any
+    /// missed entry point still cannot present a withheld surface.
+    let enabledSurfaces: Set<AppSection>
+
     /// Transcript projection sink, installed by `ChatHomeView` so
     /// `recordSurfaceReturn(_:)` can route render-eligible events
     /// back into the chat session. Per
@@ -220,7 +247,11 @@ final class AppBootstrap {
         providerStatusProvider: ProviderStatusProviding? = nil,
         providerStatusSources: [any ProviderStatusProviding] = [],
         continuationRuntime: ContinuationRuntime? = nil,
-        identifierFactory: TelemetryIdentifierFactory? = nil
+        identifierFactory: TelemetryIdentifierFactory? = nil,
+        textGenerator: (any KAirTextGenerator)? = nil,
+        authSession: KAirAuthSessionManager? = nil,
+        serverConfiguration: KAirServerConfiguration = .default,
+        enabledSurfaces: Set<AppSection> = Set(AppSection.allCases)
     ) {
         self.healthStore = healthStore ?? HealthDashboardStore()
         self.recommendationProvider = recommendationProvider ?? StubRecommendationProvider()
@@ -251,6 +282,10 @@ final class AppBootstrap {
         }
         self.continuationRuntime = continuationRuntime ?? NoOpContinuationRuntime()
         self.identifierFactory = identifierFactory ?? UUIDTelemetryIdentifierFactory()
+        self.textGenerator = textGenerator ?? KAirTextGeneratorFactory.makeDefault()
+        self.authSession = authSession ?? KAirAuthSessionManager(store: InMemoryKAirSessionStore())
+        self.serverConfiguration = serverConfiguration
+        self.enabledSurfaces = enabledSurfaces
     }
 
     private static func makeCapabilityRegistry(
@@ -278,11 +313,22 @@ final class AppBootstrap {
         isProfilePresented = true
     }
 
+    /// Builds a credentialed `/v1` API client bound to this composition's auth
+    /// session. The single place views obtain a server client, keeping transport
+    /// assembly at the composition root. Consumed only when `serverAuthEnabled`.
+    func makeServerClient() -> KAirServerAPIClient {
+        serverConfiguration.makeClient(authSession: authSession)
+    }
+
     func openSurface(_ section: AppSection) {
         guard section != .chat else {
             closeSurface()
             return
         }
+
+        // Withheld surfaces (see `FeatureFlag.v1EnabledSurfaces`) never present,
+        // regardless of entry point (chip, gate card, App Intent, deep link).
+        guard enabledSurfaces.contains(section) else { return }
 
         // Main D.1: when transitioning from chat to a non-chat
         // surface, issue a fresh `SurfaceSessionID` per

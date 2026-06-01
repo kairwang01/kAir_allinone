@@ -19,15 +19,27 @@ struct ContentView: View {
     @State private var selectedTab: DashboardTab = .overview
     @State private var bootstrap: AppBootstrap
 
+    /// First-run gate (B4). Persisted so onboarding shows exactly once.
+    @AppStorage("kair.onboarding.completed") private var onboardingCompleted = false
+
     init(store: HealthDashboardStore) {
         self.store = store
-        _bootstrap = State(initialValue: AppBootstrap(healthStore: store))
+        _bootstrap = State(
+            initialValue: AppBootstrap(
+                healthStore: store,
+                enabledSurfaces: FeatureFlag.v1EnabledSurfaces
+            )
+        )
     }
 
     var body: some View {
         Group {
             if FeatureFlag.allInOneShellEnabled {
-                RootShellView(bootstrap: bootstrap)
+                if onboardingCompleted {
+                    RootShellView(bootstrap: bootstrap)
+                } else {
+                    OnboardingView(onComplete: { onboardingCompleted = true })
+                }
             } else {
                 switch store.phase {
                 case .intro:

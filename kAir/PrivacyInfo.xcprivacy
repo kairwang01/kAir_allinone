@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- kAir does not track users across apps/websites for advertising. -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<!--
+	  Required-reason APIs. A code scan found no file-timestamp, system-boot-time,
+	  disk-space, or active-keyboard usage. UserDefaults is declared because a
+	  SwiftUI app reads/writes app-scoped defaults (e.g. @AppStorage / framework
+	  use). Update this list if a new required-reason API or SDK is added.
+	-->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+	<!--
+	  v1 is on-device-first: HealthKit data stays on device and is never sent off
+	  device, so it is NOT "collected". When optional account login + the
+	  server-mediated gateway are activated, add the collected types (email
+	  address, user ID, and any content sent to the server) here and mirror them
+	  in App Store Connect → App Privacy.
+	-->
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+</dict>
+</plist>

@@ -109,17 +109,26 @@ final class ChatStore {
         ComposerMode(id: "shop", title: "Shop", systemImage: "bag"),
     ]
 
-    let accessories: [ComposerAccessory] = [
+    static let allAccessories: [ComposerAccessory] = [
         ComposerAccessory(id: "health", title: "Health", systemImage: "heart.text.square"),
         ComposerAccessory(id: "ai", title: "AI", systemImage: "cpu"),
         ComposerAccessory(id: "maps", title: "Maps", systemImage: "map"),
         ComposerAccessory(id: "store", title: "Store", systemImage: "bag"),
     ]
 
+    /// Composer capability chips, filtered to the surfaces enabled for this
+    /// build (`AppBootstrap.enabledSurfaces`). Each chip id maps to its
+    /// like-named `AppSection`. Defaults to all surfaces.
+    var accessories: [ComposerAccessory] {
+        Self.allAccessories.filter { accessory in
+            AppSection(rawValue: accessory.id).map(enabledSurfaces.contains) ?? true
+        }
+    }
+
     var session = ChatSession(title: "kAir", messages: [])
     var draft = ""
     var selectedModeID = "ask"
-    var contextSummary = "One thread across Health, AI, Maps, and Store"
+    var contextSummary = "One private thread, on your device"
     var suggestedPrompts: [String] = [
         "Connect Apple Health",
         "我想去超市",
@@ -156,6 +165,9 @@ final class ChatStore {
     /// does NOT consume this.
     private(set) var pendingCapabilityRefresh: Task<Void, Never>?
 
+    /// The in-flight on-device reply regeneration (B6), if any. Tests await it.
+    private(set) var pendingReplyGeneration: Task<Void, Never>?
+
     /// Latest `availabilitySnapshot()` from the capability registry.
     /// Empty until the first refresh resolves; afterwards maps each
     /// registered `CapabilityKind` to its current `isAvailable()`
@@ -176,6 +188,7 @@ final class ChatStore {
     private let telemetryEmitter: TelemetryEmitter
     private let identifierFactory: TelemetryIdentifierFactory
     private let capabilityRegistry: CapabilityRegistry
+    private let textGenerator: (any KAirTextGenerator)?
 
     /// Stable `thread_id` for this chat session. Issued exactly once
     /// at construction via `identifierFactory.makeThreadID()` per
@@ -214,6 +227,7 @@ final class ChatStore {
     private var supportsHealthData = true
     private var pendingMapsIntent: PendingMapsIntent?
     private var resolvedMapsSession: MapsRouteSession?
+    private let enabledSurfaces: Set<AppSection>
 
     init(
         recommendationProvider: RecommendationProvider? = nil,
@@ -222,7 +236,9 @@ final class ChatStore {
         completedRecommendationHandoff: CompletedRecommendationHandoff? = nil,
         telemetryEmitter: TelemetryEmitter? = nil,
         identifierFactory: TelemetryIdentifierFactory? = nil,
-        capabilityRegistry: CapabilityRegistry? = nil
+        capabilityRegistry: CapabilityRegistry? = nil,
+        textGenerator: (any KAirTextGenerator)? = nil,
+        enabledSurfaces: Set<AppSection> = Set(AppSection.allCases)
     ) {
         let recommendationProvider = recommendationProvider ?? StubRecommendationProvider()
         let identifierFactory = identifierFactory ?? UUIDTelemetryIdentifierFactory()
@@ -237,6 +253,8 @@ final class ChatStore {
         self.identifierFactory = identifierFactory
         self.capabilityRegistry = capabilityRegistry
             ?? DefaultCapabilityRegistry.makeWithShippedStubs()
+        self.textGenerator = textGenerator
+        self.enabledSurfaces = enabledSurfaces
         self.threadID = identifierFactory.makeThreadID()
         self.recommendedMatches = recommendationProvider.recommendedMatches()
 
@@ -452,7 +470,9 @@ final class ChatStore {
     func bootstrap(with dashboard: HealthDashboard) {
         supportsHealthData = true
         contextSummary = "\(dashboard.hero.band) · Apple Health \(dashboard.generatedAt.formatted(.dateTime.hour().minute())) · local-first"
-        suggestedPrompts = Self.suggestedPrompts(for: dashboard)
+        suggestedPrompts = offersCapabilitySurfaces
+            ? Self.suggestedPrompts(for: dashboard)
+            : Self.healthFirstSuggestedPrompts(supportsHealthData: true)
 
         guard lastRefreshDate != dashboard.generatedAt else { return }
 
@@ -482,8 +502,10 @@ final class ChatStore {
         self.supportsHealthData = supportsHealthData
         contextSummary = supportsHealthData
             ? "Chat-first shell · attach Apple Health when you want grounded health answers"
-            : "HealthKit unavailable · AI, Maps, and Store remain available"
-        suggestedPrompts = Self.fallbackSuggestedPrompts(supportsHealthData: supportsHealthData)
+            : "HealthKit unavailable · chat stays available on-device"
+        suggestedPrompts = offersCapabilitySurfaces
+            ? Self.fallbackSuggestedPrompts(supportsHealthData: supportsHealthData)
+            : Self.healthFirstSuggestedPrompts(supportsHealthData: supportsHealthData)
 
         guard session.messages.isEmpty else { return }
 
@@ -571,6 +593,11 @@ final class ChatStore {
     }
 
     func route(for prompt: String) -> AppSection? {
+        guard let candidate = rawRoute(for: prompt) else { return nil }
+        return enabledSurfaces.contains(candidate) ? candidate : nil
+    }
+
+    private func rawRoute(for prompt: String) -> AppSection? {
         if pendingMapsIntent != nil, travelMode(from: prompt) != nil {
             return .maps
         }
@@ -587,6 +614,7 @@ final class ChatStore {
 
         if normalized.contains("buy") ||
             normalized.contains("shop") ||
+            normalized.contains("store") ||
             normalized.contains("order") ||
             normalized.contains("supplement") ||
             normalized.contains("device") ||
@@ -595,7 +623,10 @@ final class ChatStore {
             return .store
         }
 
-        if normalized.contains("model") || normalized.contains("ai") {
+        // Word-boundary match so "explain", "kair", "again", "air" don't
+        // misroute to AI on the bare `contains("ai")` substring.
+        let words = Set(normalized.split { !$0.isLetter && !$0.isNumber }.map(String.init))
+        if words.contains("model") || words.contains("ai") || normalized.contains("a.i.") {
             return .ai
         }
 
@@ -640,34 +671,98 @@ final class ChatStore {
             )
         )
 
-        if let mapsMessage = handleMapsFlow(prompt: prompt) {
+        if enabledSurfaces.contains(.maps), let mapsMessage = handleMapsFlow(prompt: prompt) {
             session.messages.append(mapsMessage)
             return
         }
 
-        session.messages.append(
-            .assistant(
-                text: dashboard.map {
-                    Self.reply(to: prompt, modeID: selectedModeID, dashboard: $0)
-                } ?? Self.replyWithoutDashboard(
-                    to: prompt,
-                    modeID: selectedModeID,
-                    supportsHealthData: supportsHealthData
-                ),
-                tags: dashboard.map {
-                    Self.replyTags(for: prompt, modeID: selectedModeID, dashboard: $0)
-                } ?? Self.replyTagsWithoutDashboard(
-                    for: prompt,
-                    modeID: selectedModeID,
-                    supportsHealthData: supportsHealthData
-                ),
-                toolResults: dashboard.map {
-                    Self.toolResults(for: prompt, dashboard: $0)
-                } ?? Self.toolResultsWithoutDashboard(
-                    for: prompt,
-                    supportsHealthData: supportsHealthData
-                )
+        let baselineText: String
+        let replyTags: [String]
+        let replyToolResults: [ConversationToolResult]
+        if let withheld = withheldSurfaceContent(for: prompt) {
+            // v1 capability gate: a prompt aimed at a withheld surface
+            // (Maps/Store/AI) must never surface that surface's copy or a
+            // placeholder tool card. Answer on-device, with no surface card.
+            baselineText = withheld.text
+            replyTags = withheld.tags
+            replyToolResults = []
+        } else {
+            baselineText = dashboard.map {
+                Self.reply(to: prompt, modeID: selectedModeID, dashboard: $0)
+            } ?? Self.replyWithoutDashboard(
+                to: prompt,
+                modeID: selectedModeID,
+                supportsHealthData: supportsHealthData
             )
+            replyTags = dashboard.map {
+                Self.replyTags(for: prompt, modeID: selectedModeID, dashboard: $0)
+            } ?? Self.replyTagsWithoutDashboard(
+                for: prompt,
+                modeID: selectedModeID,
+                supportsHealthData: supportsHealthData
+            )
+            replyToolResults = dashboard.map {
+                Self.toolResults(for: prompt, dashboard: $0)
+            } ?? Self.toolResultsWithoutDashboard(
+                for: prompt,
+                supportsHealthData: supportsHealthData
+            )
+        }
+
+        let assistantMessage = ConversationMessage.assistant(
+            text: baselineText,
+            tags: replyTags,
+            toolResults: replyToolResults
+        )
+        session.messages.append(assistantMessage)
+
+        // On-device AI (B6): when a generator is injected, regenerate the reply
+        // text on-device (Apple Foundation Models, else deterministic fallback)
+        // and replace the baseline in place. The static baseline keeps the
+        // non-generator path — and all existing tests — unchanged.
+        if let textGenerator {
+            let request = KAirGenerationRequest(
+                systemInstructions: Self.assistantInstructions,
+                prompt: prompt
+            )
+            let messageID = assistantMessage.id
+            // Cancel any still-running prior generation before replacing the
+            // handle (each Task targets its own message id, so this only frees
+            // the superseded request — `try?` below already swallows the cancel).
+            pendingReplyGeneration?.cancel()
+            pendingReplyGeneration = Task { @MainActor [weak self] in
+                guard let generated = try? await textGenerator.generate(request),
+                      generated.isEmpty == false else { return }
+                self?.replaceMessageText(id: messageID, with: generated)
+            }
+        }
+    }
+
+    /// System prompt for on-device chat generation — grounded + non-diagnostic
+    /// (PrivacyGuard `.modelOutputsMustRemainNonDiagnostic`).
+    static let assistantInstructions = """
+    You are kAir, a concise local-first assistant. Answer helpfully in 1–3 \
+    sentences. You are not a medical professional: never diagnose, prescribe, or \
+    claim medical certainty; for health topics, summarize gently and suggest \
+    consulting a clinician for any concern. Point to the app's surfaces (health \
+    overview, maps, store) when relevant.
+    """
+
+    /// Replace an existing message's text in place (same id / tags / results).
+    private func replaceMessageText(id: String, with text: String) {
+        guard let index = session.messages.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+        let existing = session.messages[index]
+        session.messages[index] = ConversationMessage(
+            id: existing.id,
+            role: existing.role,
+            author: existing.author,
+            text: text,
+            timestamp: existing.timestamp,
+            tags: existing.tags,
+            toolResults: existing.toolResults,
+            continuationEvent: existing.continuationEvent
         )
     }
 
@@ -724,6 +819,47 @@ final class ChatStore {
         }
     }
 
+    /// Whether this build exposes the full super-app capability surfaces. In the
+    /// local-first v1 only Chat + Health are enabled (`enabledSurfaces`), so
+    /// suggested prompts, the welcome, and per-message replies stay within them.
+    private var offersCapabilitySurfaces: Bool {
+        enabledSurfaces.contains(.maps)
+            || enabledSurfaces.contains(.store)
+            || enabledSurfaces.contains(.ai)
+    }
+
+    /// When a prompt's intent points at a withheld surface, the chat answers
+    /// on-device rather than advertising a hidden Maps/Store/AI flow or emitting
+    /// a placeholder surface card. Returns the replacement reply, or `nil` when
+    /// the prompt is in-scope for the enabled surfaces and the normal keyword
+    /// replies apply (always `nil` when every surface is enabled).
+    private func withheldSurfaceContent(for prompt: String) -> (text: String, tags: [String])? {
+        guard let route = rawRoute(for: prompt),
+              route != .chat,
+              route != .health,
+              enabledSurfaces.contains(route) == false else {
+            return nil
+        }
+        return (
+            "I'm focused on your health and on-device questions in this version. Ask me about your Apple Health trends, or how kAir keeps your data private on this device.",
+            ["On-device"]
+        )
+    }
+
+    private static func healthFirstSuggestedPrompts(supportsHealthData: Bool) -> [String] {
+        supportsHealthData
+            ? [
+                "What changed most in my health today?",
+                "Explain my sleep trend",
+                "How does kAir keep my data private?"
+            ]
+            : [
+                "What can kAir help me with?",
+                "How does kAir keep my data private?",
+                "How does on-device AI work?"
+            ]
+    }
+
     private static func suggestedPrompts(for dashboard: HealthDashboard) -> [String] {
         [
             "What changed most in my health today?",
@@ -753,14 +889,14 @@ final class ChatStore {
     }
 
     private static func welcomeMessage(for dashboard: HealthDashboard) -> String {
-        "You are in kAir. I can read your local Apple Health snapshot, explain it in plain language, route you into AI, prep nearby places, and stage store suggestions without breaking the thread. \(dashboard.hero.summary)"
+        "You are in kAir. I read your local Apple Health snapshot and explain it in plain language — on your device, never exported. \(dashboard.hero.summary)"
     }
 
     private static func welcomeMessageWithoutDashboard(supportsHealthData: Bool) -> String {
         if supportsHealthData {
-            return "You are in kAir. Chat is already live, and Health can be attached when you want grounded Apple Health answers. Until then I can still route AI, Maps, and Store from this same thread."
+            return "You are in kAir. Chat is live and runs on your device. Attach Apple Health whenever you want grounded, private health answers in this same thread."
         }
-        return "You are in kAir. This device cannot attach Apple Health right now, but the chat, AI, Maps, and Store surfaces still live in one thread."
+        return "You are in kAir. Chat runs on your device. This device can't attach Apple Health right now, but everything here stays local-first."
     }
 
     private static func reply(to prompt: String, modeID: String, dashboard: HealthDashboard) -> String {
@@ -789,7 +925,7 @@ final class ChatStore {
             if let prediction = dashboard.predictions.first {
                 return "The active AI posture is local-first. I would keep health explanations grounded in your Apple Health snapshot, use a compact planner to decide which surface to open next, and reserve specialized models for \(prediction.title.lowercased()) or other deep reads when needed."
             }
-            return "The AI layer is designed as a routing surface: one general model for conversation, one health explainer, and one planner for when to open Maps, Store, or a deeper Health view."
+            return "The AI layer is designed as a routing surface: one general model for conversation, one health explainer, and one planner that decides what to surface next — all on your device."
         }
 
         if normalized.contains("buy") || normalized.contains("store") || normalized.contains("supplement") || normalized.contains("device") || modeID == "shop" {
@@ -797,10 +933,10 @@ final class ChatStore {
         }
 
         if normalized.contains("privacy") || normalized.contains("local") {
-            return "kAir reads Apple Health through HealthKit on-device. The design keeps health, AI, maps, and store inside one shell, but the health context stays local-first and visible."
+            return "kAir reads Apple Health through HealthKit on-device. Your health context stays on your device — local-first and visible — and is never exported."
         }
 
-        return "Right now your overall health status is \(dashboard.hero.band.lowercased()), and the clearest focus is \(leadingInsight(in: dashboard)?.title.lowercased() ?? "recent trends"). If you want, I can unpack the data itself, open a nearby route, explain the AI stack, or stage store recommendations."
+        return "Right now your overall health status is \(dashboard.hero.band.lowercased()), and the clearest focus is \(leadingInsight(in: dashboard)?.title.lowercased() ?? "recent trends"). Ask me to unpack any of it — I'll keep the answer grounded in your local data."
     }
 
     private static func replyWithoutDashboard(
@@ -830,8 +966,8 @@ final class ChatStore {
         }
 
         return supportsHealthData
-            ? "kAir is already chat-first. You can explore AI, Maps, and Store now, and attach Apple Health later when you want grounded health guidance."
-            : "kAir is already chat-first. AI, Maps, and Store are available now, but Health grounding is unavailable on this device."
+            ? "kAir is chat-first and runs on your device. Ask me anything, and attach Apple Health when you want grounded health guidance."
+            : "kAir is chat-first and runs on your device. Apple Health grounding isn't available here, but everything else stays local-first."
     }
 
     private static func replyTags(for prompt: String, modeID: String, dashboard: HealthDashboard) -> [String] {
@@ -1028,11 +1164,11 @@ final class ChatStore {
             metrics: [
                 .init(key: "Chat", value: "Ready"),
                 .init(key: "Health", value: supportsHealthData ? "Connect" : "Unavailable"),
-                .init(key: "Maps", value: "Ready")
+                .init(key: "Privacy", value: "On-device")
             ],
             footer: supportsHealthData
                 ? "Open the Health surface to grant Apple Health access."
-                : "Use AI, Maps, and Store without local Apple Health."
+                : "Chat runs on your device without Apple Health."
         )
     }
 

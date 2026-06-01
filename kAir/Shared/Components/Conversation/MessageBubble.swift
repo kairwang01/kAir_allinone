@@ -25,12 +25,9 @@ struct MessageBubble: View {
                         alignment: message.role.alignsTrailing ? .trailing : .leading,
                         spacing: 10
                     ) {
-                        metadataRow
-
-                        if message.tags.isEmpty == false {
-                            tagRow
-                        }
-
+                        // Minimalist bubbles (Doubao/Yuanbao style): no per-message
+                        // author, timestamp, or jargon tag chips — alignment + bubble
+                        // styling already convey who is speaking.
                         if message.text.isEmpty == false {
                             textContent
                         }
@@ -51,41 +48,6 @@ struct MessageBubble: View {
                     if message.role.alignsTrailing == false {
                         Spacer(minLength: 52)
                     }
-                }
-            }
-        }
-    }
-
-    private var metadataRow: some View {
-        HStack(spacing: 8) {
-            Text(message.author)
-                .font(.caption.weight(.semibold))
-
-            Text(
-                message.timestamp.formatted(
-                    .dateTime
-                        .hour()
-                        .minute()
-                )
-            )
-            .font(.caption)
-        }
-        .foregroundStyle(AppTheme.Palette.textMuted)
-    }
-
-    private var tagRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(message.tags, id: \.self) { tag in
-                    Text(tag)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(AppTheme.Palette.textSecondary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(
-                            Capsule(style: .continuous)
-                                .fill(AppTheme.Palette.surfaceElevated)
-                        )
                 }
             }
         }

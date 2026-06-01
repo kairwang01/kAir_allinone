@@ -47,9 +47,21 @@ struct ChatHomeView: View {
                 feedbackRuntime: bootstrap.feedbackRuntime,
                 completedRecommendationHandoff: bootstrap.completedRecommendationHandoff,
                 telemetryEmitter: bootstrap.telemetryEmitter,
-                capabilityRegistry: bootstrap.capabilityRegistry
+                capabilityRegistry: bootstrap.capabilityRegistry,
+                textGenerator: bootstrap.textGenerator,
+                enabledSurfaces: bootstrap.enabledSurfaces
             )
         )
+    }
+
+    /// Whether the capability-routing chrome (search-availability strip,
+    /// recommended-next console) is shown. Hidden in the local-first v1 where
+    /// only Chat + Health ship, keeping the surface a clean conversation.
+    private var showsCapabilityChrome: Bool {
+        bootstrap.enabledSurfaces.contains(.maps)
+            || bootstrap.enabledSurfaces.contains(.store)
+            || bootstrap.enabledSurfaces.contains(.search)
+            || bootstrap.enabledSurfaces.contains(.ai)
     }
 
     private static let bottomAnchorID = "kair-chat-bottom"
@@ -120,7 +132,10 @@ struct ChatHomeView: View {
                             DirectSubmitGate(
                                 gate: gate,
                                 onOpen: { section in acceptGate(section) },
-                                onKeepChatting: { dismissGate() }
+                                onKeepChatting: { dismissGate() },
+                                choices: [.health, .ai, .maps, .store].filter {
+                                    bootstrap.enabledSurfaces.contains($0)
+                                }
                             )
                             .padding(.top, 16)
                         }
@@ -186,6 +201,14 @@ struct ChatHomeView: View {
         }
         .sheet(isPresented: $isReferencePickerPresented) {
             ReferencePickerSheet(
+                attachments: ReferenceAttachment.allCases.filter { reference in
+                    switch reference {
+                    case .health: return true
+                    case .location: return bootstrap.enabledSurfaces.contains(.maps)
+                    case .store: return bootstrap.enabledSurfaces.contains(.store)
+                    case .photo: return false   // visual/file intake not implemented yet
+                    }
+                },
                 onSelect: handleReference
             )
             .presentationDetents([.medium])
@@ -198,28 +221,30 @@ struct ChatHomeView: View {
             // composer so neither overlays transcript content or competes
             // for safe-area space.
             VStack(spacing: 12) {
-                SearchAvailabilityIndicator(display: store.searchAvailabilityDisplay)
+                if showsCapabilityChrome {
+                    SearchAvailabilityIndicator(display: store.searchAvailabilityDisplay)
 
-                if store.recommendedMatches.isEmpty == false {
-                    RecommendedNextConsole(
-                        objects: store.recommendedMatches,
-                        isExpanded: $isRecommendedNextExpanded,
-                        providerStatus: { object in
-                            store.providerStatusPresentation(for: object.id)
-                        },
-                        onAccept: { object in acceptRecommendation(object) },
-                        onDismiss: { object in
-                            store.dismissRecommendation(object, feedback: .dismiss)
-                        },
-                        onFeedback: { object, kind in
-                            store.dismissRecommendation(object, feedback: kind)
-                        }
-                    )
+                    if store.recommendedMatches.isEmpty == false {
+                        RecommendedNextConsole(
+                            objects: store.recommendedMatches,
+                            isExpanded: $isRecommendedNextExpanded,
+                            providerStatus: { object in
+                                store.providerStatusPresentation(for: object.id)
+                            },
+                            onAccept: { object in acceptRecommendation(object) },
+                            onDismiss: { object in
+                                store.dismissRecommendation(object, feedback: .dismiss)
+                            },
+                            onFeedback: { object, kind in
+                                store.dismissRecommendation(object, feedback: kind)
+                            }
+                        )
+                    }
                 }
 
                 FloatingAskComposer(
                     text: $store.draft,
-                    placeholder: "Ask me anything...",
+                    placeholder: "Message kAir",
                     onSend: sendFromComposer,
                     onUserTap: bootstrap.showProfile
                 )
@@ -230,25 +255,6 @@ struct ChatHomeView: View {
             .background(Color.white.opacity(0.001))
         }
         .toolbar(.hidden, for: .navigationBar)
-    }
-
-    private func handleAccessory(_ accessory: ComposerAccessory) {
-        switch accessory.id {
-        case "health":
-            bootstrap.openSurface(.health)
-            store.recordHandoff(to: .health)
-        case "ai":
-            bootstrap.openSurface(.ai)
-            store.recordHandoff(to: .ai)
-        case "maps":
-            bootstrap.openSurface(.maps)
-            store.recordHandoff(to: .maps)
-        case "store":
-            bootstrap.openSurface(.store)
-            store.recordHandoff(to: .store)
-        default:
-            break
-        }
     }
 
     private func submit(_ prompt: String, scrollProxy: ScrollViewProxy) {
@@ -277,7 +283,7 @@ struct ChatHomeView: View {
         case .photo:
             store.attachReference(
                 "Photo or file",
-                detail: "Visual and document intake is reserved for the next implementation pass."
+                detail: "Photo and file context is added to the conversation."
             )
         case .store:
             store.attachReference(
@@ -298,14 +304,6 @@ struct ChatHomeView: View {
         if let event = message.continuationEvent {
             HStack(alignment: .top, spacing: 14) {
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 8) {
-                        Text(message.author)
-                            .font(.caption.weight(.semibold))
-                        Text(message.timestamp.formatted(.dateTime.hour().minute()))
-                            .font(.caption)
-                    }
-                    .foregroundStyle(AppTheme.Palette.textMuted)
-
                     ContinuationBlockRenderer(event: event)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -520,15 +518,16 @@ private struct DirectSubmitGate: View {
     let onKeepChatting: () -> Void
 
     /// The closed catalog offered when the route is ambiguous, in a fixed
-    /// order (no re-sort, no grouping).
-    private static let clarifyChoices: [AppSection] = [.health, .ai, .maps, .store]
+    /// order (no re-sort, no grouping). The caller filters it to the surfaces
+    /// enabled for this build.
+    var choices: [AppSection] = [.health, .ai, .maps, .store]
 
     var body: some View {
         VStack(spacing: 16) {
             if let route = gate.route {
                 card(for: route, highConfidence: true)
             } else {
-                ForEach(Self.clarifyChoices) { section in
+                ForEach(choices) { section in
                     card(for: section, highConfidence: false)
                 }
             }
@@ -558,8 +557,8 @@ private struct DirectSubmitGate: View {
             title: highConfidence ? "Open \(name)?" : name,
             subtitleTokens: ["“\(preview)”"],
             reasonText: highConfidence
-                ? "Confirm before kAir opens a surface."
-                : "Not sure which capability — pick one or keep chatting.",
+                ? "Confirm before opening."
+                : "Not sure what you need — pick one or keep chatting.",
             primaryCTA: "Open \(name)",
             secondaryCTA: "Keep chatting"
         )
@@ -829,9 +828,9 @@ private struct EmptyConversationState: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("Ask me anything.")
+            Text("Ask me anything")
                 .font(.largeTitle.weight(.bold))
-                .foregroundStyle(Color.black)
+                .foregroundStyle(AppTheme.Palette.textPrimary)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
@@ -839,36 +838,27 @@ private struct EmptyConversationState: View {
                         Button {
                             onTapPrompt(prompt)
                         } label: {
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text(prompt)
-                                    .font(.footnote.weight(.semibold))
-                                    .foregroundStyle(Color.black)
-                                    .multilineTextAlignment(.leading)
-                                    .lineLimit(2)
-
-                                Text("Start from intent")
-                                    .font(.caption2.weight(.medium))
-                                    .foregroundStyle(Color.black.opacity(0.45))
-                            }
-                            .frame(width: 180, alignment: .leading)
-                            .padding(14)
-                            .background(
-                                RoundedRectangle(
-                                    cornerRadius: 18,
-                                    style: .continuous
+                            Text(prompt)
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(AppTheme.Palette.textPrimary)
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(2)
+                                .frame(width: 168, alignment: .leading)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .fill(AppTheme.Palette.surface)
                                 )
-                                .fill(Color.white)
-                            )
-                            .overlay(
-                                RoundedRectangle(
-                                    cornerRadius: 18,
-                                    style: .continuous
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .strokeBorder(AppTheme.Palette.line, lineWidth: 1)
                                 )
-                                .strokeBorder(Color.black.opacity(0.07), lineWidth: 1)
-                            )
-                            .kAirElevation(ChatHomeView.surfaceElevation)
+                                .kAirElevation(ChatHomeView.surfaceElevation)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(prompt)
+                        .accessibilityHint("Starts a message from this suggestion")
                     }
                 }
             }
@@ -893,32 +883,35 @@ private struct FloatingAskComposer: View {
                 TextField(placeholder, text: $text, axis: .vertical)
                     .lineLimit(1 ... 3)
                     .font(.title3.weight(.regular))
-                    .foregroundStyle(Color.black)
+                    .foregroundStyle(AppTheme.Palette.textPrimary)
                     .submitLabel(.send)
                     .onSubmit(onSend)
+                    .accessibilityLabel("Message")
+                    .accessibilityIdentifier("chat.composer")
 
                 Button(action: onSend) {
                     Image(systemName: "arrow.up")
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(canSend ? Color.white : Color.black.opacity(0.35))
+                        .foregroundStyle(canSend ? AppTheme.Palette.textOnStrong : AppTheme.Palette.textMuted)
                         .frame(width: 34, height: 34)
                         .background(
                             Circle()
-                                .fill(canSend ? Color.black : Color.black.opacity(0.06))
+                                .fill(canSend ? AppTheme.Palette.accentStrong : AppTheme.Palette.line)
                         )
                 }
                 .buttonStyle(.plain)
                 .disabled(canSend == false)
+                .accessibilityLabel("Send")
             }
             .padding(.horizontal, 22)
             .padding(.vertical, 18)
             .background(
                 Capsule(style: .continuous)
-                    .fill(Color.white)
+                    .fill(AppTheme.Palette.surface)
             )
             .overlay(
                 Capsule(style: .continuous)
-                    .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
+                    .strokeBorder(AppTheme.Palette.line, lineWidth: 1)
             )
             .kAirElevation(ChatHomeView.surfaceElevation)
 
@@ -995,11 +988,12 @@ private enum ReferenceAttachment: CaseIterable, Identifiable {
 private struct ReferencePickerSheet: View {
     @Environment(\.dismiss) private var dismiss
 
+    var attachments: [ReferenceAttachment] = ReferenceAttachment.allCases
     let onSelect: (ReferenceAttachment) -> Void
 
     var body: some View {
         NavigationStack {
-            List(ReferenceAttachment.allCases) { attachment in
+            List(attachments) { attachment in
                 Button {
                     onSelect(attachment)
                     dismiss()
