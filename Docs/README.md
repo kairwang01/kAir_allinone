@@ -1,7 +1,7 @@
 # kAir Docs Index
 
 Status: project-specific docs index.
-Last updated: 2026-05-30.
+Last updated: 2026-06-01.
 
 This folder is no longer a generic iOS multi-agent template. It is the
 working documentation set for kAir, a chat-first all-in-one super app
@@ -13,18 +13,20 @@ model downloads, paid model options, and domain-scoped memory.
 1. `Docs/PROJECT_BRIEF.md`
 2. `Docs/PRODUCT_CONTRACT.md`
 3. `Docs/architecture/kair-superapp-architecture-v1.md`
-4. `Docs/architecture/kair-file-architecture-v1.md`
-5. `Docs/architecture/kair-ai-model-memory-v1.md`
-6. `Docs/architecture/kair-provider-routing-mcp-search-v1.md`
-7. `Docs/architecture/kair-agent-market-fit-audit-v1.md`
-8. `Docs/architecture/kair-next-agent-prompts-v1.md`
-9. Relevant `Contracts/*` and `Docs/design/*` for the specific surface.
+4. `Docs/architecture/kair-marvis-overseas-market-directions-v1.md`
+5. `Docs/architecture/kair-file-architecture-v1.md`
+6. `Docs/architecture/kair-ai-model-memory-v1.md`
+7. `Docs/architecture/kair-provider-routing-mcp-search-v1.md`
+8. `Docs/architecture/kair-agent-market-fit-audit-v1.md`
+9. `Docs/architecture/kair-next-agent-prompts-v1.md`
+10. Relevant `Contracts/*` and `Docs/design/*` for the specific surface.
 
 ## Canonical Architecture Docs
 
 | File | Purpose |
 |---|---|
 | `Docs/architecture/kair-superapp-architecture-v1.md` | Product and software architecture for the super app direction. |
+| `Docs/architecture/kair-marvis-overseas-market-directions-v1.md` | Marvis-style overseas market lane catalog and execution boundaries. |
 | `Docs/architecture/kair-file-architecture-v1.md` | Target directory tree, module boundaries, and dependency direction. |
 | `Docs/architecture/kair-ai-model-memory-v1.md` | Local model, paid model, routing, download, and memory architecture. |
 | `Docs/architecture/kair-provider-routing-mcp-search-v1.md` | Provider routing, map/search provider switching, MCP reservation, crawler-safe public information retrieval. |

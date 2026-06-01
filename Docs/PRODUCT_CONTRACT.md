@@ -1,7 +1,7 @@
 # PRODUCT_CONTRACT · kAir
 
 Status: project-specific product and technical contract.
-Last updated: 2026-05-30.
+Last updated: 2026-06-01.
 
 Any agent that violates this file should be rejected before merge.
 
@@ -52,6 +52,19 @@ Any agent that violates this file should be rejected before merge.
 - iOS anchors: future `MemoryStore`, `MemoryWritePolicy`, settings UI.
 - Blocked bypass: dumping raw transcript into an invisible global memory.
 
+### Contract 6 - Marvis-style lanes are directions, not execution claims
+
+- Code equivalent: `MarketCompanionCatalog` may declare overseas
+  companion lanes, example apps, capability mappings, and safety
+  boundaries; it cannot create a live adapter, purchase, post, sign,
+  check in, game, crawl, or mutate system settings.
+- iOS anchors: `MarketCompanionCatalog`, `CapabilityKind`,
+  `SurfaceKind`, `PlanValidator`, future provider-specific contracts.
+- Blocked bypass: marketing "auto" copy that implies hidden
+  third-party app control, game botting, ticket purchase, contract
+  signing, posting/check-in, or system cleanup without an approved
+  public API path and explicit confirmation.
+
 ## 2. Permission Gates
 
 | Gate | Checked when | Pass condition | If blocked |
@@ -62,17 +75,38 @@ Any agent that violates this file should be rejected before merge.
 | `paidActionAllowed` | purchase, order, booking, subscription | StoreKit/partner entitlement and explicit user confirmation | block and explain |
 | `memoryWriteAllowed` | any memory candidate | domain policy, sensitivity, user memory setting | skip write silently or show settings reason |
 | `shareExportAllowed` | any export/share | user initiated, previewed, confirmed, privacy policy pass | block export |
+| `externalServiceHandoffAllowed` | fan check-in, ticket, game, office, PC, travel, or partner-app action | public API/universal link/ShareSheet/Shortcut/server-provider contract plus visible user confirmation | prepare read-only result or disabled handoff |
 
 ## 3. Copy Style
 
-- Use direct, concrete copy: "你", "帮你", "已准备", "需要授权".
-- Do not use vague assistant branding: "AI 助手", "智能大脑", "我已经替你完成付款".
-- Do not reveal chain-of-thought or internal routing prompts.
-- User-facing error copy should explain the next action, not the stack
-  trace.
-- Health copy must be informational and non-diagnostic.
-- If completion cannot be verified, say "已打开", "已准备", or "可继续",
-  not "已完成".
+### 3.1 文案基调
+
+对标 **Marvis** 风格：温暖、直接、以用户价值为中心。像朋友在帮你，不像机器在汇报。
+
+- 用"你"和"帮你"，让人感觉在被照顾，而不是被操作。
+- 用日常语言，不用技术黑话。例子：
+  - ✓ "Odera 找到最合适的方式帮你完成"  ✗ "Odera 路由到合适的端侧能力"
+  - ✓ "在你手机上处理"                    ✗ "端侧推理"
+  - ✓ "功能"                              ✗ "能力"（UI 语境下）
+  - ✓ "聊天" / "对话"                     ✗ "指令面" / "command surface"
+  - ✓ "说出来" / "告诉"                   ✗ "输入自然指令"
+- 不用 AI 行业的空洞大词："AI 助手"、"智能大脑"、"我已经替你完成付款"。
+- 不用拟人化过度承诺："我已经帮你做好了"（在用户还没确认的情况下）。
+
+### 3.2 UI 文案规则
+
+- 直接，具体："你"、"帮你"、"已准备"、"需要授权"。
+- 不暴露内部推理过程（chain-of-thought）或路由提示词。
+- 错误提示要告诉用户下一步怎么做，不是堆栈追踪。
+- 健康类文案必须是信息参考性质，不能有诊断口吻。
+- 如果无法验证是否真的完成，说"已打开"、"已准备"、"可继续"，不要说"已完成"。
+
+### 3.3 命名约定
+
+- **Odera**：住在 kAir 里的 AI 伙伴。面向用户时称"她"，不用"它"。
+- **kAir**：app 本身。Odera 是 kAir 里的 AI，kAir 是 Odera 的家。
+- 功能命名：菜谱、路线、健康、搜索、影音、生活服务（不用"媒体"、"商店"等冷感词汇）。
+- 避免在面向用户的文案中出现：路由、适配器、指令面、端侧、能力目录、shell、surface、transcript、rail、stub、provider。
 
 ## 4. Resilience
 
@@ -97,6 +131,8 @@ Do not wait on a failing remote service to invent local fallback copy.
 - No Health data to Friends, social, ads, growth, or commerce ranking.
 - No hidden third-party app automation.
 - No silent export.
+- No hidden overseas app posting, check-in, game automation, ticket
+  purchase, contract signature, or system-setting mutation.
 - No iCloud storage for app-managed personal health information in v1.
 - Memory must support pause, delete, and domain isolation.
 - Model telemetry must not include prompt text unless a later telemetry
@@ -122,7 +158,8 @@ Before a PR is considered:
 - 30 seconds: Type what you want. kAir understands the intent, checks
   permissions, routes to the right capability, and keeps sensitive
   context local unless you explicitly choose otherwise.
-- 3 minutes: Show Chat -> structured recommendation -> execution
-  surface -> return continuation -> memory-aware next suggestion ->
-  Model Library state.
-
+- 3 minutes: Show Chat -> one Marvis-style overseas lane prompt
+  (celebrity, gaming, intelligence, knowledge, office, PC, growth, or
+  lifestyle) -> structured recommendation -> execution surface or
+  read-only prepared handoff -> return continuation -> memory-aware next
+  suggestion -> Model Library state.

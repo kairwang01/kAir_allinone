@@ -31,11 +31,49 @@ enum KAirTextGeneratorError: Error, Sendable {
     case generationFailed
 }
 
+/// UI-agnostic metadata about a server model-gateway reply. Carried alongside
+/// the reply text so the chat layer can render a tool-result card (model name,
+/// token usage, latency, citations) without `Core` depending on any UI type.
+struct KAirServerModelInfo: Hashable, Sendable {
+    let model: String?
+    let finishReason: String?
+    let promptTokens: Int?
+    let completionTokens: Int?
+    let reasoningTokens: Int?
+    let totalTokens: Int?
+    let latencyMs: Int?
+    let citationCount: Int
+    let selectedProviderId: String?
+}
+
+/// A generated assistant reply. `serverModelInfo` is non-nil only for the
+/// server model-gateway path; on-device generators leave it `nil`.
+struct KAirGeneratedReply: Hashable, Sendable {
+    let text: String
+    let serverModelInfo: KAirServerModelInfo?
+
+    init(text: String, serverModelInfo: KAirServerModelInfo? = nil) {
+        self.text = text
+        self.serverModelInfo = serverModelInfo
+    }
+}
+
 /// Generates an assistant reply, on-device only.
 protocol KAirTextGenerator: Sendable {
     /// Whether on-device generation is ready right now.
     func isAvailable() async -> Bool
     func generate(_ request: KAirGenerationRequest) async throws -> String
+    /// Richer variant that may carry structured metadata (e.g. server model
+    /// usage) for card rendering. Has a default implementation that wraps
+    /// `generate(_:)` with no metadata, so on-device generators need not
+    /// implement it.
+    func generateReply(_ request: KAirGenerationRequest) async throws -> KAirGeneratedReply
+}
+
+extension KAirTextGenerator {
+    func generateReply(_ request: KAirGenerationRequest) async throws -> KAirGeneratedReply {
+        KAirGeneratedReply(text: try await generate(request))
+    }
 }
 
 /// Deterministic, always-available, offline reply generator. Honest + grounded:
@@ -110,6 +148,17 @@ struct FallbackTextGenerator: KAirTextGenerator {
             }
         }
         return try await fallback.generate(request)
+    }
+
+    func generateReply(_ request: KAirGenerationRequest) async throws -> KAirGeneratedReply {
+        if await primary.isAvailable() {
+            do {
+                return try await primary.generateReply(request)
+            } catch {
+                return try await fallback.generateReply(request)
+            }
+        }
+        return try await fallback.generateReply(request)
     }
 }
 

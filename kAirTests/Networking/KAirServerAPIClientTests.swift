@@ -267,6 +267,115 @@ final class KAirServerAPIClientTests: XCTestCase {
         XCTAssertEqual(response.trace.costClass, ProviderCostClass.includedQuota)
     }
 
+    func test_modelGatewayPostsChatCompletionAndDecodesCompletion() async throws {
+        let httpClient = RecordingKAirHTTPClient(responses: [
+            try .json([
+                "result": [
+                    "message": "server model reply",
+                    "model": "deepseek-v4-flash-202605",
+                    "finishReason": "stop",
+                    "usage": [
+                        "promptTokens": 12,
+                        "completionTokens": 4,
+                        "reasoningTokens": 9,
+                        "totalTokens": 16,
+                    ],
+                ],
+                "trace": providerTrace(
+                    traceId: "trace-model",
+                    capability: "chatCompletion",
+                    selectedProviderId: "tokenhub-deepseek",
+                    selectedProviderFamily: "modelGateway",
+                    costClass: "includedQuota",
+                    privacyClass: "general",
+                    failureReason: NSNull()
+                ),
+            ]),
+        ])
+        let client = client(httpClient: httpClient)
+
+        let response = try await client.postModel(
+            envelope: KAirProviderEnvelope(
+                traceId: "trace-model",
+                capability: .chatCompletion,
+                providerFamily: .modelGateway,
+                privacyClass: .general,
+                region: .northAmerica,
+                membershipTier: .pro,
+                costClass: .includedQuota,
+                freshness: .livePreferred,
+                preferredProvider: .modelGateway
+            ),
+            query: KAirModelQuery(text: "hello model", region: .northAmerica),
+            idempotencyKey: "idem-model",
+            estimatedUnits: 2
+        )
+
+        XCTAssertEqual(response.result?.message, "server model reply")
+        XCTAssertEqual(response.result?.model, "deepseek-v4-flash-202605")
+        XCTAssertEqual(response.result?.usage?.totalTokens, 16)
+        XCTAssertEqual(response.result?.usage?.reasoningTokens, 9)
+        XCTAssertEqual(response.trace.capability, .chatCompletion)
+        XCTAssertEqual(response.trace.selectedProviderFamily, .modelGateway)
+
+        let requests = await httpClient.recordedRequests
+        let request = try XCTUnwrap(requests.first)
+        XCTAssertEqual(request.url?.path, "/v1/kair/model")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer access-token")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Idempotency-Key"), "idem-model")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "X-Trace-Id"), "trace-model")
+
+        let body = try jsonDictionary(from: request)
+        let encodedEnvelope = try XCTUnwrap(body["envelope"] as? [String: Any])
+        let encodedQuery = try XCTUnwrap(body["query"] as? [String: Any])
+        XCTAssertEqual(encodedEnvelope["capability"] as? String, "chatCompletion")
+        XCTAssertEqual(encodedEnvelope["providerFamily"] as? String, "modelGateway")
+        XCTAssertEqual(encodedEnvelope["privacyClass"] as? String, "general")
+        XCTAssertEqual(encodedQuery["text"] as? String, "hello model")
+        XCTAssertEqual(body["estimatedUnits"] as? Int, 2)
+    }
+
+    func test_serverModelTextGeneratorUsesModelGatewayMessage() async throws {
+        let httpClient = RecordingKAirHTTPClient(responses: [
+            try .json([
+                "result": [
+                    "message": "REMOTE REPLY",
+                    "model": "deepseek-v4-flash-202605",
+                    "finishReason": "stop",
+                ],
+                "trace": providerTrace(
+                    traceId: "ios-model-fixture",
+                    capability: "chatCompletion",
+                    selectedProviderId: "tokenhub-deepseek",
+                    selectedProviderFamily: "modelGateway",
+                    costClass: "includedQuota",
+                    privacyClass: "general",
+                    failureReason: NSNull()
+                ),
+            ]),
+        ])
+        let client = client(httpClient: httpClient)
+        let generator = KAirServerModelTextGenerator(client: client, membershipTier: .pro)
+
+        let text = try await generator.generate(
+            KAirGenerationRequest(systemInstructions: "Be brief.", prompt: "你好")
+        )
+
+        XCTAssertEqual(text, "REMOTE REPLY")
+        let requests = await httpClient.recordedRequests
+        let request = try XCTUnwrap(requests.first)
+        XCTAssertEqual(request.url?.path, "/v1/kair/model")
+        let body = try jsonDictionary(from: request)
+        let encodedEnvelope = try XCTUnwrap(body["envelope"] as? [String: Any])
+        let encodedQuery = try XCTUnwrap(body["query"] as? [String: Any])
+        XCTAssertEqual(encodedEnvelope["capability"] as? String, "chatCompletion")
+        XCTAssertEqual(encodedEnvelope["providerFamily"] as? String, "modelGateway")
+        XCTAssertEqual(encodedEnvelope["privacyClass"] as? String, "general")
+        XCTAssertEqual(encodedQuery["region"] as? String, "northAmerica")
+        XCTAssertTrue((encodedQuery["text"] as? String)?.contains("System:") == true)
+        XCTAssertTrue((encodedQuery["text"] as? String)?.contains("User:") == true)
+    }
+
     func test_non2xxResponseThrowsStableAPIError() async throws {
         let httpClient = RecordingKAirHTTPClient(responses: [
             try .json(

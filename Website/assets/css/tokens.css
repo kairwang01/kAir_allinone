@@ -1,0 +1,122 @@
+/* ==========================================================================
+   kAir — Design Tokens
+   Source of truth: the app's frozen `Contracts/Design/design-system-v1.md`
+   (mirrored here so the marketing site and the product never drift apart).
+   The brand-* purple is sampled from the real App Icon gradient.
+   Everything else is the app's neutral, light, on-device system.
+   ========================================================================== */
+
+:root {
+  /* --- Brand (App Icon gradient: #6C5CE9 -> #8944ED, center #815AED) ------ */
+  --brand-indigo: #6C5CE9;
+  --brand-violet: #8944ED;
+  --brand:        #7A4CEA;   /* primary brand purple */
+  --brand-ink:    #5b3fb0;   /* darker purple for text-on-light (AA contrast) */
+  --brand-50:     #f4f1fe;
+  --brand-100:    #e9e3fd;
+  --brand-200:    #d7ccfb;
+  --brand-gradient: linear-gradient(135deg, #6C5CE9 0%, #8944ED 100%);
+  --brand-gradient-soft: linear-gradient(135deg, #7d6cf0 0%, #9a5cf0 100%);
+
+  /* --- Neutral surfaces (design-system-v1: light canvas) ----------------- */
+  --bg-start:       #FFFFFF;
+  --bg-end:         #F7F7F9;
+  --bg-inset:       #FBFBFC;
+  --surface:        #FFFFFF;
+  --surface-2:      #FAFAFC;
+  --surface-strong: #1C1F25;  /* inverted dark surface (CTA on dark, footer) */
+
+  /* --- Text -------------------------------------------------------------- */
+  --text-primary:   #1C1F21;
+  --text-secondary: #57595E;
+  --text-muted:     #82858A;
+  --text-on-strong: #FFFFFF;
+  --text-on-strong-muted: rgba(255,255,255,0.66);
+
+  /* --- Lines ------------------------------------------------------------- */
+  --line:        rgba(0,0,0,0.06);
+  --line-strong: rgba(0,0,0,0.10);
+  --line-ondark: rgba(255,255,255,0.12);
+
+  /* --- Section identity tints (from AppTheme.tint(for:)) ----------------- */
+  --tint-chat:   #1A1C21;  /* chat   = accentStrong (ink) */
+  --tint-health: #4F6E61;  /* health = success (calm green) */
+  --tint-ai:     #61738A;  /* ai/search = sky (slate blue) */
+  --tint-maps:   #91754A;  /* maps   = warning (tan) */
+  --tint-store:  #595E69;  /* store  = accent (gray) */
+  --health-50:   #eef3f1;
+  --health-ink:  #3c574c;
+
+  /* --- Typography (system stack ≈ San Francisco) ------------------------- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+               "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+               Roboto, Helvetica, Arial, "Apple Color Emoji", sans-serif;
+  --font-rounded: ui-rounded, "SF Pro Rounded", -apple-system, var(--font-sans);
+
+  /* Fluid type scale (clamp: mobile -> desktop) */
+  --fs-display: clamp(2.1rem, 1.5rem + 3.2vw, 3.5rem);   /* hero — product page, not billboard */
+  --fs-h1:      clamp(2.0rem, 1.4rem + 2.6vw, 3.0rem);    /* section titles */
+  --fs-h2:      clamp(1.5rem, 1.2rem + 1.4vw, 2.0rem);
+  --fs-h3:      clamp(1.18rem, 1.05rem + 0.5vw, 1.35rem);
+  --fs-lead:    clamp(1.1rem, 1.02rem + 0.45vw, 1.3rem);  /* hero subhead */
+  --fs-body:    1.0625rem;   /* 17px — iOS body */
+  --fs-meta:    0.9375rem;   /* 15px */
+  --fs-chip:    0.8125rem;   /* 13px */
+  --fs-eyebrow: 0.75rem;     /* 12px */
+
+  --lh-tight:  1.08;
+  --lh-snug:   1.25;
+  --lh-normal: 1.55;
+  --tracking-eyebrow: 0.12em;
+  --tracking-tight:  -0.02em;
+  --tracking-display: -0.03em;
+
+  /* --- Spacing scale ----------------------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;   /* screenPadding */
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  --container:    1120px;
+  --container-narrow: 760px;
+  --section-y: clamp(64px, 5vw + 40px, 120px);
+
+  /* --- Radius (design-system-v1: card 26 / compact 16) ------------------- */
+  --radius-card:    26px;
+  --radius-compact: 16px;
+  --radius-pill:    999px;
+  --radius-sm:      12px;
+
+  /* --- Elevation (design-system-v1 shadows) ------------------------------ */
+  --elev-raised:   0 6px 12px rgba(0,0,0,0.06);
+  --elev-floating: 0 6px 14px rgba(0,0,0,0.08);
+  /* Layered soft shadow for hero device (multi-step natural falloff) */
+  --elev-device:
+      0 2px 4px rgba(28,31,33,0.04),
+      0 8px 16px rgba(28,31,33,0.06),
+      0 24px 48px rgba(28,31,33,0.10),
+      0 48px 96px rgba(60,40,120,0.12);
+  --elev-brand:   0 10px 30px rgba(122,76,234,0.28);
+
+  /* --- Motion (design-system-v1) ----------------------------------------- */
+  --dur-standard: 0.24s;
+  --ease-standard: cubic-bezier(0.4, 0.0, 0.2, 1);   /* ≈ easeInOut */
+  --ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1); /* ≈ spring settle */
+  --dur-reveal: 0.7s;
+
+  /* --- Layout helpers ---------------------------------------------------- */
+  --nav-h: 64px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-standard: 0.12s; --dur-reveal: 0.12s; }
+}

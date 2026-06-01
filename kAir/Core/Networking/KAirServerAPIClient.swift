@@ -140,6 +140,26 @@ struct KAirServerAPIClient: Sendable {
         )
     }
 
+    func postModel(
+        envelope: KAirProviderEnvelope,
+        query: KAirModelQuery,
+        idempotencyKey: String,
+        estimatedUnits: Int = 1
+    ) async throws -> KAirProviderResult<KAirModelCompletion> {
+        try await send(
+            method: .post,
+            path: "kair/model",
+            body: KAirProviderRequestBody(
+                envelope: envelope,
+                query: query,
+                estimatedUnits: estimatedUnits
+            ),
+            requiresAuth: true,
+            idempotencyKey: idempotencyKey,
+            traceID: envelope.traceId
+        )
+    }
+
     private func send<Response: Decodable, Body: Encodable>(
         method: KAirHTTPMethod,
         path: String,
@@ -262,6 +282,13 @@ private struct KAirRefreshRequest: Encodable {
 private struct KAirProviderRequestBody<Query: Encodable>: Encodable {
     let envelope: KAirProviderEnvelope
     let query: Query
+    let estimatedUnits: Int?
+
+    init(envelope: KAirProviderEnvelope, query: Query, estimatedUnits: Int? = nil) {
+        self.envelope = envelope
+        self.query = query
+        self.estimatedUnits = estimatedUnits
+    }
 }
 
 struct KAirRegisterResponse: Codable, Hashable, Sendable {
@@ -407,6 +434,7 @@ enum KAirAPIProviderFamily: String, Codable, Hashable, Sendable, CaseIterable {
     case googleMaps
     case searchAPI
     case researchAPI
+    case modelGateway
     case crawler
     case mcp
     case cache
@@ -432,7 +460,7 @@ enum KAirAPIProviderFamily: String, Codable, Hashable, Sendable, CaseIterable {
         case .crawler: return .crawler
         case .mcp: return .mcp
         case .cache: return .cache
-        case .researchAPI: return nil
+        case .researchAPI, .modelGateway: return nil
         }
     }
 }
@@ -446,6 +474,7 @@ enum KAirAPIProviderCapability: String, Codable, Hashable, Sendable, CaseIterabl
     case scholarlySearch
     case citationLookup
     case aiCompletion
+    case chatCompletion
     case crawlerFetch
     case mcpTool
 
@@ -558,8 +587,62 @@ struct KAirProviderResult<Result: Decodable>: Decodable {
 }
 
 struct KAirProviderBlocked: Codable, Hashable, Sendable {
-    let reason: ProviderCostClass
+    let reason: KAirProviderBlockedReason
     let message: String
+}
+
+enum KAirProviderBlockedReason: Hashable, Sendable {
+    case blockedByPrivacy
+    case blockedByCost
+    case missingSnapshot
+    case vendorDisabled
+    case membershipMissing
+    case privacyBlocked
+    case overQuota
+    case staleSnapshot
+    case capabilityMismatch
+    case alreadyReserved
+    case other(String)
+
+    var rawValue: String {
+        switch self {
+        case .blockedByPrivacy:  return "blockedByPrivacy"
+        case .blockedByCost:     return "blockedByCost"
+        case .missingSnapshot:   return "missingSnapshot"
+        case .vendorDisabled:    return "vendorDisabled"
+        case .membershipMissing: return "membershipMissing"
+        case .privacyBlocked:    return "privacyBlocked"
+        case .overQuota:         return "overQuota"
+        case .staleSnapshot:     return "staleSnapshot"
+        case .capabilityMismatch: return "capabilityMismatch"
+        case .alreadyReserved:   return "alreadyReserved"
+        case .other(let value):  return value
+        }
+    }
+}
+
+extension KAirProviderBlockedReason: Codable {
+    init(from decoder: Decoder) throws {
+        let rawValue = try decoder.singleValueContainer().decode(String.self)
+        switch rawValue {
+        case "blockedByPrivacy":  self = .blockedByPrivacy
+        case "blockedByCost":     self = .blockedByCost
+        case "missingSnapshot":   self = .missingSnapshot
+        case "vendorDisabled":    self = .vendorDisabled
+        case "membershipMissing": self = .membershipMissing
+        case "privacyBlocked":    self = .privacyBlocked
+        case "overQuota":         self = .overQuota
+        case "staleSnapshot":     self = .staleSnapshot
+        case "capabilityMismatch": self = .capabilityMismatch
+        case "alreadyReserved":   self = .alreadyReserved
+        default:                  self = .other(rawValue)
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
 }
 
 struct KAirCitation: Codable, Hashable, Sendable {
@@ -590,6 +673,30 @@ struct KAirSearchQuery: Codable, Hashable, Sendable {
         self.maxResults = maxResults
         self.region = region
     }
+}
+
+struct KAirModelQuery: Codable, Hashable, Sendable {
+    let text: String
+    let region: ProviderRegion?
+
+    init(text: String, region: ProviderRegion? = nil) {
+        self.text = text
+        self.region = region
+    }
+}
+
+struct KAirModelCompletion: Codable, Hashable, Sendable {
+    let message: String
+    let model: String?
+    let finishReason: String?
+    let usage: KAirModelUsage?
+}
+
+struct KAirModelUsage: Codable, Hashable, Sendable {
+    let promptTokens: Int?
+    let completionTokens: Int?
+    let reasoningTokens: Int?
+    let totalTokens: Int?
 }
 
 enum KAirJSONValue: Codable, Hashable, Sendable {

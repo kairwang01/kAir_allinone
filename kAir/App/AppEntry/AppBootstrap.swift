@@ -154,15 +154,13 @@ final class AppBootstrap {
     /// deterministic conformances at either seam.
     let identifierFactory: TelemetryIdentifierFactory
 
-    /// On-device assistant text generator composed at the app root (B6).
+    /// Assistant text generator composed at the app root (B6).
     ///
-    /// Apple Foundation Models primary (on-device, free, private — iOS 26+)
-    /// with a deterministic fallback so chat always produces a reply. Stored
-    /// here so the composition root owns the generation seam; `ChatHomeView`
-    /// threads it into `ChatStore`. Generation is on-device only — no prompt or
-    /// health/private context leaves the device through this seam. Defaults to
-    /// `KAirTextGeneratorFactory.makeDefault()`; tests/previews can inject a
-    /// deterministic double.
+    /// Default builds use Apple Foundation Models primary (on-device, free,
+    /// private — iOS 26+) with a deterministic fallback so chat always produces
+    /// a reply. Staging builds can flip `serverProvidersEnabled` to route
+    /// general chat through `/v1/kair/model` and replace the baseline response
+    /// in place; Health/private prompts must remain on-device.
     let textGenerator: any KAirTextGenerator
 
     /// Optional server account session (#13). Owns token storage + refresh.
@@ -282,9 +280,21 @@ final class AppBootstrap {
         }
         self.continuationRuntime = continuationRuntime ?? NoOpContinuationRuntime()
         self.identifierFactory = identifierFactory ?? UUIDTelemetryIdentifierFactory()
-        self.textGenerator = textGenerator ?? KAirTextGeneratorFactory.makeDefault()
-        self.authSession = authSession ?? KAirAuthSessionManager(store: InMemoryKAirSessionStore())
+        let resolvedAuthSession = authSession ?? KAirAuthSessionManager(store: InMemoryKAirSessionStore())
+        self.authSession = resolvedAuthSession
         self.serverConfiguration = serverConfiguration
+        if let textGenerator {
+            self.textGenerator = textGenerator
+        } else if FeatureFlag.serverProvidersEnabled {
+            self.textGenerator = FallbackTextGenerator(
+                primary: KAirServerModelTextGenerator(
+                    client: serverConfiguration.makeClient(authSession: resolvedAuthSession)
+                ),
+                fallback: KAirTextGeneratorFactory.makeDefault()
+            )
+        } else {
+            self.textGenerator = KAirTextGeneratorFactory.makeDefault()
+        }
         self.enabledSurfaces = enabledSurfaces
     }
 

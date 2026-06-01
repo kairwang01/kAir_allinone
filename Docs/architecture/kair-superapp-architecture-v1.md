@@ -1,7 +1,7 @@
 # kAir Super App Architecture v1
 
 Status: architecture blueprint, comment-only, no production implementation implied.
-Last updated: 2026-05-30.
+Last updated: 2026-06-01.
 Owner: reviewer / architecture loop.
 
 This document defines the target engineering shape for kAir as an
@@ -16,6 +16,8 @@ This v1 architecture covers:
 - App shell and execution-surface architecture.
 - Capability routing across maps, health, store, search, music, video,
   social, food, local services, and future verticals.
+- Marvis-style overseas companion lanes: celebrity fan, gaming,
+  intelligence/tickets, knowledge, office, PC, growth, and lifestyle.
 - Local-first AI model routing and model download settings.
 - Paid market model option reserved behind StoreKit and server-side
   provider gateways.
@@ -82,6 +84,31 @@ Provider-backed services follow the same rule. Apple/local providers are
 the default path; Gaode, Google, search APIs, crawlers, MCP tools, and
 partner APIs are selected only when region, membership, cost, privacy,
 and terms policy allow them.
+
+## 2.1 Overseas Market Companion Lanes
+
+kAir's overseas direction is benchmarked against Marvis-style companion
+use cases, but implemented through kAir's stricter adapter and
+confirmation model. The canonical lane catalog lives in
+`Docs/architecture/kair-marvis-overseas-market-directions-v1.md` and
+`MarketCompanionCatalog`.
+
+| Lane | Product promise | Existing surface families | Overseas provider examples |
+|---|---|---|---|
+| 追星好搭子 | Celebrity news, fan check-in preparation, media organization. | Search, AI, Store | Google News, X, Instagram, TikTok, YouTube, Reddit |
+| 游戏陪你玩 | Benefit monitoring, strategy planning, daily quest preparation. | Search, AI, Store | Steam, PlayStation, Xbox, Discord, Twitch, Reddit |
+| 情报监控器 | Industry/social news monitoring and ticket information collection. | Search, AI, Store | Google News, Hacker News, X, Ticketmaster, SeatGeek |
+| 知识管理员 | Book distillation, note refinement, job-prep packs. | AI, Chat, Store, Search | Kindle, Apple Books, Google Drive, Notion, LinkedIn |
+| 打工好帮手 | File conversion plans, contract information review, data analysis. | AI, Store, Search | Google Drive, Microsoft 365, Dropbox, Adobe Acrobat, Slack |
+| 电脑小管家 | Settings guidance, cleanup planning, network repair triage. | AI, Store, Search | Apple Shortcuts, macOS System Settings, Windows Settings, Speedtest |
+| 成长加速器 | English reading, literature organization, AI-tool guidance. | AI, Search, Store | Duolingo, YouTube, arXiv, Semantic Scholar, OpenAI Docs |
+| 生活艺术家 | Movie picks, baby-album plans, travel evaluation. | Video, AI, Maps, Search | Letterboxd, IMDb, Rotten Tomatoes, Apple Photos, Google Maps, Tripadvisor |
+
+These lanes must not create hidden automation. "Auto check-in",
+"auto quest", "ticket collection", "contract review", "file
+conversion", and "PC cleanup" mean monitored preparation or explicit
+user-confirmed handoff until a later provider-specific contract proves a
+lawful executable path.
 
 ## 3. Architectural Principles
 
@@ -214,6 +241,7 @@ to deserve an execution surface.
 | Music | reserved | MusicKit or partner deep link; no fake playback result |
 | Movies/Video | reserved | search/watchlist/deep link; rights/availability must be honest |
 | Search/Web | reserved | web search and source cards, privacy-reviewed remote call |
+| Overseas companion lanes | value-only catalog | celebrity fan, gaming, intelligence, knowledge, office, PC, growth, lifestyle directions mapped onto existing surface families |
 | MCP Tools | reserved | allowlisted external tools/resources/prompts, disabled by default |
 
 ## 8. External App Calling Policy

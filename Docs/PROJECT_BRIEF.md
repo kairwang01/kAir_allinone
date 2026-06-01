@@ -1,7 +1,7 @@
 # PROJECT_BRIEF · kAir
 
 Status: project-specific brief.
-Last updated: 2026-05-30.
+Last updated: 2026-06-01.
 
 ## 1. Project Identity
 
@@ -10,7 +10,7 @@ Last updated: 2026-05-30.
 | `PROJECT_NAME` | kAir |
 | `PROJECT_NAME_EN` | kAir |
 | `ONE_LINE_PITCH` | One chat command routes daily life tasks to the right local or app capability. |
-| `TARGET_USERS` | iPhone users who want one private command surface for health, maps, AI, services, media, commerce, and personal memory. |
+| `TARGET_USERS` | Overseas iPhone users who want one private command surface for health, maps, AI, services, media, commerce, productivity, entertainment, learning, and personal memory. |
 | `TARGET_PLATFORM` | iPhone first; Universal later. |
 | `IOS_MIN_VERSION` | Current repo target; keep existing deployment target until an explicit project-file PR changes it. |
 | `REPO_PATH` | `/Users/kair/Projects/kAir` |
@@ -33,6 +33,24 @@ The 90-second demo should prove command-to-surface routing:
 10. User returns to Chat.
 11. Continuation runtime records the return outcome.
 12. Memory policy writes only allowed task state or preference.
+
+## 2.1 Overseas Companion Directions
+
+kAir's market direction explicitly includes the eight Marvis-style
+companion lanes below. They are product lanes, not new tabs; they route
+through chat, existing surface families, capability adapters, and
+confirmation-gated handoffs.
+
+| Lane | User promise | Overseas examples | Current implementation stance |
+|---|---|---|---|
+| Fandom Scout / 追星好搭子 | Track your favorite artists, get alerts for new drops, and collect fan content—all in one place. | X (Twitter), Instagram, TikTok, YouTube, Reddit, Spotify, Apple Music | Value catalog + Search/AI/Store mapping; no hidden posting. |
+| Gaming Sidekick / 游戏陪你玩 | Stay on top of limited-time rewards, optimize your strategy, and prep your session goals. | Steam, Discord, Twitch, Reddit, Epic Games Store, IGN | Value catalog + read-only monitor posture; no botting or ToS bypass. |
+| News Radar / 情报监控器 | Monitor trending stories, track industry shifts, and catch event announcements before they sell out. | Google News, X, Hacker News, TechCrunch, Ticketmaster, Eventbrite | Value catalog + ticket handoff boundary; no purchase without confirmation. |
+| Knowledge Keeper / 知识管理员 | Distill books into sharp insights, organize your notes, and prep for your next career move. | Kindle, Notion, Obsidian, LinkedIn, Indeed, Glassdoor | Value catalog + user-provided/cited source boundary. |
+| Work Wingman / 打工好帮手 | Convert documents, review contract details, and surface insights from your operational data. | Google Workspace, Microsoft 365, Slack, Notion, DocuSign, Adobe Acrobat | Value catalog + user review; no legal advice or signature/send without confirmation. |
+| Device Guide / 电脑小管家 | Demystify settings, reclaim storage, and troubleshoot connectivity—no tech jargon required. | macOS System Settings, Windows Settings, Apple Shortcuts, Speedtest, Cloudflare WARP | Value catalog + public/user-confirmed system handoff only. |
+| Growth Coach / 成长加速器 | Learn new skills, organize your reading list, and master AI tools with curated guidance. | Duolingo, Coursera, YouTube, arXiv, Google Scholar, OpenAI Docs | Value catalog + cited public or user-provided content. |
+| Life Curator / 生活艺术家 | Discover great films, organize your memories, and plan smarter travel itineraries. | Letterboxd, IMDb, Rotten Tomatoes, Google Photos, Tripadvisor, Booking.com | Value catalog + booking/export confirmation boundary. |
 
 ## 3. Screen Clusters
 
@@ -152,4 +170,3 @@ Demo is acceptable when:
 6. Missing permission, missing model, network failure, and empty data do
    not create blank UI.
 7. `git diff --check`, build, and relevant tests pass.
-

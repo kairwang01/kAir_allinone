@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title data-i18n="meta.title">kAir — Meet Odera</title>
+  <meta name="description" data-i18n-attr="content:meta.desc"
+        content="Meet Odera — the AI inside kAir that turns intent into action. Describe what you want; Odera routes the right on-device capability. v1 ships Chat + Health. Coming soon on iPhone." />
+  <link rel="canonical" href="https://kair.app/" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="color-scheme" content="light" />
+
+  <!-- Icons / manifest -->
+  <link rel="icon" href="assets/img/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="icon" href="assets/img/favicon-16.png" sizes="16x16" type="image/png" />
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+  <link rel="manifest" href="site.webmanifest" />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="kAir" />
+  <meta property="og:title" content="kAir — Meet Odera" />
+  <meta property="og:description" content="Describe what you want. Odera routes the right action — local-first, memory you control. v1: Chat + Health." />
+  <meta property="og:url" content="https://kair.app/" />
+  <meta property="og:image" content="https://kair.app/assets/img/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="kAir — Meet Odera" />
+  <meta name="twitter:description" content="The AI that turns intent into action. Odera lives inside kAir — local-first on iPhone. v1 ships Chat + Health." />
+  <meta name="twitter:image" content="https://kair.app/assets/img/og-image.png" />
+
+  <link rel="stylesheet" href="assets/css/tokens.css" />
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/site.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "kAir",
+    "url": "https://kair.app/",
+    "logo": "https://kair.app/assets/img/icon-512.png",
+    "description": "kAir is the app; Odera is the local-first AI agent that turns intent into action on iPhone.",
+    "sameAs": []
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- ============================ NAV ============================ -->
+  <header class="nav" id="top">
+    <div class="container nav__inner">
+      <a class="logo" href="#top" aria-label="kAir home">
+        <span class="logo__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M7.5 4.5V19.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+            <path d="M15.5 8.5L8.5 13.5L15 19.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18 2.6c.35 1.5.9 2.05 2.4 2.4-1.5.35-2.05.9-2.4 2.4-.35-1.5-.9-2.05-2.4-2.4 1.5-.35 2.05-.9 2.4-2.4Z" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="logo__word">kAir</span>
+      </a>
+
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#features" data-i18n="nav.features">Features</a>
+        <a href="#privacy" data-i18n="nav.privacy">Privacy</a>
+        <a href="#how" data-i18n="nav.how">How it works</a>
+        <a href="#faq" data-i18n="nav.faq">FAQ</a>
+      </nav>
+
+      <div class="nav__actions">
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" data-lang-set="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang-set="zh" aria-pressed="false">中</button>
+        </div>
+        <a href="#notify" class="btn btn--ghost" data-i18n="nav.notify">Notify me</a>
+        <button class="nav__menu-btn" type="button" data-menu-btn aria-expanded="false"
+                aria-controls="mobile-menu" data-i18n-attr="aria-label:nav.menu" aria-label="Open menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mobile-menu" data-mobile-menu>
+    <a href="#features" data-i18n="nav.features">Features</a>
+    <a href="#privacy" data-i18n="nav.privacy">Privacy</a>
+    <a href="#how" data-i18n="nav.how">How it works</a>
+    <a href="#faq" data-i18n="nav.faq">FAQ</a>
+    <a href="#notify" data-i18n="nav.notify">Notify me</a>
+  </div>
+
+  <main id="main">
+
+    <!-- ============================ HERO ============================ -->
+    <section class="hero hero--center">
+      <div class="container hero__inner">
+        <p class="hero__app" data-i18n="hero.app">on kAir · Coming soon · iPhone</p>
+        <h1 class="display" data-i18n="hero.title">Meet Odera</h1>
+        <p class="lead hero__lead" data-i18n="hero.lead">Describe what you want. Odera routes the right action.</p>
+        <p class="hero__tagline" data-i18n="hero.tagline">The AI that turns intent into action.</p>
+
+        <div class="hero__demo" aria-hidden="true">
+          <span class="hero__demo-input" data-i18n="hero.demo">What do you want to do?</span>
+        </div>
+
+        <p class="hero__hook" data-i18n="hero.hook">Local-first · Memory controlled by you · Chat + Health in v1</p>
+
+        <div class="hero__actions" id="notify">
+          <form class="waitlist" data-waitlist novalidate>
+            <div class="field">
+              <input class="field__input" type="email" name="email" required autocomplete="email"
+                     data-i18n-attr="placeholder:hero.email;aria-label:hero.email" placeholder="Enter your email" />
+              <button class="btn btn--primary" type="submit" data-i18n="hero.cta">Notify me at launch</button>
+            </div>
+          </form>
+          <div class="form-success" data-waitlist-success hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>
+            <span data-success-text>You are on the list. We will email you the moment kAir launches — nothing else.</span>
+          </div>
+          <button type="button" class="store-badge store-badge--light" onclick="document.querySelector('#notify input')&&document.querySelector('#notify input').focus()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2.5" width="16" height="19" rx="4"/><path d="M12 7v7"/><path d="M9 11l3 3 3-3"/></svg>
+            <span class="store-badge__txt">
+              <span class="store-badge__small" data-i18n="hero.store.small">Coming soon to the</span>
+              <span class="store-badge__big" data-i18n="hero.store.big">App Store</span>
+            </span>
+          </button>
+          <p class="form-note hero__note" data-i18n="hero.note">Release date to be announced · iPhone · iOS</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ FEATURES ============================ -->
+    <section class="section section--inset" id="features">
+      <div class="container">
+        <div class="sec-head center">
+          <h2 class="section-title" data-i18n="feat.title">What Odera can do for you</h2>
+          <p class="lead mx-auto" data-i18n="feat.lead">Everyday tasks routed from one conversation — an agent that acts, not a chatbot that only answers.</p>
+        </div>
+
+        <div class="cap-grid">
+          <article class="cap-card">
+            <h3 data-i18n="cap.recipes.title">Recipes</h3>
+            <p data-i18n="cap.recipes.body">Plan meals, swap ingredients, and remember what you like — routed on-device when the capability ships.</p>
+          </article>
+          <article class="cap-card">
+            <h3 data-i18n="cap.routes.title">Routes</h3>
+            <p data-i18n="cap.routes.body">Ask for directions or transit. Odera opens the maps surface and keeps context in the conversation.</p>
+          </article>
+          <article class="cap-card cap-card--live">
+            <h3 data-i18n="cap.health.title">Health</h3>
+            <p data-i18n="cap.health.body">Private Apple Health insights on-device when you ask. One domain among many — available in v1.</p>
+          </article>
+          <article class="cap-card">
+            <h3 data-i18n="cap.search.title">Search</h3>
+            <p data-i18n="cap.search.body">Find answers and sources without leaving the command surface. Unlocking after v1.</p>
+          </article>
+          <article class="cap-card">
+            <h3 data-i18n="cap.media.title">Media</h3>
+            <p data-i18n="cap.media.body">Play, queue, or discover — Odera routes to the right app capability. Unlocking after v1.</p>
+          </article>
+          <article class="cap-card">
+            <h3 data-i18n="cap.store.title">Store</h3>
+            <p data-i18n="cap.store.body">Services and commerce when you are ready to act. Unlocking after v1.</p>
+          </article>
+        </div>
+        <p class="cap-disclaimer" data-i18n="feat.health.note">Health summaries are wellness information, not medical advice. kAir is not a medical device.</p>
+      </div>
+    </section>
+
+    <!-- ============================ HOW IT WORKS ============================ -->
+    <section class="section" id="how">
+      <div class="container">
+        <div class="sec-head center">
+          <h2 class="section-title" data-i18n="how.title">Three steps to get started.</h2>
+        </div>
+        <div class="steps steps--plain">
+          <div class="step">
+            <div class="step__num">1</div>
+            <h3 data-i18n="how.s1.title">Download kAir</h3>
+            <p data-i18n="how.s1.body">One tap from the App Store when it launches on iPhone.</p>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <h3 data-i18n="how.s2.title">Describe what you want</h3>
+            <p data-i18n="how.s2.body">Type or speak a natural instruction — find a route, check health, draft a message, or ask a question.</p>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <h3 data-i18n="how.s3.title">Confirm and execute on your iPhone</h3>
+            <p data-i18n="how.s3.body">Odera routes to the right capability, you review the plan, and results return to the conversation — processed on-device in v1.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ PRIVACY ============================ -->
+    <section class="section section--inset" id="privacy">
+      <div class="container">
+        <div class="sec-head center">
+          <h2 class="section-title" data-i18n="priv.title">Local-first — your command surface stays on your iPhone.</h2>
+          <p class="priv-tagline" data-i18n="priv.tagline">On-device models · Controlled memory · No account in v1</p>
+          <p class="lead mx-auto measure" style="margin-inline:auto;margin-top:var(--space-4)" data-i18n="priv.lead">Routing, memory, and capability execution are designed to run on your device. In v1, prompts and on-device data are not sent to kAir servers.</p>
+        </div>
+
+        <div class="privacy__grid">
+          <div class="card card--flat">
+            <h3 class="card__title" data-i18n="priv.c1.title">On-device processing</h3>
+            <p class="card__body" data-i18n="priv.c1.body">Inference runs on Apple Foundation Models, right on your iPhone.</p>
+          </div>
+          <div class="card card--flat">
+            <h3 class="card__title" data-i18n="priv.c2.title">Nothing leaves your device</h3>
+            <p class="card__body" data-i18n="priv.c2.body">Your chats and Apple Health data are processed locally and are not sent to kAir servers in this version.</p>
+          </div>
+          <div class="card card--flat">
+            <h3 class="card__title" data-i18n="priv.c3.title">No account, no tracking</h3>
+            <p class="card__body" data-i18n="priv.c3.body">No sign-up required. No ads, no cross-app tracking, and no analytics profile built about you.</p>
+          </div>
+          <div class="card card--flat">
+            <h3 class="card__title" data-i18n="priv.c4.title">You are always in control</h3>
+            <p class="card__body" data-i18n="priv.c4.body">Any export is something you start, preview, and confirm. It is never automatic and never silent.</p>
+          </div>
+        </div>
+
+        <div class="privacy__never">
+          <h3 data-i18n="priv.never.title">What kAir does not do</h3>
+          <ul class="never-list never-list--light">
+            <li data-i18n="priv.never.1">Send your chats to a server</li>
+            <li data-i18n="priv.never.2">Export your Apple Health data</li>
+            <li data-i18n="priv.never.3">Show you ads</li>
+            <li data-i18n="priv.never.4">Track you across apps</li>
+            <li data-i18n="priv.never.5">Require an account to work</li>
+            <li data-i18n="priv.never.6">Upload your data to train models</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ ROADMAP ============================ -->
+    <section class="section" id="roadmap">
+      <div class="container">
+        <div class="sec-head">
+          <h2 class="section-title" data-i18n="road.title">v1 ships Chat + Health. More capabilities unlock over time.</h2>
+          <p class="lead" data-i18n="road.lead">Odera lives inside kAir — a local-first command surface. Launch ships two on-device capabilities; recipes, routes, search, media, and store follow as each becomes real.</p>
+        </div>
+        <div>
+          <div class="roadmap__group">
+            <h4 data-i18n="road.live">Available at launch</h4>
+            <div class="roadmap__chips">
+              <span class="chip chip--live"><span class="chip__dot" aria-hidden="true"></span><span data-i18n="road.chat">Chat</span></span>
+              <span class="chip chip--live"><span class="chip__dot" aria-hidden="true"></span><span data-i18n="road.health">Health</span></span>
+            </div>
+          </div>
+          <div class="roadmap__group">
+            <h4 data-i18n="road.soon">Planned for later</h4>
+            <div class="roadmap__chips">
+              <span class="chip chip--soon"><span class="chip__dot" aria-hidden="true"></span><span data-i18n="road.recipes">Recipes</span></span>
+              <span class="chip chip--soon"><span class="chip__dot" aria-hidden="true"></span><span data-i18n="road.routes">Routes</span></span>
+              <span class="chip chip--soon"><span class="chip__dot" aria-hidden="true"></span><span data-i18n="road.search">Search</span></span>
+              <span class="chip chip--soon"><span class="chip__dot" aria-hidden="true"></span><span data-i18n="road.media">Media</span></span>
+              <span class="chip chip--soon"><span class="chip__dot" aria-hidden="true"></span><span data-i18n="road.store">Store</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ FAQ ============================ -->
+    <section class="section how" id="faq">
+      <div class="container faq__grid">
+        <div class="sec-head" style="margin-bottom:0">
+          <h2 class="section-title" data-i18n="faq.title">Questions, answered.</h2>
+          <p class="lead" data-i18n="faq.lead">Everything you might want to know before kAir lands on your iPhone.</p>
+        </div>
+        <div class="accordion">
+          <div class="accordion__item">
+            <button class="accordion__trigger" aria-expanded="false" aria-controls="faq0"><span data-i18n="faq.q0">What is Odera?</span><span class="accordion__icon" aria-hidden="true"></span></button>
+            <div class="accordion__panel" id="faq0" role="region"><div class="accordion__panel-inner" data-i18n="faq.a0">Odera is the AI inside kAir. You describe what you want; Odera understands intent, uses memory you control, checks permissions and risk, and routes the task to the right in-app capability. kAir is the app; Odera is the agent. v1 ships Chat and Health.</div></div>
+          </div>
+          <div class="accordion__item">
+            <button class="accordion__trigger" aria-expanded="false" aria-controls="faq1"><span data-i18n="faq.q1">When will kAir launch?</span><span class="accordion__icon" aria-hidden="true"></span></button>
+            <div class="accordion__panel" id="faq1" role="region"><div class="accordion__panel-inner" data-i18n="faq.a1">The launch date is being finalized. Join the list and you will be the first to know — we will email you the moment kAir is live.</div></div>
+          </div>
+          <div class="accordion__item">
+            <button class="accordion__trigger" aria-expanded="false" aria-controls="faq2"><span data-i18n="faq.q2">Which devices does kAir support?</span><span class="accordion__icon" aria-hidden="true"></span></button>
+            <div class="accordion__panel" id="faq2" role="region"><div class="accordion__panel-inner" data-i18n="faq.a2">kAir launches on iPhone (iOS). Support for additional platforms may follow in future versions.</div></div>
+          </div>
+          <div class="accordion__item">
+            <button class="accordion__trigger" aria-expanded="false" aria-controls="faq3"><span data-i18n="faq.q3">Is kAir private?</span><span class="accordion__icon" aria-hidden="true"></span></button>
+            <div class="accordion__panel" id="faq3" role="region"><div class="accordion__panel-inner" data-i18n="faq.a3">Yes. In v1, routing and generation run on your iPhone with on-device models. Prompts and on-device capability data are not sent to kAir servers, and no account is required.</div></div>
+          </div>
+          <div class="accordion__item">
+            <button class="accordion__trigger" aria-expanded="false" aria-controls="faq4"><span data-i18n="faq.q4">Do I need an account?</span><span class="accordion__icon" aria-hidden="true"></span></button>
+            <div class="accordion__panel" id="faq4" role="region"><div class="accordion__panel-inner" data-i18n="faq.a4">No. kAir works fully on-device, so you can open it and start right away. Sign-in is optional.</div></div>
+          </div>
+          <div class="accordion__item">
+            <button class="accordion__trigger" aria-expanded="false" aria-controls="faq5"><span data-i18n="faq.q5">Is kAir a medical device?</span><span class="accordion__icon" aria-hidden="true"></span></button>
+            <div class="accordion__panel" id="faq5" role="region"><div class="accordion__panel-inner" data-i18n="faq.a5">No. kAir is a wellness and information tool, not a medical device. It does not diagnose, treat, or prevent any condition, and its AI summaries can be incomplete or wrong. Always consult a qualified clinician for medical decisions.</div></div>
+          </div>
+          <div class="accordion__item">
+            <button class="accordion__trigger" aria-expanded="false" aria-controls="faq6"><span data-i18n="faq.q6">How much will kAir cost?</span><span class="accordion__icon" aria-hidden="true"></span></button>
+            <div class="accordion__panel" id="faq6" role="region"><div class="accordion__panel-inner" data-i18n="faq.a6">Pricing will be shared closer to launch. Join the list and we will keep you updated.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ FINAL CTA ============================ -->
+    <section class="section final-cta">
+      <div class="container final-cta__inner">
+          <h2 data-i18n="cta.title">Be first to meet Odera.</h2>
+          <p data-i18n="cta.lead">Coming soon on kAir for iPhone — we will notify you when v1 is ready.</p>
+          <div>
+            <form class="waitlist" data-waitlist novalidate>
+              <div class="field">
+                <input class="field__input" type="email" name="email" required autocomplete="email"
+                       data-i18n-attr="placeholder:cta.email;aria-label:cta.email" placeholder="Enter your email" />
+                <button class="btn btn--primary" type="submit" data-i18n="cta.btn">Notify me at launch</button>
+              </div>
+            </form>
+            <div class="form-success" data-waitlist-success hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>
+              <span data-success-text>You are on the list.</span>
+            </div>
+            <p class="form-note" data-i18n="cta.note">We will email you on launch day. No spam.</p>
+          </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================ FOOTER ============================ -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <a class="logo" href="#top" aria-label="kAir home">
+            <span class="logo__mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7.5 4.5V19.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M15.5 8.5L8.5 13.5L15 19.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 2.6c.35 1.5.9 2.05 2.4 2.4-1.5.35-2.05.9-2.4 2.4-.35-1.5-.9-2.05-2.4-2.4 1.5-.35 2.05-.9 2.4-2.4Z" fill="currentColor"/></svg></span>
+            <span class="logo__word">kAir</span>
+          </a>
+          <p class="footer__tagline" data-i18n="foot.tagline">kAir — home of Odera, your local-first AI agent.</p>
+        </div>
+        <div class="footer__cols">
+          <div class="footer__col">
+            <h4 data-i18n="foot.product">Product</h4>
+            <ul>
+              <li><a href="#features" data-i18n="foot.features">Features</a></li>
+              <li><a href="#privacy" data-i18n="foot.privacy">Privacy</a></li>
+              <li><a href="#how" data-i18n="foot.how">How it works</a></li>
+              <li><a href="#roadmap" data-i18n="foot.roadmap">Roadmap</a></li>
+              <li><a href="#faq" data-i18n="foot.faq">FAQ</a></li>
+            </ul>
+          </div>
+          <div class="footer__col">
+            <h4 data-i18n="foot.company">Company</h4>
+            <ul>
+              <li><a href="#" data-i18n="foot.about">About</a></li>
+              <li><a href="#" data-i18n="foot.blog">Blog</a></li>
+              <li><a href="#" data-i18n="foot.careers">Careers</a></li>
+              <li><a href="mailto:hello@kair.app" data-i18n="foot.contact">Contact</a></li>
+            </ul>
+          </div>
+          <div class="footer__col">
+            <h4 data-i18n="foot.legal">Legal</h4>
+            <ul>
+              <li><a href="privacy.html" data-i18n="foot.privacyPolicy">Privacy Policy</a></li>
+              <li><a href="terms.html" data-i18n="foot.terms">Terms of Service</a></li>
+              <li><a href="#faq" data-i18n="foot.health">Health disclaimer</a></li>
+            </ul>
+          </div>
+          <div class="footer__col">
+            <h4 data-i18n="foot.connect">Connect</h4>
+            <ul>
+              <li><a href="mailto:hello@kair.app" data-i18n="foot.email">hello@kair.app</a></li>
+              <li><a href="#" aria-label="X (Twitter)">X / Twitter</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__disclaimer" data-i18n="foot.ai">kAir uses on-device AI. AI-generated content can be incomplete or wrong — please use your own judgment, and never rely on it for medical, legal, or financial decisions.</p>
+        <p class="footer__disclaimer" data-i18n="foot.healthFull">kAir is a wellness and information tool, not a medical device. It does not diagnose, treat, or prevent any condition. Always consult a qualified clinician for medical decisions, and call your local emergency number in an emergency.</p>
+        <div class="footer__legal-row">
+          <span data-i18n="foot.copyright">© 2026 kAir. All rights reserved.</span>
+          <span data-i18n="foot.madeWith">Designed for privacy. Built for iPhone.</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

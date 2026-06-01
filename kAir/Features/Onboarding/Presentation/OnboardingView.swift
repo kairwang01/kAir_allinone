@@ -27,11 +27,11 @@ struct OnboardingView: View {
                             .font(.system(size: 44, weight: .semibold))
                             .foregroundStyle(AppTheme.Palette.accentStrong)
 
-                        Text("Welcome to kAir")
+                        Text("Meet Odera")
                             .font(.largeTitle.weight(.bold))
                             .foregroundStyle(AppTheme.Palette.textPrimary)
 
-                        Text("Your local-first AI companion for chat and health — private by design, on your device.")
+                        Text("The AI that turns intent into action — inside kAir, private by design on your iPhone.")
                             .font(.body)
                             .foregroundStyle(AppTheme.Palette.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -41,14 +41,14 @@ struct OnboardingView: View {
                         FeatureRow(
                             icon: "bubble.left.and.text.bubble.right",
                             tint: AppTheme.Palette.accentStrong,
-                            title: "On-device AI chat",
-                            detail: "Answers are generated on your device. Your prompts stay with you."
+                            title: "Describe what you want",
+                            detail: "Odera keeps chat as the command surface and routes to local capabilities when you choose."
                         )
                         FeatureRow(
                             icon: "heart.text.square",
                             tint: AppTheme.Palette.success,
-                            title: "Private health insights",
-                            detail: "kAir reads Apple Health on-device and never exports it."
+                            title: "Health is one local domain",
+                            detail: "Apple Health is processed on-device when attached. It is one capability, not the whole product."
                         )
                         FeatureRow(
                             icon: "lock.shield",

@@ -42,4 +42,17 @@ final class SurfaceGatingTests: XCTestCase {
         XCTAssertEqual(store.accessories.count, 4)
         XCTAssertEqual(store.route(for: "buy supplements"), .store)
     }
+
+    func test_chatStore_v1OverviewNamesMarketCompanionLanesWithoutRouting() {
+        let store = ChatStore(enabledSurfaces: [.chat, .health])
+
+        XCTAssertNil(store.route(for: "What can kAir do for me?"))
+        store.submitPrompt("What can kAir do for me?", using: nil)
+
+        let reply = store.session.messages.last?.text ?? ""
+        XCTAssertTrue(reply.contains("追星好搭子"))
+        XCTAssertTrue(reply.contains("游戏陪你玩"))
+        XCTAssertTrue(reply.contains("生活艺术家"))
+        XCTAssertNil(store.session.messages.last?.toolResults.first)
+    }
 }

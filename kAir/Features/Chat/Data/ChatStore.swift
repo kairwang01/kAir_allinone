@@ -731,9 +731,10 @@ final class ChatStore {
             // the superseded request — `try?` below already swallows the cancel).
             pendingReplyGeneration?.cancel()
             pendingReplyGeneration = Task { @MainActor [weak self] in
-                guard let generated = try? await textGenerator.generate(request),
-                      generated.isEmpty == false else { return }
-                self?.replaceMessageText(id: messageID, with: generated)
+                guard let reply = try? await textGenerator.generateReply(request),
+                      reply.text.isEmpty == false else { return }
+                let card = reply.serverModelInfo.map(Self.serverModelCard(from:))
+                self?.replaceMessage(id: messageID, text: reply.text, appendingCard: card)
             }
         }
     }
@@ -750,10 +751,31 @@ final class ChatStore {
 
     /// Replace an existing message's text in place (same id / tags / results).
     private func replaceMessageText(id: String, with text: String) {
+        replaceMessage(id: id, text: text, appendingCard: nil)
+    }
+
+    /// Replace an existing message's text in place and, when a server model
+    /// card is provided, attach it to the message's tool results (replacing a
+    /// prior card with the same id, else appending). Baseline cards are
+    /// preserved so a health-grounded card and the model-runtime card can
+    /// coexist.
+    private func replaceMessage(
+        id: String,
+        text: String,
+        appendingCard card: ConversationToolResult?
+    ) {
         guard let index = session.messages.firstIndex(where: { $0.id == id }) else {
             return
         }
         let existing = session.messages[index]
+        var toolResults = existing.toolResults
+        if let card {
+            if let cardIndex = toolResults.firstIndex(where: { $0.id == card.id }) {
+                toolResults[cardIndex] = card
+            } else {
+                toolResults.append(card)
+            }
+        }
         session.messages[index] = ConversationMessage(
             id: existing.id,
             role: existing.role,
@@ -761,8 +783,40 @@ final class ChatStore {
             text: text,
             timestamp: existing.timestamp,
             tags: existing.tags,
-            toolResults: existing.toolResults,
+            toolResults: toolResults,
             continuationEvent: existing.continuationEvent
+        )
+    }
+
+    /// Builds the "AI Runtime" tool-result card from a server model-gateway
+    /// reply. Surfaces the concrete model, token usage (including reasoning
+    /// tokens), latency, and citation count returned by `/v1/kair/model`.
+    static func serverModelCard(from info: KAirServerModelInfo) -> ConversationToolResult {
+        var metrics: [ConversationToolMetric] = []
+        if let model = info.model, model.isEmpty == false {
+            metrics.append(.init(key: "Model", value: model))
+        }
+        if let total = info.totalTokens {
+            metrics.append(.init(key: "Tokens", value: "\(total)"))
+        } else if let completion = info.completionTokens {
+            metrics.append(.init(key: "Output tokens", value: "\(completion)"))
+        }
+        if let reasoning = info.reasoningTokens, reasoning > 0 {
+            metrics.append(.init(key: "Reasoning", value: "\(reasoning)"))
+        }
+        if let latency = info.latencyMs {
+            metrics.append(.init(key: "Latency", value: "\(latency) ms"))
+        }
+        if info.citationCount > 0 {
+            metrics.append(.init(key: "Citations", value: "\(info.citationCount)"))
+        }
+        return ConversationToolResult(
+            id: "server_model_runtime",
+            title: "AI Runtime",
+            summary: "Answered through the kAir model gateway.",
+            state: .ready,
+            metrics: metrics,
+            footer: "Routed via the kAir gateway. Health and private prompts stay on-device."
         )
     }
 
@@ -917,6 +971,10 @@ final class ChatStore {
             return "The recent activity picture is anchored by \(dashboard.workouts.count) workouts, with \(newestWorkout) as the newest session. \(dashboard.insights.first(where: { $0.id == "activity" })?.summary ?? "Movement data is available in Health.")"
         }
 
+        if isCapabilityOverviewPrompt(normalized) {
+            return companionOverviewReply
+        }
+
         if isGenericMapsPrompt(normalized, prompt: prompt) {
             return "Maps should stay quiet and utilitarian inside kAir: nearby clinics, pharmacies, gyms, and walking routes, surfaced as task-ready places instead of a noisy standalone map first."
         }
@@ -957,6 +1015,10 @@ final class ChatStore {
             return "Maps can still be invoked immediately from chat. I will preserve this thread, then hand off into a focused navigation surface."
         }
 
+        if isCapabilityOverviewPrompt(normalized) {
+            return companionOverviewReply
+        }
+
         if normalized.contains("buy") || normalized.contains("store") || normalized.contains("shop") || modeID == "shop" {
             return "Store can still open from the conversation, but curation will be broader until Apple Health is attached."
         }
@@ -968,6 +1030,21 @@ final class ChatStore {
         return supportsHealthData
             ? "kAir is chat-first and runs on your device. Ask me anything, and attach Apple Health when you want grounded health guidance."
             : "kAir is chat-first and runs on your device. Apple Health grounding isn't available here, but everything else stays local-first."
+    }
+
+    private static func isCapabilityOverviewPrompt(_ normalized: String) -> Bool {
+        normalized.contains("what can") ||
+            normalized.contains("help me with") ||
+            normalized.contains("能做什么") ||
+            normalized.contains("可以做什么") ||
+            normalized.contains("帮我做什么")
+    }
+
+    private static var companionOverviewReply: String {
+        let laneNames = MarketCompanionCatalog.directions
+            .map(\.localizedTitle)
+            .joined(separator: "、")
+        return "kAir is your on-device companion. Right now I'm focused on private chat and your Apple Health. Next, I'll take on everyday companion tasks — \(laneNames) — and help with local life nearby: finding places, services, and routes, then handing off to your maps or booking app once you confirm. I read and prepare on your device, and never buy, post, or change a setting without asking you first."
     }
 
     private static func replyTags(for prompt: String, modeID: String, dashboard: HealthDashboard) -> [String] {
@@ -1023,6 +1100,10 @@ final class ChatStore {
     private static func toolResults(for prompt: String, dashboard: HealthDashboard) -> [ConversationToolResult] {
         let normalized = prompt.lowercased()
 
+        if isCapabilityOverviewPrompt(normalized) {
+            return []
+        }
+
         if isGenericMapsPrompt(normalized, prompt: prompt) {
             return [mapsResult()]
         }
@@ -1047,6 +1128,10 @@ final class ChatStore {
         supportsHealthData: Bool
     ) -> [ConversationToolResult] {
         let normalized = prompt.lowercased()
+
+        if isCapabilityOverviewPrompt(normalized) {
+            return []
+        }
 
         if isGenericMapsPrompt(normalized, prompt: prompt) {
             return [mapsResult()]
