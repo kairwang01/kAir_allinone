@@ -108,4 +108,161 @@ final class DefaultCapabilityRegistryTests: XCTestCase {
         let a2 = try XCTUnwrap(r2.adapter(for: .aiCompletion))
         XCTAssertFalse(a1 === a2)
     }
+
+    // MARK: - Reserved Search composition
+
+    func test_makeWithShippedStubs_reservedSearchNilBehavesLikeDefaultRegistry() async throws {
+        let registry = DefaultCapabilityRegistry.makeWithShippedStubs(
+            reservedSearchAdapter: nil
+        )
+        let snapshot = await registry.availabilitySnapshot()
+
+        XCTAssertEqual(snapshot.count, 3)
+        XCTAssertEqual(snapshot[.aiCompletion], true)
+        XCTAssertEqual(snapshot[.threadLookup], true)
+        XCTAssertEqual(snapshot[.localStoreLookup], true)
+        XCTAssertNil(registry.adapter(for: .webSearch))
+    }
+
+    func test_makeWithShippedStubs_registersReservedSearchOnlyWhenSupplied() async throws {
+        let configuration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            isEnabled: true
+        )
+        let searchAdapter = SearchCapabilityAdapter(configuration: configuration)
+
+        let registry = DefaultCapabilityRegistry.makeWithShippedStubs(
+            reservedSearchAdapter: searchAdapter
+        )
+        let registeredSearchAdapter = try XCTUnwrap(
+            registry.adapter(for: .webSearch) as? SearchCapabilityAdapter
+        )
+        let snapshot = await registry.availabilitySnapshot()
+
+        XCTAssertTrue(registeredSearchAdapter === searchAdapter)
+        XCTAssertEqual(type(of: registeredSearchAdapter).capability, .webSearch)
+        XCTAssertEqual(snapshot.count, 4)
+        XCTAssertEqual(snapshot[.aiCompletion], true)
+        XCTAssertEqual(snapshot[.threadLookup], true)
+        XCTAssertEqual(snapshot[.localStoreLookup], true)
+        XCTAssertEqual(snapshot[.webSearch], true)
+    }
+
+    func test_makeWithShippedStubs_reservedSearchAvailabilityReflectsConfiguration() async throws {
+        let configuration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            isEnabled: false
+        )
+        let searchAdapter = SearchCapabilityAdapter(configuration: configuration)
+
+        let registry = DefaultCapabilityRegistry.makeWithShippedStubs(
+            reservedSearchAdapter: searchAdapter
+        )
+        let snapshot = await registry.availabilitySnapshot()
+
+        XCTAssertNotNil(registry.adapter(for: .webSearch))
+        XCTAssertEqual(snapshot.count, 4)
+        XCTAssertEqual(snapshot[.webSearch], false)
+    }
+
+    // MARK: - Reserved Search factory
+
+    func test_reservedSearchConfiguration_doesNotRegisterWebSearchInDefaultRegistry() throws {
+        _ = DefaultCapabilityRegistry.makeReservedSearchConfiguration()
+
+        let registry = DefaultCapabilityRegistry.makeWithShippedStubs()
+        XCTAssertNil(registry.adapter(for: .webSearch))
+        XCTAssertEqual(Set(DefaultCapabilityRegistry.shippedKinds), [
+            .aiCompletion,
+            .threadLookup,
+            .localStoreLookup,
+        ])
+    }
+
+    func test_reservedSearchConfiguration_isDisabledByDefaultAndCarriesProfile() {
+        let profile = ProviderAccessProfile(
+            membershipTier: .plus,
+            defaultRegion: .northAmerica,
+            preferredProvider: .searchAPI,
+            meteredProviderEntitlements: [.searchAPI]
+        )
+
+        let configuration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            providerAccessProfile: profile
+        )
+
+        XCTAssertFalse(configuration.isEnabled)
+        XCTAssertEqual(configuration.providerAccessProfile, profile)
+        XCTAssertEqual(
+            configuration.providerQuotaSnapshot,
+            ServerProviderQuotaSnapshot(providerAccessProfile: profile)
+        )
+        XCTAssertFalse(
+            configuration.providerQuotaSnapshot.allowedProviderFamilies.contains(.searchAPI)
+        )
+        XCTAssertTrue(configuration.providerQuotaSnapshot.meteredEligibleProviderFamilies.isEmpty)
+        XCTAssertEqual(configuration.privacyClass, .general)
+        XCTAssertEqual(configuration.sourceMode, .searchAPI)
+        XCTAssertEqual(configuration.robotsState, .notApplicable)
+    }
+
+    func test_reservedSearchConfiguration_preservesExplicitQuotaSnapshot() {
+        let quota = ServerProviderQuotaSnapshot(
+            providerAccessProfile: ProviderAccessProfile(
+                membershipTier: .pro,
+                meteredProviderEntitlements: [.searchAPI]
+            ),
+            allowedProviderFamilies: [.searchAPI],
+            meteredEligibleProviderFamilies: [.searchAPI],
+            disabledProviderFamilies: [.cache]
+        )
+
+        let configuration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            providerAccessProfile: .freeLocalDefault,
+            providerQuotaSnapshot: quota
+        )
+
+        XCTAssertEqual(configuration.providerAccessProfile, .freeLocalDefault)
+        XCTAssertEqual(configuration.providerQuotaSnapshot, quota)
+        XCTAssertEqual(configuration.providerQuotaSnapshot.allowedProviderFamilies, [.searchAPI])
+        XCTAssertEqual(configuration.providerQuotaSnapshot.entitledProviderFamilies, [.searchAPI])
+        XCTAssertEqual(configuration.providerQuotaSnapshot.meteredEligibleProviderFamilies, [.searchAPI])
+        XCTAssertEqual(configuration.providerQuotaSnapshot.disabledProviderFamilies, [.cache])
+    }
+
+    func test_reservedSearchConfiguration_preservesExplicitSourcePrivacyRobotsAndFixtures() throws {
+        let now = Date(timeIntervalSince1970: 1_800_000_300)
+        let draft = SearchResultDraft(
+            sourceURL: try XCTUnwrap(URL(string: "https://example.com/menu")),
+            title: "Public menu",
+            snippet: "Public menu fixture.",
+            attribution: "example.com",
+            confidence: 0.82
+        )
+        let profile = ProviderAccessProfile.developerInternalDiagnostics(
+            enabledExperimentalProviders: [.crawler],
+            meteredProviderEntitlements: [.crawler]
+        )
+
+        let configuration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            isEnabled: true,
+            providerAccessProfile: profile,
+            category: .menuOrHours,
+            sourceMode: .crawlerFetch,
+            privacyClass: .private,
+            freshness: .liveRequired,
+            robotsState: .allowed,
+            resultDrafts: ["Public   Menu": draft],
+            registry: SearchProviderDescriptor.defaultRegistry,
+            now: now
+        )
+
+        XCTAssertTrue(configuration.isEnabled)
+        XCTAssertEqual(configuration.providerAccessProfile, profile)
+        XCTAssertEqual(configuration.category, .menuOrHours)
+        XCTAssertEqual(configuration.sourceMode, .crawlerFetch)
+        XCTAssertEqual(configuration.privacyClass, .private)
+        XCTAssertEqual(configuration.freshness, .liveRequired)
+        XCTAssertEqual(configuration.robotsState, .allowed)
+        XCTAssertEqual(configuration.resultDrafts["Public Menu"], draft)
+        XCTAssertEqual(configuration.now, now)
+    }
 }

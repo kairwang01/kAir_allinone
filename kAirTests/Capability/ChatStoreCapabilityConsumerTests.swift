@@ -23,6 +23,7 @@
 //
 
 import XCTest
+import SwiftUI
 @testable import kAir
 
 @MainActor
@@ -101,6 +102,275 @@ final class ChatStoreCapabilityConsumerTests: XCTestCase {
         XCTAssertEqual(store.capabilityAvailability, [.aiCompletion: false])
     }
 
+    // MARK: - AppBootstrap reserved Search propagation
+
+    func test_bootstrapDefaultRegistryKeepsWebSearchAbsentInChatStore() async throws {
+        let bootstrap = AppBootstrap()
+        let store = makeStoreMirroringChatHome(bootstrap: bootstrap)
+        let beforeSlate = store.recommendedMatches
+
+        await store.pendingCapabilityRefresh?.value
+
+        XCTAssertEqual(store.capabilityAvailability.count, 3)
+        XCTAssertEqual(store.capabilityAvailability[.aiCompletion], true)
+        XCTAssertEqual(store.capabilityAvailability[.threadLookup], true)
+        XCTAssertEqual(store.capabilityAvailability[.localStoreLookup], true)
+        XCTAssertNil(store.capabilityAvailability[.webSearch])
+        XCTAssertEqual(store.recommendedMatches, beforeSlate)
+        XCTAssertTrue(store.session.messages.isEmpty)
+    }
+
+    func test_bootstrapSearchOptInEnabledReachesChatStoreAvailability() async throws {
+        let configuration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            isEnabled: true
+        )
+        let bootstrap = AppBootstrap(reservedSearchConfiguration: configuration)
+        let store = makeStoreMirroringChatHome(bootstrap: bootstrap)
+        let beforeSlate = store.recommendedMatches
+
+        await store.pendingCapabilityRefresh?.value
+
+        XCTAssertEqual(store.capabilityAvailability.count, 4)
+        XCTAssertEqual(store.capabilityAvailability[.aiCompletion], true)
+        XCTAssertEqual(store.capabilityAvailability[.threadLookup], true)
+        XCTAssertEqual(store.capabilityAvailability[.localStoreLookup], true)
+        XCTAssertEqual(store.capabilityAvailability[.webSearch], true)
+        XCTAssertEqual(store.recommendedMatches, beforeSlate)
+        XCTAssertTrue(store.session.messages.isEmpty)
+    }
+
+    func test_bootstrapSearchOptInDisabledReachesChatStoreAsUnavailable() async throws {
+        let configuration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            isEnabled: false
+        )
+        let bootstrap = AppBootstrap(reservedSearchConfiguration: configuration)
+        let store = makeStoreMirroringChatHome(bootstrap: bootstrap)
+        let beforeSlate = store.recommendedMatches
+
+        await store.pendingCapabilityRefresh?.value
+
+        XCTAssertEqual(store.capabilityAvailability.count, 4)
+        XCTAssertEqual(store.capabilityAvailability[.webSearch], false)
+        XCTAssertEqual(store.recommendedMatches, beforeSlate)
+        XCTAssertTrue(store.session.messages.isEmpty)
+    }
+
+    // MARK: - Search availability presentation state
+
+    func test_searchAvailabilityState_mapsDefaultDisabledAndEnabledSearchStates() async throws {
+        let defaultStore = makeStoreMirroringChatHome(bootstrap: AppBootstrap())
+        await defaultStore.pendingCapabilityRefresh?.value
+
+        XCTAssertEqual(defaultStore.searchAvailabilityState, .notInBuild)
+        XCTAssertEqual(defaultStore.searchAvailabilityState.statusLine, "Search not installed")
+
+        let disabledConfiguration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            isEnabled: false
+        )
+        let disabledStore = makeStoreMirroringChatHome(
+            bootstrap: AppBootstrap(reservedSearchConfiguration: disabledConfiguration)
+        )
+        await disabledStore.pendingCapabilityRefresh?.value
+
+        XCTAssertEqual(disabledStore.searchAvailabilityState, .registeredUnavailable)
+        XCTAssertEqual(
+            disabledStore.searchAvailabilityState.statusLine,
+            "Search reserved but unavailable"
+        )
+
+        let enabledConfiguration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            isEnabled: true
+        )
+        let enabledStore = makeStoreMirroringChatHome(
+            bootstrap: AppBootstrap(reservedSearchConfiguration: enabledConfiguration)
+        )
+        await enabledStore.pendingCapabilityRefresh?.value
+
+        XCTAssertEqual(enabledStore.searchAvailabilityState, .available)
+        XCTAssertEqual(enabledStore.searchAvailabilityState.statusLine, "Search available")
+    }
+
+    func test_searchAvailabilityState_changesOnlyAfterCapabilityRefreshLands() async throws {
+        let configuration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            isEnabled: true
+        )
+        let store = makeStoreMirroringChatHome(
+            bootstrap: AppBootstrap(reservedSearchConfiguration: configuration)
+        )
+
+        XCTAssertEqual(store.searchAvailabilityState, .notInBuild)
+
+        await store.pendingCapabilityRefresh?.value
+
+        XCTAssertEqual(store.searchAvailabilityState, .available)
+    }
+
+    func test_searchAvailabilityState_readingDoesNotMutateTranscriptOrSlate() async throws {
+        let configuration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            isEnabled: true
+        )
+        let store = makeStoreMirroringChatHome(
+            bootstrap: AppBootstrap(reservedSearchConfiguration: configuration)
+        )
+        await store.pendingCapabilityRefresh?.value
+        let beforeSlate = store.recommendedMatches
+        let beforeMessages = store.session.messages
+
+        _ = store.searchAvailabilityState
+        _ = store.searchAvailabilityState.statusLine
+
+        XCTAssertEqual(store.recommendedMatches, beforeSlate)
+        XCTAssertEqual(store.session.messages, beforeMessages)
+    }
+
+    // MARK: - Search availability display model
+
+    func test_searchAvailabilityDisplay_mapsEveryStateToStableValues() throws {
+        XCTAssertEqual(
+            ChatSearchAvailabilityDisplay(state: .notInBuild),
+            ChatSearchAvailabilityDisplay(
+                isVisible: false,
+                systemImage: "magnifyingglass",
+                tone: .neutral,
+                title: "Search not installed",
+                statusLine: "Search not installed",
+                accessibilityLabel: "Search is not installed in this build."
+            )
+        )
+        XCTAssertEqual(
+            ChatSearchAvailabilityDisplay(state: .registeredUnavailable),
+            ChatSearchAvailabilityDisplay(
+                isVisible: true,
+                systemImage: "magnifyingglass.circle",
+                tone: .warning,
+                title: "Search unavailable",
+                statusLine: "Search reserved but unavailable",
+                accessibilityLabel: "Search is reserved but unavailable."
+            )
+        )
+        XCTAssertEqual(
+            ChatSearchAvailabilityDisplay(state: .available),
+            ChatSearchAvailabilityDisplay(
+                isVisible: true,
+                systemImage: "magnifyingglass.circle.fill",
+                tone: .positive,
+                title: "Search available",
+                statusLine: "Search available",
+                accessibilityLabel: "Search is available."
+            )
+        )
+    }
+
+    func test_searchAvailabilityDisplay_defaultCopyDoesNotImplySearchCanRun() async throws {
+        let store = makeStoreMirroringChatHome(bootstrap: AppBootstrap())
+        await store.pendingCapabilityRefresh?.value
+
+        let display = store.searchAvailabilityDisplay
+
+        XCTAssertFalse(display.isVisible)
+        XCTAssertEqual(display.tone, .neutral)
+        XCTAssertEqual(display.statusLine, "Search not installed")
+        XCTAssertFalse(display.statusLine.localizedCaseInsensitiveContains("live"))
+        XCTAssertFalse(display.statusLine.localizedCaseInsensitiveContains("crawler"))
+        XCTAssertFalse(display.statusLine.localizedCaseInsensitiveContains("provider"))
+        XCTAssertFalse(display.accessibilityLabel.localizedCaseInsensitiveContains("available"))
+    }
+
+    func test_searchAvailabilityDisplay_readingDoesNotMutateTranscriptOrSlate() async throws {
+        let configuration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            isEnabled: true
+        )
+        let store = makeStoreMirroringChatHome(
+            bootstrap: AppBootstrap(reservedSearchConfiguration: configuration)
+        )
+        await store.pendingCapabilityRefresh?.value
+        let beforeSlate = store.recommendedMatches
+        let beforeMessages = store.session.messages
+
+        _ = store.searchAvailabilityDisplay
+        _ = store.searchAvailabilityDisplay.accessibilityLabel
+
+        XCTAssertEqual(store.recommendedMatches, beforeSlate)
+        XCTAssertEqual(store.session.messages, beforeMessages)
+    }
+
+    // MARK: - Search availability UI binding
+
+    func test_searchAvailabilityIndicator_hidesDefaultNotInBuildDisplay() async throws {
+        let store = makeStoreMirroringChatHome(bootstrap: AppBootstrap())
+        await store.pendingCapabilityRefresh?.value
+
+        XCTAssertNil(SearchAvailabilityIndicator.content(for: store.searchAvailabilityDisplay))
+    }
+
+    func test_searchAvailabilityIndicator_exposesVisibleRegisteredStates() throws {
+        let unavailable = SearchAvailabilityIndicator.content(
+            for: ChatSearchAvailabilityDisplay(state: .registeredUnavailable)
+        )
+        let available = SearchAvailabilityIndicator.content(
+            for: ChatSearchAvailabilityDisplay(state: .available)
+        )
+
+        XCTAssertEqual(
+            unavailable,
+            SearchAvailabilityIndicatorContent(
+                systemImage: "magnifyingglass.circle",
+                statusLine: "Search reserved but unavailable",
+                accessibilityLabel: "Search is reserved but unavailable.",
+                tone: .warning
+            )
+        )
+        XCTAssertEqual(
+            available,
+            SearchAvailabilityIndicatorContent(
+                systemImage: "magnifyingglass.circle.fill",
+                statusLine: "Search available",
+                accessibilityLabel: "Search is available.",
+                tone: .positive
+            )
+        )
+        XCTAssertNotEqual(unavailable, available)
+        XCTAssertEqual(
+            SearchAvailabilityIndicator.foregroundColor(for: .warning),
+            AppTheme.Palette.warning
+        )
+        XCTAssertEqual(
+            SearchAvailabilityIndicator.foregroundColor(for: .positive),
+            AppTheme.Palette.success
+        )
+        XCTAssertEqual(SearchAvailabilityIndicator.typography, AppTheme.Typography.chip)
+    }
+
+    func test_searchAvailabilityIndicator_bindingDoesNotMutateStateOrTelemetry() async throws {
+        let emitter = InMemoryTelemetryEmitter()
+        let configuration = DefaultCapabilityRegistry.makeReservedSearchConfiguration(
+            isEnabled: true
+        )
+        let bootstrap = AppBootstrap(
+            telemetryEmitter: emitter,
+            reservedSearchConfiguration: configuration
+        )
+        let store = makeStoreMirroringChatHome(bootstrap: bootstrap)
+        await store.pendingCapabilityRefresh?.value
+        let beforeSlate = store.recommendedMatches
+        let beforeMessages = store.session.messages
+        let beforeAvailability = store.capabilityAvailability
+        let beforeSection = bootstrap.currentSection
+        let beforePresentedSurface = bootstrap.presentedSurface
+
+        _ = SearchAvailabilityIndicator.content(for: store.searchAvailabilityDisplay)
+        _ = SearchAvailabilityIndicator.foregroundColor(for: store.searchAvailabilityDisplay.tone)
+        _ = SearchAvailabilityIndicator.backgroundColor(for: store.searchAvailabilityDisplay.tone)
+        _ = SearchAvailabilityIndicator.borderColor(for: store.searchAvailabilityDisplay.tone)
+
+        XCTAssertEqual(store.recommendedMatches, beforeSlate)
+        XCTAssertEqual(store.session.messages, beforeMessages)
+        XCTAssertEqual(store.capabilityAvailability, beforeAvailability)
+        XCTAssertEqual(bootstrap.currentSection, beforeSection)
+        XCTAssertEqual(bootstrap.presentedSurface, beforePresentedSurface)
+        XCTAssertTrue(emitter.records.isEmpty)
+    }
+
     // MARK: - refresh() can be re-run
 
     func test_refreshCapabilityAvailability_canBeCalledRepeatedly() async throws {
@@ -135,6 +405,17 @@ final class ChatStoreCapabilityConsumerTests: XCTestCase {
         let store = ChatStore()
         await store.pendingCapabilityRefresh?.value
         XCTAssertEqual(store.session.messages.count, 0)
+    }
+
+    private func makeStoreMirroringChatHome(bootstrap: AppBootstrap) -> ChatStore {
+        ChatStore(
+            recommendationProvider: bootstrap.recommendationProvider,
+            providerStatusProvider: bootstrap.providerStatusProvider,
+            feedbackRuntime: bootstrap.feedbackRuntime,
+            completedRecommendationHandoff: bootstrap.completedRecommendationHandoff,
+            telemetryEmitter: bootstrap.telemetryEmitter,
+            capabilityRegistry: bootstrap.capabilityRegistry
+        )
     }
 }
 
