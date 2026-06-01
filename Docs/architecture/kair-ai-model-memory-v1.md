@@ -303,6 +303,53 @@ Why hybrid:
 - Local-first memory research now favors scoped, hybrid retrieval with
   diagnostics rather than raw top-k vector dumps.
 
+### 13.1 Memory-v2 direction (research-backed, 2026-06-01)
+
+A verified deep-dive (`Docs/research/2026-agent-memory-deep-dive-v1.md`;
+24/25 claims 3-vote-confirmed) refines this path. SOURCED FACT is separated
+from kAir RECOMMENDATION; every step is gated. This is the comment-first
+memory-v2 plan — **not ratified**, pending PM 判断.
+
+**SOURCED FACT.** (a) Hierarchical summarization + Ebbinghaus-style decay
+bound memory growth *without* hurting personalization — MemoryBank
+(`R = e^(−t/S)`, AAAI 2024), RMM (ACL 2025, +>10pp LongMemEval), FadeMem
+(2026 preprint, −45% storage, no measured regression); a 2026 survey frames
+forgetting as "a feature, not a bug" and warns crude age/size eviction is
+inferior to importance-weighted forgetting. (b) Knowledge-graph memory is
+**not** a free on-device win: the only same-stack comparison (Mem0 vs Mem0^g,
+arXiv:2504.19413) shows ~+2% overall, a multi-hop **regression**, and higher
+latency; the graph wins only on temporal/knowledge-update reasoning (Zep) and
+interactive/sequential tasks (AriGraph). (c) Every high-quality graph result
+uses 70B LLMs + 7B embedders on GPUs (HippoRAG 2 is "not designed for CPU-only
+operation"); only the **algorithm** (PPR / temporal edge-invalidation / decay /
+summarization) transfers to an iPhone — no source measures these on-device.
+(d) Gains are reader-capability-dependent and can backfire with a small
+on-device LLM (LongMemEval; time-aware expansion degrades on Llama-8B).
+
+**kAir RECOMMENDATION (ranked, gated — extends steps 1–5 above):**
+1. Importance-weighted **decay** — a `MemoryStrength` value (`R = e^(−t/S)`,
+   `S`↑ and `t`→0 on recall; or FadeMem importance = relevance + access-freq +
+   recency). Pure, `now:`-injected. Highest certainty; binds to the existing
+   `MemoryConsolidationPolicy.decay` action.
+2. Hierarchical **summary tier** — `MemoryRecord.kind` ∈ {`dailySummary`,
+   `globalSummary`}, `provenanceIDs` → source records. A summary never deletes
+   its sources within the abstention window; keep raw records until validated.
+   Health summaries stay health-domain (already enforced by `MemoryWritePolicy`).
+3. Make `MemoryStore.retrieve()` actually **use `query`** — FTS5 keyword first
+   (steps 3 above). Deterministic; the safest first real retrieval step (today
+   `query` is ignored — domain-scope + sensitivity-cap + prefix only).
+4. `VectorIndex` facade (sqlite-vec / Alibaba zvec + a quantized small embedder)
+   behind the same seam (step 4–5 above).
+5. `MemoryGraph` facade **last, gated, temporal-only** — adopt only if a kAir
+   on-device benchmark shows a temporal-reasoning win that summarization +
+   time-aware query expansion cannot match. Temporal `supersede` (Zep-style edge
+   invalidation) overlaps the existing `MemoryConsolidationPolicy.supersede`.
+
+**Adoption gate (CI):** recall@k + end-to-end p95 latency + storage-growth-
+over-time, on a LongMemEval-style local fixture (5 abilities incl. abstention).
+**Measure on-device first** — the literature has no iPhone-budget numbers; this
+is the central open risk.
+
 ## 14. Context Assembly
 
 The model context packet should be explicit:

@@ -311,6 +311,17 @@ Generative-Agents reflection: pure rules deciding when stored records should be
 reads non-health). No background scheduler in v1 — a pure function the store can
 call.
 
+> **Research validation (2026-06-01, `Docs/research/2026-agent-memory-deep-dive-v1.md`).**
+> A verified deep-dive (24/25 claims 3-vote-confirmed) confirms this design:
+> hierarchical summarization (MemoryBank/RMM) and Ebbinghaus decay
+> (`R = e^(−t/S)`; FadeMem importance-weighting) are the highest-certainty,
+> most on-device-portable mechanisms, and a 2026 survey frames forgetting as
+> "a feature, not a bug." Conversely a knowledge graph is **not** a free
+> on-device win (Mem0^g: ~+2% overall, a multi-hop regression, higher latency) —
+> reserve a `MemoryGraph` facade **last and gated**, temporal-only. The ranked
+> memory-v2 plan + CI gate (recall@k · p95 latency · storage-growth, measured
+> on-device first) live in `kair-ai-model-memory-v1.md` §13.1. Not ratified (flagged).
+
 ### 5.6 `SpatiotemporalContext` + agent loop budget — life-services grounding (L3/L2)
 
 New file: `kAir/Core/AI/SpatiotemporalContext.swift` (+ tests). Meituan's
