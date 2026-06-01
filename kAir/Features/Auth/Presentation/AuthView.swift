@@ -41,6 +41,9 @@ struct AuthView: View {
                         if let error = model.errorMessage {
                             errorBanner(error)
                         }
+                        if model.mode == .register {
+                            termsAcknowledgment
+                        }
                         submitButton
                         switchModeLink
                         footnote
@@ -248,6 +251,20 @@ struct AuthView: View {
         .buttonStyle(.plain)
         .disabled(model.canSubmit == false)
         .accessibilityIdentifier("auth.submit")
+    }
+
+    /// Registration-only consent line. kAir's Privacy Policy and Terms are
+    /// published on the marketing site; surfaced here as plain text until the
+    /// hosted URLs are wired (the account flow itself is gated by
+    /// `FeatureFlag.serverAuthEnabled`).
+    private var termsAcknowledgment: some View {
+        Text("By creating an account, you agree to kAir's Privacy Policy and Terms.")
+            .font(.caption)
+            .foregroundStyle(AppTheme.Palette.textMuted)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity)
+            .accessibilityIdentifier("auth.terms")
     }
 
     private var switchModeLink: some View {

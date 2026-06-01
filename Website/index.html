@@ -98,13 +98,32 @@
     <!-- ============================ HERO ============================ -->
     <section class="hero hero--center">
       <div class="container hero__inner">
+        <span class="halo halo--hero" data-state="idle" data-odera-halo role="img" aria-label="Odera">
+          <svg class="halo__svg" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="haloGrad" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0" stop-color="#6C5CE9"/>
+                <stop offset="0.5" stop-color="#815AED"/>
+                <stop offset="1" stop-color="#8944ED"/>
+              </linearGradient>
+            </defs>
+            <circle class="halo__track" cx="50" cy="50" r="40"/>
+            <circle class="halo__arc" cx="50" cy="50" r="40"/>
+          </svg>
+          <svg class="halo__check" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6.5 12.5l3.5 3.5L17.5 8.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
         <p class="hero__app" data-i18n="hero.app">on kAir · Coming soon · iPhone</p>
         <h1 class="display" data-i18n="hero.title">Meet Odera</h1>
         <p class="lead hero__lead" data-i18n="hero.lead">Describe what you want. Odera routes the right action.</p>
         <p class="hero__tagline" data-i18n="hero.tagline">The AI that turns intent into action.</p>
 
-        <div class="hero__demo" aria-hidden="true">
-          <span class="hero__demo-input" data-i18n="hero.demo">What do you want to do?</span>
+        <div class="hero__demo" data-odera-demo aria-hidden="true">
+          <div class="odera-demo__row">
+            <span class="odera-demo__prompt" data-odera-prompt>How did I sleep this week?</span>
+            <span class="odera-demo__status" data-odera-status>Ask Odera anything…</span>
+          </div>
         </div>
 
         <p class="hero__hook" data-i18n="hero.hook">Local-first · Memory controlled by you · Chat + Health in v1</p>

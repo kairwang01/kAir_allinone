@@ -26,6 +26,7 @@ struct OnboardingView: View {
                         Image(systemName: "sparkles")
                             .font(.system(size: 44, weight: .semibold))
                             .foregroundStyle(AppTheme.Palette.accentStrong)
+                            .accessibilityHidden(true)
 
                         Text("Meet Odera")
                             .font(.largeTitle.weight(.bold))

@@ -149,3 +149,77 @@
     el.textContent = "2026";
   });
 })();
+
+/* ==========================================================================
+   Odera Halo-O hero demo — narrates intent → thinking → routed on-device.
+   Uses ONLY v1-real capabilities (Chat + Health). State-driven, paused when
+   offscreen or tab hidden, and fully static under reduced-motion.
+   ========================================================================== */
+(function () {
+  "use strict";
+  var halo = document.querySelector("[data-odera-halo]");
+  var demo = document.querySelector("[data-odera-demo]");
+  var promptEl = document.querySelector("[data-odera-prompt]");
+  var statusEl = document.querySelector("[data-odera-status]");
+  if (!halo || !demo || !promptEl || !statusEl) return;
+
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function lang() { return document.documentElement.lang === "zh-Hans" ? "zh" : "en"; }
+  function t(key) { return window.kAirI18n ? window.kAirI18n.t(key, lang()) : key; }
+
+  var EXAMPLES = ["odera.ex1", "odera.ex2", "odera.ex3"]; // Health, Chat, Chat/AI — v1-real only
+  var i = 0, running = false, timers = [];
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function setState(s) { halo.setAttribute("data-state", s); }
+
+  function staticView() {
+    setState("idle");
+    promptEl.textContent = t(EXAMPLES[0] + ".prompt");
+    statusEl.textContent = t("odera.idle");
+  }
+
+  function cycle() {
+    if (!running) return;
+    var ex = EXAMPLES[i % EXAMPLES.length];
+    promptEl.textContent = t(ex + ".prompt");
+    statusEl.textContent = t("odera.idle");
+    setState("listening");
+    timers.push(setTimeout(function () {
+      setState("thinking");
+      statusEl.textContent = t("odera.thinking");
+    }, 750));
+    timers.push(setTimeout(function () {
+      setState("success");
+      statusEl.textContent = t(ex + ".status");
+    }, 750 + 1900));
+    timers.push(setTimeout(function () {
+      setState("idle");
+      i += 1;
+      cycle();
+    }, 750 + 1900 + 1900));
+  }
+
+  function start() { if (running || reduce) return; running = true; cycle(); }
+  function stop() { running = false; clearTimers(); setState("idle"); }
+
+  if (reduce) {
+    staticView();
+  } else {
+    if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { if (e.isIntersecting) { start(); } else { stop(); } });
+      }, { threshold: 0.25 });
+      io.observe(demo);
+    } else {
+      start();
+    }
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) { stop(); } else { start(); }
+    });
+  }
+
+  // Re-render text in the new language on toggle
+  document.addEventListener("kair:langchange", function () {
+    if (reduce || !running) { staticView(); }
+  });
+})();
