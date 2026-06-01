@@ -7,3 +7,6 @@ xcuserdata/
 # Build products
 build/
 DerivedData/
+
+# Claude Code local config / worktrees
+.claude/
